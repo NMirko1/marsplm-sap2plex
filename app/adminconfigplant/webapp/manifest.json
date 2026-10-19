@@ -1,0 +1,349 @@
+{
+    "_version": "1.80.0",
+    "sap.app": {
+        "id": "avvaleplm.marsplm.sap2plex.adminconfigplant",
+        "type": "application",
+        "i18n": {
+            "bundleUrl": "i18n/i18n.properties",
+            "supportedLocales": [
+                "",
+                "it"
+            ],
+            "fallbackLocale": ""
+        },
+        "applicationVersion": {
+            "version": "0.0.1"
+        },
+        "title": "{{appTitle}}",
+        "description": "{{appDescription}}",
+        "dataSources": {
+            "catalogService": {
+                "uri": "odata/v4/catalog/",
+                "type": "OData",
+                "settings": {
+                    "odataVersion": "4.0"
+                }
+            },
+            "productService": {
+                "uri": "products/",
+                "type": "OData",
+                "settings": {
+                    "odataVersion": "4.0"
+                }
+            },
+            "objGroupService": {
+                "uri": "objgroup-edit/",
+                "type": "OData",
+                "settings": {
+                    "odataVersion": "4.0"
+                }
+            },
+            "plexFieldMapService": {
+                "uri": "plex-fieldmap/",
+                "type": "OData",
+                "settings": {
+                    "odataVersion": "4.0"
+                }
+            },
+            "plexOpFieldMapService": {
+                "uri": "plex-opfieldmap/",
+                "type": "OData",
+                "settings": {
+                    "odataVersion": "4.0"
+                }
+            },
+            "matCategoryService": {
+                "uri": "mat-category/",
+                "type": "OData",
+                "settings": {
+                    "odataVersion": "4.0"
+                }
+            },
+            "orderCompExclService": {
+                "uri": "ordercomp-excl/",
+                "type": "OData",
+                "settings": {
+                    "odataVersion": "4.0"
+                }
+            }
+        },
+        "crossNavigation": {
+            "inbounds": {
+                "marsplm-admin": {
+                    "semanticObject": "marsplm",
+                    "action": "admin",
+                    "title": "{{appTitle}}",
+                    "signature": {
+                        "parameters": {},
+                        "additionalParameters": "allowed"
+                    }
+                }
+            }
+        }
+    },
+    "sap.ui": {
+        "technology": "UI5",
+        "icons": {
+            "icon": "",
+            "favIcon": "",
+            "phone": "",
+            "phone@2": "",
+            "tablet": "",
+            "tablet@2": ""
+        },
+        "deviceTypes": {
+            "desktop": true,
+            "tablet": true,
+            "phone": true
+        }
+    },
+    "sap.ui5": {
+        "flexEnabled": false,
+        "dependencies": {
+            "minUI5Version": "1.142.0",
+            "libs": {
+                "sap.m": {},
+                "sap.ui.core": {},
+                "sap.f": {},
+                "sap.ui.layout": {}
+            }
+        },
+        "contentDensities": {
+            "compact": true,
+            "cozy": true
+        },
+        "models": {
+            "i18n": {
+                "type": "sap.ui.model.resource.ResourceModel",
+                "settings": {
+                    "bundleName": "avvaleplm.marsplm.sap2plex.adminconfigplant.i18n.i18n",
+                    "supportedLocales": [
+                        "",
+                        "it"
+                    ],
+                    "fallbackLocale": ""
+                }
+            },
+            "fieldMap": {
+                "type": "sap.ui.model.json.JSONModel",
+                "uri": "model/fieldMappings.json"
+            },
+            "catalog": {
+                "dataSource": "catalogService",
+                "type": "sap.ui.model.odata.v4.ODataModel",
+                "settings": {
+                    "synchronizationMode": "None",
+                    "operationMode": "Server",
+                    "groupId": "$auto",
+                    "updateGroupId": "plantChanges",
+                    "autoExpandSelect": true,
+                    "groupProperties": {
+                        "plantChanges": {
+                            "submit": "API"
+                        },
+                        "autoAssignChanges": {
+                            "submit": "API"
+                        },
+                        "recvOpChanges": {
+                            "submit": "API"
+                        },
+                        "plexPartCodeChanges": {
+                            "submit": "API"
+                        },
+                        "notifyMatSyncChanges": {
+                            "submit": "API"
+                        },
+                        "notifyRoutingSyncChanges": {
+                            "submit": "API"
+                        },
+                        "notifyProdOrderChanges": {
+                            "submit": "API"
+                        },
+                        "notifyProdConfChanges": {
+                            "submit": "API"
+                        },
+                        "notifyProdTecoChanges": {
+                            "submit": "API"
+                        },
+                        "notifyOrderCompleteChanges": {
+                            "submit": "API"
+                        },
+                        "notifyOrderScheduledChanges": {
+                            "submit": "API"
+                        },
+                        "jobSortChanges": {
+                            "submit": "API"
+                        },
+                        "routingFilterChanges": {
+                            "submit": "API"
+                        },
+                        "prodOrderFilterChanges": {
+                            "submit": "API"
+                        },
+                        "prodOrderTecoChanges": {
+                            "submit": "API"
+                        },
+                        "prodOrderCompleteChanges": {
+                            "submit": "API"
+                        },
+                        "prodOrderScheduledChanges": {
+                            "submit": "API"
+                        },
+                        "phantomExplodeChanges": {
+                            "submit": "API"
+                        },
+                        "plexConnChanges": {
+                            "submit": "API"
+                        }
+                    }
+                }
+            },
+            "product": {
+                "dataSource": "productService",
+                "type": "sap.ui.model.odata.v4.ODataModel",
+                "settings": {
+                    "synchronizationMode": "None",
+                    "operationMode": "Server",
+                    "groupId": "$auto",
+                    "autoExpandSelect": true
+                }
+            },
+            "objgrp": {
+                "dataSource": "objGroupService",
+                "type": "sap.ui.model.odata.v4.ODataModel",
+                "settings": {
+                    "synchronizationMode": "None",
+                    "operationMode": "Server",
+                    "groupId": "$auto",
+                    "updateGroupId": "objGroupChanges",
+                    "autoExpandSelect": true,
+                    "groupProperties": {
+                        "objGroupChanges": {
+                            "submit": "API"
+                        }
+                    }
+                }
+            },
+            "fieldmap": {
+                "dataSource": "plexFieldMapService",
+                "type": "sap.ui.model.odata.v4.ODataModel",
+                "settings": {
+                    "synchronizationMode": "None",
+                    "operationMode": "Server",
+                    "groupId": "$auto",
+                    "updateGroupId": "fieldMapChanges",
+                    "autoExpandSelect": true,
+                    "groupProperties": {
+                        "fieldMapChanges": {
+                            "submit": "API"
+                        }
+                    }
+                }
+            },
+            "opfieldmap": {
+                "dataSource": "plexOpFieldMapService",
+                "type": "sap.ui.model.odata.v4.ODataModel",
+                "settings": {
+                    "synchronizationMode": "None",
+                    "operationMode": "Server",
+                    "groupId": "$auto",
+                    "updateGroupId": "opFieldMapChanges",
+                    "autoExpandSelect": true,
+                    "groupProperties": {
+                        "opFieldMapChanges": {
+                            "submit": "API"
+                        }
+                    }
+                }
+            },
+            "matcategory": {
+                "dataSource": "matCategoryService",
+                "type": "sap.ui.model.odata.v4.ODataModel",
+                "settings": {
+                    "synchronizationMode": "None",
+                    "operationMode": "Server",
+                    "groupId": "$auto",
+                    "updateGroupId": "matCategoryChanges",
+                    "autoExpandSelect": true,
+                    "groupProperties": {
+                        "matCategoryChanges": {
+                            "submit": "API"
+                        }
+                    }
+                }
+            },
+            "compexcl": {
+                "dataSource": "orderCompExclService",
+                "type": "sap.ui.model.odata.v4.ODataModel",
+                "settings": {
+                    "synchronizationMode": "None",
+                    "operationMode": "Server",
+                    "groupId": "$auto",
+                    "updateGroupId": "compExclChanges",
+                    "autoExpandSelect": true,
+                    "groupProperties": {
+                        "compExclChanges": {
+                            "submit": "API"
+                        }
+                    }
+                }
+            }
+        },
+        "resources": {
+            "css": [
+                {
+                    "uri": "css/style.css"
+                }
+            ]
+        },
+        "routing": {
+            "config": {
+                "routerClass": "sap.m.routing.Router",
+                "controlAggregation": "pages",
+                "controlId": "app",
+                "transition": "slide",
+                "type": "View",
+                "viewType": "XML",
+                "path": "avvaleplm.marsplm.sap2plex.adminconfigplant.view",
+                "async": true
+            },
+            "routes": [
+                {
+                    "name": "plantDashboard",
+                    "pattern": "",
+                    "target": [
+                        "plantDashboard"
+                    ]
+                },
+                {
+                    "name": "plantConfig",
+                    "pattern": "plantConfig/{plantCode}",
+                    "target": [
+                        "plantConfig"
+                    ]
+                }
+            ],
+            "targets": {
+                "plantDashboard": {
+                    "id": "plantDashboard",
+                    "name": "PlantDashboard"
+                },
+                "plantConfig": {
+                    "id": "plantConfig",
+                    "name": "PlantConfig"
+                }
+            }
+        },
+        "rootView": {
+            "viewName": "avvaleplm.marsplm.sap2plex.adminconfigplant.view.App",
+            "type": "XML",
+            "id": "App",
+            "async": true
+        },
+        "flexBundle": false
+    },
+    "sap.cloud": {
+        "public": true,
+        "service": "marsplm.service"
+    }
+}

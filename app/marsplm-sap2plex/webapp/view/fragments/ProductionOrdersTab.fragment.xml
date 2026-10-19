@@ -1,0 +1,218 @@
+<core:FragmentDefinition
+    xmlns="sap.m"
+    xmlns:core="sap.ui.core">
+
+    <!--
+        [IS-FULL-KEY] Le due chiavi interne dei figli dell'ordine — l'AUFPL
+        (OrderInternalBillOfOperations) e la prenotazione, che l'iFlow veicola in
+        MasterProductionOrder — non si mostrano in nessuna colonna ma la riga cliccata le porta
+        al dettaglio, dove diventano le chiavi delle letture di operazioni e componenti (DEC-42).
+        Il `$select` esplicito che stava qui NON SERVE PIU' e non e' stato dimenticato: dalla
+        [LIST-WHOLE-SET] la lettura la fa `_loadTab` su un modello con `autoExpandSelect: false`,
+        quindi la richiesta non porta `$select` e la risposta arriva con TUTTI i campi. Chi
+        rimettesse `autoExpandSelect: true` deve rimettere anche l'elenco, o quelle due chiavi
+        spariscono e il dettaglio non legge piu' niente.
+
+        [ORDER-STATUS-FILTER] `noDataText` non e' il testo generico «nessun dato»: dalla feature
+        0017 il perimetro degli ordini e' fail-closed, quindi una lista vuota puo' voler dire
+        «questo plant non ha un perimetro configurato e non viene letto». Il testo e' composto in
+        DashboardNavigation.controller.js a partire da prodOrderScope(): una lista vuota che
+        l'utente legge come «non ci sono ordini» sarebbe la risposta sbagliata.
+
+        [LIST-WHOLE-SET] `prodOrderModel` e' ora un JSONModel con l'insieme intero in `/rows`; il
+        modello OData vive sul controller (`_oProdOrderSrv`) e serve solo alla lettura.
+    -->
+    <MessageStrip
+        class="sapUiSmallMarginBeginEnd sapUiTinyMarginTop"
+        visible="{prodOrderModel>/note/visible}"
+        text="{prodOrderModel>/note/text}"
+        type="{prodOrderModel>/note/type}"
+        showIcon="true"/>
+
+    <Table
+        id="productionOrdersTable"
+        inset="false"
+        growing="true"
+        growingThreshold="100"
+        growingScrollToLoad="true"
+        noDataText="{prodOrderScope>/noDataText}"
+        items="{prodOrderModel>/rows}">
+
+        <headerToolbar>
+            <OverflowToolbar>
+                <ToolbarSpacer/>
+                <Button
+                    icon="sap-icon://refresh"
+                    press=".onRefreshProdOrders"
+                    tooltip="{i18n>refresh}"/>
+            </OverflowToolbar>
+        </headerToolbar>
+
+        <!-- [COLUMN-SORT] I criteri attivi si dichiarano. -->
+        <infoToolbar>
+            <OverflowToolbar visible="{prodOrderModel>/criteria/visible}">
+                <Text text="{prodOrderModel>/criteria/text}"/>
+                <ToolbarSpacer/>
+                <Button
+                    text="{i18n>colMenuClearAll}"
+                    type="Transparent"
+                    icon="sap-icon://clear-filter"
+                    press=".onClearProdOrderCriteria"/>
+            </OverflowToolbar>
+        </infoToolbar>
+
+        <columns>
+            <Column width="7em">
+                <Text text="{i18n>manufacturingOrder}"/>
+                <customData>
+                    <core:CustomData key="field" value="ManufacturingOrder"/>
+                    <core:CustomData key="type" value="string"/>
+                </customData>
+            </Column>
+            <!-- [COLUMN-SORT] Colonna nascosta: nessuna `CustomData`, quindi nessun menu. Una
+                 colonna invisibile con un criterio attivo sarebbe un filtro che l'utente non puo'
+                 vedere ne' togliere. -->
+            <Column minScreenWidth="Tablet" demandPopin="true" visible="false">
+                <Text text="{i18n>orderDescription}"/>
+            </Column>
+            <Column minScreenWidth="Tablet" demandPopin="true" width="4em">
+                <Text text="{i18n>orderType}"/>
+                <customData>
+                    <core:CustomData key="field" value="ManufacturingOrderType"/>
+                    <core:CustomData key="type" value="string"/>
+                </customData>
+            </Column>
+            <Column minScreenWidth="Tablet" demandPopin="true" width="6em">
+                <Text text="{i18n>material}"/>
+                <customData>
+                    <core:CustomData key="field" value="Material"/>
+                    <core:CustomData key="type" value="string"/>
+                </customData>
+            </Column>
+            <Column minScreenWidth="Tablet" demandPopin="true" width="4em">
+                <Text text="{i18n>productionPlant}"/>
+                <customData>
+                    <core:CustomData key="field" value="ProductionPlant"/>
+                    <core:CustomData key="type" value="string"/>
+                </customData>
+            </Column>
+            <!-- [COLUMN-SORT] `type="number"`: i decimali OData arrivano come stringa, e come
+                 testo `'100'` verrebbe prima di `'99'`. -->
+            <!-- [LAST-LOG-WORST-DAY] 6em -> 5em: `2.000,000` allineato a destra sono nove
+                 caratteri, e l'intestazione va a capo comunque. Le quattro colonne strette di 1em
+                 (questa, Resa Confermata e le due date) sono lo spazio per il messaggio di
+                 storico. -->
+            <Column minScreenWidth="Desktop" demandPopin="true" hAlign="End" width="5em">
+                <Text text="{i18n>totalQuantity}"/>
+                <customData>
+                    <core:CustomData key="field" value="TotalQuantity"/>
+                    <core:CustomData key="type" value="number"/>
+                </customData>
+            </Column>
+            <Column minScreenWidth="Desktop" demandPopin="true" width="3em">
+                <Text text="{i18n>productionUnit}"/>
+                <customData>
+                    <core:CustomData key="field" value="ProductionUnit"/>
+                    <core:CustomData key="type" value="string"/>
+                </customData>
+            </Column>
+            <Column minScreenWidth="Desktop" demandPopin="true" hAlign="End" width="5em">
+                <Text text="{i18n>confirmedYield}"/>
+                <customData>
+                    <core:CustomData key="field" value="MfgOrderConfirmedYieldQty"/>
+                    <core:CustomData key="type" value="number"/>
+                </customData>
+            </Column>
+            <Column minScreenWidth="Desktop" demandPopin="true" width="6em">
+                <Text text="{i18n>plannedStartDate}"/>
+                <customData>
+                    <core:CustomData key="field" value="MfgOrderPlannedStartDate"/>
+                    <core:CustomData key="type" value="date"/>
+                </customData>
+            </Column>
+            <Column minScreenWidth="Desktop" demandPopin="true" width="6em">
+                <Text text="{i18n>plannedEndDate}"/>
+                <customData>
+                    <core:CustomData key="field" value="MfgOrderPlannedEndDate"/>
+                    <core:CustomData key="type" value="date"/>
+                </customData>
+            </Column>
+            <!-- [COLUMN-SORT] Come lo stato d'invio dei materiali: si ordina sul valore grezzo di
+                 `OrderIsReleased`, non sull'etichetta del formatter. -->
+            <Column minScreenWidth="Desktop" demandPopin="true" hAlign="Center" width="5em">
+                <Text text="{i18n>orderStatus}"/>
+                <customData>
+                    <core:CustomData key="field" value="OrderIsReleased"/>
+                    <core:CustomData key="type" value="string"/>
+                </customData>
+            </Column>
+            <!-- ============================================================
+                 [LAST-LOG-WORST-DAY] Lo storico dell'ordine, in due colonne (feature 0049).
+                 Prendono il posto di Supervisore e Ordine di Vendita, che in lista nessuno
+                 guardava: i due campi restano nella banda del dettaglio, e le loro chiavi i18n
+                 (`productionSupervisor`, `salesOrder`) NON si toccano — le usa
+                 ProdOrderDetail.view.xml.
+                 Le due colonne sono le stesse di Materiali e Cicli, con le stesse chiavi i18n e
+                 gli stessi tre formatter: quello che cambia e' cosa il server ci mette dentro —
+                 la riga PEGGIORE del GIORNO PIU' RECENTE dello storico, non l'ultima scritta.
+                 [COLUMN-SORT] Lo stato si ordina e si filtra sul valore GREZZO (`S`/`W`/`E`), non
+                 sull'etichetta tradotta che la cella mostra: l'etichetta e' un formatter e non
+                 esiste nel modello. Chi cerca gli errori digita `E`.
+                 ============================================================ -->
+            <Column minScreenWidth="Desktop" demandPopin="true" hAlign="Center" width="7em">
+                <Text text="{i18n>colSendStatus}"/>
+                <customData>
+                    <core:CustomData key="field" value="LastSendStatus"/>
+                    <core:CustomData key="type" value="string"/>
+                </customData>
+            </Column>
+            <Column minScreenWidth="Desktop" demandPopin="true" width="14em">
+                <Text text="{i18n>colSendMessage}"/>
+                <customData>
+                    <core:CustomData key="field" value="LastSendMessage"/>
+                    <core:CustomData key="type" value="string"/>
+                </customData>
+            </Column>
+        </columns>
+
+        <items>
+            <ColumnListItem type="Navigation" press=".onProdOrderItemPress">
+                <cells>
+                    <ObjectIdentifier
+                        title="{prodOrderModel>ManufacturingOrder}"/>
+                    <Text text="{prodOrderModel>OrderLongText}"/>
+                    <Text text="{prodOrderModel>ManufacturingOrderType}"/>
+                    <Text text="{prodOrderModel>Material}"/>
+                    <Text text="{prodOrderModel>ProductionPlant}"/>
+                    <ObjectNumber
+                        number="{
+                            path: 'prodOrderModel>TotalQuantity',
+                            type: 'sap.ui.model.type.Float',
+                            formatOptions: { decimals: 3 }
+                        }"/>
+                    <Text text="{prodOrderModel>ProductionUnit}"/>
+                    <ObjectNumber
+                        number="{
+                            path: 'prodOrderModel>MfgOrderConfirmedYieldQty',
+                            type: 'sap.ui.model.type.Float',
+                            formatOptions: { decimals: 3 }
+                        }"/>
+                    <Text text="{prodOrderModel>MfgOrderPlannedStartDate}"/>
+                    <Text text="{prodOrderModel>MfgOrderPlannedEndDate}"/>
+                    <ObjectStatus
+                        text="{path: 'prodOrderModel>OrderIsReleased', formatter: '.formatProdOrderStatus'}"
+                        state="{path: 'prodOrderModel>OrderIsReleased', formatter: '.formatProdOrderState'}"/>
+                    <!-- [LAST-LOG-WORST-DAY] Celle di storico, allineate per posizione alle due
+                         colonne aggiunte sopra. -->
+                    <ObjectStatus
+                        text="{path: 'prodOrderModel>LastSendStatus', formatter: '.formatStatusText'}"
+                        state="{path: 'prodOrderModel>LastSendStatus', formatter: '.formatStatusState'}"
+                        icon="{path: 'prodOrderModel>LastSendStatus', formatter: '.formatStatusIcon'}"/>
+                    <Text text="{prodOrderModel>LastSendMessage}" maxLines="2" wrapping="true"/>
+                </cells>
+            </ColumnListItem>
+        </items>
+
+    </Table>
+
+</core:FragmentDefinition>

@@ -1,0 +1,169 @@
+<mvc:View controllerName="avvaleplm.marsplm.sap2plex.main.controller.RoutingTemplateDetail"
+    xmlns:mvc="sap.ui.core.mvc"
+    xmlns:core="sap.ui.core"
+    xmlns="sap.m"
+    xmlns:f="sap.f"
+    xmlns:form="sap.ui.layout.form"
+    xmlns:dnd="sap.ui.core.dnd">
+
+    <f:DynamicPage busy="{detailModel>/busy}">
+        <!-- HEADER -->
+        <f:title>
+            <f:DynamicPageTitle>
+                <f:heading>
+                    <Title text="{i18n>templateDetailTitle}" class="sapUiSmallMarginEnd"/>
+                </f:heading>
+                <f:actions>
+                    <Button
+                        text="{i18n>btnBack}"
+                        press="onBack"
+                        icon="sap-icon://nav-back"/>
+                </f:actions>
+                <f:breadcrumbs>
+                    <Breadcrumbs>
+                        <Link text="{i18n>backToRoutings}" press="onBack"/>
+                    </Breadcrumbs>
+                </f:breadcrumbs>
+            </f:DynamicPageTitle>
+        </f:title>
+
+        <!-- TEMPLATE HEADER (editable: code + description) -->
+        <f:header>
+            <f:DynamicPageHeader pinnable="true">
+                <f:content>
+                    <form:SimpleForm editable="true" layout="ResponsiveGridLayout"
+                        labelSpanL="3" labelSpanM="3" labelSpanS="12">
+                        <form:content>
+                            <Label text="{i18n>plant}"/>
+                            <Text text="{detailModel>/Plant}"/>
+                            <Label text="{i18n>templateCode}" required="true"/>
+                            <Input
+                                value="{detailModel>/TemplateCode}"
+                                maxLength="20"
+                                liveChange="onHeaderChange"
+                                width="14rem"/>
+                            <Label text="{i18n>templateDescription}"/>
+                            <Input
+                                value="{detailModel>/Description}"
+                                maxLength="255"
+                                liveChange="onHeaderChange"
+                                width="28rem"/>
+                        </form:content>
+                    </form:SimpleForm>
+                </f:content>
+            </f:DynamicPageHeader>
+        </f:header>
+
+        <!-- CONTENT: Template tree -->
+        <f:content>
+            <VBox class="sapUiSmallMargin" width="100%">
+                <Title text="{i18n>templateTreeTitle}" level="H2" class="sapUiSmallMarginBottom"/>
+
+                <!-- Toolbar -->
+                <OverflowToolbar class="sapUiSmallMarginBottom">
+                    <Button
+                        id="btnAddOperations"
+                        text="{i18n>btnAddOperations}"
+                        icon="sap-icon://add"
+                        press="onAddPlexOperations"
+                        type="Emphasized"/>
+                    <!-- priority="NeverOverflow": il pulsante di salvataggio non entra MAI nel menu
+                         «...». OverflowToolbar riempie quel menu partendo DAL FONDO, e finche'
+                         «Salva Template» era l'ultimo elemento ci finiva per primo: l'utente
+                         costruiva l'albero e usciva senza salvare, senza nessun segnale. Lo scambio
+                         di posizione con «Copia da Template» lo allontana dal bordo, questa riga lo
+                         blinda a qualunque larghezza della finestra. -->
+                    <Button
+                        id="btnSaveTemplate"
+                        text="{i18n>btnSaveTemplate}"
+                        icon="sap-icon://save"
+                        press="onSaveTemplate"
+                        type="Accept"
+                        enabled="{plexCycleModel>/dirty}">
+                        <layoutData>
+                            <OverflowToolbarLayoutData priority="NeverOverflow"/>
+                        </layoutData>
+                    </Button>
+                    <Button
+                        id="btnRemoveOperation"
+                        text="{i18n>btnRemoveOperation}"
+                        icon="sap-icon://delete"
+                        press="onRemovePlexOperation"
+                        enabled="{plexCycleModel>/removeEnabled}"/>
+                    <ToolbarSpacer/>
+                    <Button
+                        id="btnMoveUp"
+                        icon="sap-icon://navigation-up-arrow"
+                        tooltip="{i18n>btnMoveUp}"
+                        press="onMoveOperationUp"
+                        enabled="{plexCycleModel>/moveUpEnabled}"/>
+                    <Button
+                        id="btnMoveDown"
+                        icon="sap-icon://navigation-down-arrow"
+                        tooltip="{i18n>btnMoveDown}"
+                        press="onMoveOperationDown"
+                        enabled="{plexCycleModel>/moveDownEnabled}"/>
+                    <ToolbarSeparator/>
+                    <Button
+                        id="btnCopyFromTemplate"
+                        text="{i18n>btnCopyFromTemplate}"
+                        icon="sap-icon://copy"
+                        press="onCopyFromTemplate"/>
+                </OverflowToolbar>
+
+                <!-- Template Tree -->
+                <VBox class="treePanel plexTreePanel">
+                    <Tree
+                        id="templateTree"
+                        items="{path: 'plexCycleModel>/nodes', templateShareable: false}"
+                        mode="SingleSelectMaster"
+                        selectionChange="onPlexTreeSelectionChange"
+                        toggleOpenState="onPlexTreeToggle">
+                        <dragDropConfig>
+                            <dnd:DragInfo sourceAggregation="items"/>
+                            <dnd:DropInfo
+                                targetAggregation="items"
+                                dropPosition="OnOrBetween"
+                                dropLayout="Vertical"
+                                drop="onPlexTreeDrop"/>
+                        </dragDropConfig>
+
+                        <CustomTreeItem class="{plexCycleModel>cssClass}">
+                            <HBox alignItems="Center" class="treeNodeContent">
+                                <core:Icon
+                                    src="{plexCycleModel>icon}"
+                                    class="{plexCycleModel>iconClass}"
+                                    color="{plexCycleModel>iconColor}"/>
+                                <VBox class="sapUiSmallMarginBegin" width="100%">
+                                    <Text text="{plexCycleModel>text}" class="treeNodeTitle"/>
+                                    <Text text="{plexCycleModel>description}" class="treeNodeDesc"/>
+                                </VBox>
+                                <core:Icon
+                                    src="sap-icon://factory"
+                                    class="linkIcon"
+                                    visible="{= ${plexCycleModel>nodeType} === 'plexOperation'}"
+                                    color="{= ${plexCycleModel>hasWorkcenters} ? '#0854A0' : '#CCCCCC'}"
+                                    tooltip="{i18n>manageWorkcenters}"
+                                    press="onManageWorkcenters"/>
+                                <!-- [TEMPLATE-GROUP] I gruppi oggetti dell'operazione. Stessa forma
+                                     dell'icona accanto: `visible` sul nodeType, perche' il nodo
+                                     radice non e' un'operazione, e il colore come SEMAFORO — blu
+                                     se l'operazione ne ha, grigio se non ne ha. Senza il semaforo
+                                     bisognerebbe aprire ogni popover per sapere dove si e'
+                                     arrivati. Il flag lo calcola `_rebuildPlexCycleTree`. -->
+                                <core:Icon
+                                    src="sap-icon://group"
+                                    class="linkIcon"
+                                    visible="{= ${plexCycleModel>nodeType} === 'plexOperation'}"
+                                    color="{= ${plexCycleModel>hasObjectGroups} ? '#0854A0' : '#CCCCCC'}"
+                                    tooltip="{i18n>manageObjectGroups}"
+                                    press="onManageObjectGroups"/>
+                            </HBox>
+                        </CustomTreeItem>
+                    </Tree>
+                </VBox>
+            </VBox>
+        </f:content>
+
+    </f:DynamicPage>
+</mvc:View>

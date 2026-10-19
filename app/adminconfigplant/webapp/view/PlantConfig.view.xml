@@ -1,0 +1,219 @@
+<mvc:View
+    controllerName="avvaleplm.marsplm.sap2plex.adminconfigplant.controller.PlantConfig"
+    xmlns:mvc="sap.ui.core.mvc"
+    xmlns="sap.m"
+    xmlns:core="sap.ui.core">
+
+    <Page
+        id="plantConfigPage"
+        title="{
+            parts: ['i18n>plantConfigTitle', 'catalog>PlantCode', 'catalog>PlantName'],
+            formatter: '.formatPageTitle'
+        }"
+        showNavButton="true"
+        navButtonPress=".onNavBack">
+
+        <headerContent>
+            <ObjectStatus
+                text="{
+                    path: 'catalog>Status',
+                    formatter: '.formatStatusText'
+                }"
+                state="{
+                    path: 'catalog>Status',
+                    formatter: '.formatStatusState'
+                }"
+                icon="{
+                    path: 'catalog>Status',
+                    formatter: '.formatStatusIcon'
+                }"/>
+        </headerContent>
+
+        <content>
+            <IconTabBar
+                id="configTabBar"
+                stretchContentHeight="true"
+                headerMode="Inline"
+                class="sapUiNoContentPadding">
+
+                <items>
+                    <IconTabFilter
+                        text="{i18n>tabGlobalParams}"
+                        icon="sap-icon://settings"
+                        key="globalParams"
+                        visible="{= !!${session>/isFullAdmin} }">
+                        <content>
+                            <core:Fragment fragmentName="avvaleplm.marsplm.sap2plex.adminconfigplant.view.fragment.GlobalParamsTab" type="XML"/>
+                        </content>
+                    </IconTabFilter>
+
+                    <!-- [W1-23] Qui stava la scheda «Materiali»: sei controlli sul modello JSON
+                         'plants', handler onConfigChange che mostrava «Configuration updated» e non
+                         salvava niente, con i valori presi dai cinque plant tedeschi inventati. E'
+                         stata rimossa, non implementata: il perimetro vero dei materiali e' gia'
+                         customizing REALE nella scheda «Categorie Materiali» (ZMatCategory), e la
+                         chiave dei materiali non e' configurabile. -->
+
+                    <IconTabFilter
+                        text="{i18n>tabMatCategories}"
+                        icon="sap-icon://filter"
+                        key="matCategories"
+                        visible="{= !!${session>/isFullAdmin} }">
+                        <content>
+                            <core:Fragment fragmentName="avvaleplm.marsplm.sap2plex.adminconfigplant.view.fragment.MaterialCategoriesTab" type="XML"/>
+                        </content>
+                    </IconTabFilter>
+
+                    <!-- [W1-03] Operazione di ricevimento per unita' di misura (BBP §7.3.4).
+                         Sta subito dopo «Categorie Materiali» perche' e' la sua continuazione: la'
+                         si decide la CLASSE di un materiale, qui con quale operazione Plex lo si
+                         riceve quando quella classe lo prevede. ADMIN-only come tutte le schede
+                         che governano cio' che finisce su Plex. -->
+                    <IconTabFilter
+                        text="{i18n>tabRecvOp}"
+                        icon="sap-icon://inbox"
+                        key="recvOp"
+                        visible="{= !!${session>/isFullAdmin} }">
+                        <content>
+                            <core:Fragment fragmentName="avvaleplm.marsplm.sap2plex.adminconfigplant.view.fragment.RecvOpTab" type="XML"/>
+                        </content>
+                    </IconTabFilter>
+
+                    <!-- [PLEX-PART-CODES] Codici del tenant Plex (feature 0022). Chiude la
+                         sequenza «Categorie Materiali» -> «Operazioni di ricevimento»: la' si
+                         decide la CLASSE di un materiale e come lo si riceve, qui con quale
+                         CODICE quella tipologia viene identificata sul tenant Plex del plant.
+                         E' l'unica scheda in cui una chiave numerica di Plex si vede e si
+                         digita. ADMIN-only come tutte le schede che governano cio' che finisce
+                         su Plex. -->
+                    <IconTabFilter
+                        text="{i18n>tabPlexPartCodes}"
+                        icon="sap-icon://number-sign"
+                        key="plexPartCodes"
+                        visible="{= !!${session>/isFullAdmin} }">
+                        <content>
+                            <core:Fragment fragmentName="avvaleplm.marsplm.sap2plex.adminconfigplant.view.fragment.PlexPartCodesTab" type="XML"/>
+                        </content>
+                    </IconTabFilter>
+
+                    <!-- [PHANTOM-EXPLODE] ADMIN-only da quando questa scheda porta i parametri
+                         del motore di esplosione (feature 0019): finche' era mock non decideva
+                         nulla, ora governa cio' che finisce su Plex, come "Routings" e
+                         "Ordini di produzione". -->
+                    <IconTabFilter
+                        text="{i18n>tabBOM}"
+                        icon="sap-icon://tree"
+                        key="bom"
+                        visible="{= !!${session>/isFullAdmin} }">
+                        <content>
+                            <core:Fragment fragmentName="avvaleplm.marsplm.sap2plex.adminconfigplant.view.fragment.BOMTab" type="XML"/>
+                        </content>
+                    </IconTabFilter>
+
+                    <IconTabFilter
+                        text="{i18n>tabRoutings}"
+                        icon="sap-icon://workflow-tasks"
+                        key="routings"
+                        visible="{= !!${session>/isFullAdmin} }">
+                        <content>
+                            <core:Fragment fragmentName="avvaleplm.marsplm.sap2plex.adminconfigplant.view.fragment.RoutingsTab" type="XML"/>
+                        </content>
+                    </IconTabFilter>
+
+                    <IconTabFilter
+                        text="{i18n>tabProdOrders}"
+                        icon="sap-icon://factory"
+                        key="prodOrders"
+                        visible="{= !!${session>/isFullAdmin} }">
+                        <content>
+                            <core:Fragment fragmentName="avvaleplm.marsplm.sap2plex.adminconfigplant.view.fragment.ProdOrdersTab" type="XML"/>
+                        </content>
+                    </IconTabFilter>
+
+                    <!-- [W1-23] Prospetto di sola lettura delle corrispondenze SAP -> Plex: binding
+                         assoluto su model/fieldMappings.json, quindi lo stesso per OGNI plant, e
+                         nessun controllo editabile. Non e' ADMIN-only, ed e' il tab su cui atterra
+                         un utente 'admin-config' (PlantConfig.controller.js), che non vede
+                         «Parametri globali». La mappatura APPLICATA, per plant e su OData, e' nelle
+                         schede «Mappatura Part Plex» (ZPlexFieldMap) e «Mappatura Operazioni Plex»
+                         (ZPlexOpFieldMap). -->
+                    <IconTabFilter
+                        text="{i18n>tabFieldMapping}"
+                        icon="sap-icon://map"
+                        key="fieldMapping">
+                        <content>
+                            <core:Fragment fragmentName="avvaleplm.marsplm.sap2plex.adminconfigplant.view.fragment.FieldMappingTab" type="XML"/>
+                        </content>
+                    </IconTabFilter>
+
+                    <IconTabFilter
+                        text="{i18n>tabGroups}"
+                        icon="sap-icon://group"
+                        key="groups">
+                        <content>
+                            <core:Fragment fragmentName="avvaleplm.marsplm.sap2plex.adminconfigplant.view.fragment.GroupsTab" type="XML"/>
+                        </content>
+                    </IconTabFilter>
+
+                    <IconTabFilter
+                        text="{i18n>tabAutoAssign}"
+                        icon="sap-icon://chain-link"
+                        key="autoAssign">
+                        <content>
+                            <core:Fragment fragmentName="avvaleplm.marsplm.sap2plex.adminconfigplant.view.fragment.AutoAssignTab" type="XML"/>
+                        </content>
+                    </IconTabFilter>
+
+                    <IconTabFilter
+                        text="{i18n>tabPlexPartMapping}"
+                        icon="sap-icon://synchronize"
+                        key="plexPartMap">
+                        <content>
+                            <core:Fragment fragmentName="avvaleplm.marsplm.sap2plex.adminconfigplant.view.fragment.PlexPartMappingTab" type="XML"/>
+                        </content>
+                    </IconTabFilter>
+
+                    <IconTabFilter
+                        text="{i18n>tabPlexOpMapping}"
+                        icon="sap-icon://process"
+                        key="plexOpMap"
+                        visible="{= !!${session>/isFullAdmin} }">
+                        <content>
+                            <core:Fragment fragmentName="avvaleplm.marsplm.sap2plex.adminconfigplant.view.fragment.PlexOpMappingTab" type="XML"/>
+                        </content>
+                    </IconTabFilter>
+
+                    <!-- [CONF-POSTING] Feature 0028: cosa diventano in SAP le registrazioni che
+                         tornano da Plex. E' l'unica scheda del progetto in cui una scelta sbagliata
+                         SCARICA MERCE in SAP, e per questo e' ADMIN-only come le altre schede che
+                         governano una scrittura. -->
+                    <IconTabFilter
+                        text="{i18n>tabConfPosting}"
+                        icon="sap-icon://receipt"
+                        key="confPosting"
+                        visible="{= !!${session>/isFullAdmin} }">
+                        <content>
+                            <core:Fragment fragmentName="avvaleplm.marsplm.sap2plex.adminconfigplant.view.fragment.ConfPostingTab" type="XML"/>
+                        </content>
+                    </IconTabFilter>
+
+                    <!-- Destinatari del recap mail di fine job, una sezione per job.
+                         ${session>/isFullAdmin} con ${} semplice e' corretto: session e' un
+                         JSONModel. Il %{...} serve solo per le proprieta' OData V4. -->
+                    <IconTabFilter
+                        text="{i18n>tabJobNotify}"
+                        icon="sap-icon://email"
+                        key="jobNotify"
+                        visible="{= !!${session>/isFullAdmin} }">
+                        <content>
+                            <core:Fragment fragmentName="avvaleplm.marsplm.sap2plex.adminconfigplant.view.fragment.JobNotifyTab" type="XML"/>
+                        </content>
+                    </IconTabFilter>
+                </items>
+
+            </IconTabBar>
+        </content>
+
+    </Page>
+
+</mvc:View>

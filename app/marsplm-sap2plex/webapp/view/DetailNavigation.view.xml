@@ -1,0 +1,249 @@
+<mvc:View controllerName="avvaleplm.marsplm.sap2plex.main.controller.DetailNavigation"
+    xmlns:mvc="sap.ui.core.mvc"
+    xmlns:core="sap.ui.core"
+    xmlns="sap.m"
+    xmlns:f="sap.f"
+    xmlns:form="sap.ui.layout.form"
+    xmlns:editor="sap.ui.codeeditor">
+
+    <f:DynamicPage busy="{detailModel>/busy}">
+        <!-- HEADER -->
+        <f:title>
+            <f:DynamicPageTitle>
+                <f:heading>
+                    <Title text="{parts: ['i18n>productDetailTitle', 'detailModel>/Product'], formatter: '.formatTitle'}"/>
+                </f:heading>
+                <f:actions>
+                    <Button
+                        text="{i18n>btnSendToPlex}"
+                        press="onSendToPlex"
+                        icon="sap-icon://upload"
+                        type="Accept"/>
+                    <Button
+                        text="{i18n>btnBack}"
+                        press="onBack"
+                        icon="sap-icon://nav-back"/>
+                </f:actions>
+                <f:breadcrumbs>
+                    <Breadcrumbs>
+                        <Link text="{i18n>backToDashboard}" press="onBack"/>
+                    </Breadcrumbs>
+                </f:breadcrumbs>
+            </f:DynamicPageTitle>
+        </f:title>
+
+        <!-- PRODUCT INFORMATION HEADER -->
+        <f:header>
+            <f:DynamicPageHeader pinnable="true">
+                <f:content>
+                    <FlexBox width="100%" justifyContent="SpaceBetween" wrap="Wrap">
+                        <items>
+                            <form:SimpleForm editable="false" layout="ResponsiveGridLayout"
+                                labelSpanL="5" labelSpanM="5" labelSpanS="12"
+                                class="sapUiSmallMarginEnd">
+                                <form:layoutData>
+                                    <FlexItemData growFactor="1" baseSize="30%"/>
+                                </form:layoutData>
+                                <form:content>
+                                    <Label text="{i18n>product}"/>
+                                    <Text text="{detailModel>/Product}"/>
+                                    <Label text="{i18n>plant}"/>
+                                    <Text text="{detailModel>/Plant}"/>
+                                    <Label text="{i18n>productDescription}"/>
+                                    <Text text="{detailModel>/ProductDescription}"/>
+                                    <Label text="{i18n>productType}"/>
+                                    <Text text="{detailModel>/ProductType}"/>
+                                </form:content>
+                            </form:SimpleForm>
+                            <form:SimpleForm editable="false" layout="ResponsiveGridLayout"
+                                labelSpanL="5" labelSpanM="5" labelSpanS="12"
+                                class="sapUiSmallMarginEnd">
+                                <form:layoutData>
+                                    <FlexItemData growFactor="1" baseSize="30%"/>
+                                </form:layoutData>
+                                <form:content>
+                                    <Label text="{i18n>status}"/>
+                                    <ObjectStatus
+                                        text="{detailModel>/CrossPlantStatus}"
+                                        state="{= ${detailModel>/IsMarkedForDeletion} ? 'Error' : 'Success' }"/>
+                                    <Label text="{i18n>productGroup}"/>
+                                    <Text text="{detailModel>/ProductGroup}"/>
+                                    <Label text="{i18n>productHierarchy}"/>
+                                    <Text text="{detailModel>/ProductHierarchy}"/>
+                                    <Label text="{i18n>division}"/>
+                                    <Text text="{detailModel>/Division}"/>
+                                </form:content>
+                            </form:SimpleForm>
+                            <form:SimpleForm editable="false" layout="ResponsiveGridLayout"
+                                labelSpanL="5" labelSpanM="5" labelSpanS="12">
+                                <form:layoutData>
+                                    <FlexItemData growFactor="1" baseSize="30%"/>
+                                </form:layoutData>
+                                <form:content>
+                                    <Label text="{i18n>baseUnit}"/>
+                                    <Text text="{detailModel>/BaseUnit}"/>
+                                    <Label text="{i18n>grossWeight}"/>
+                                    <ObjectNumber
+                                        number="{
+                                            path: 'detailModel>/GrossWeight',
+                                            type: 'sap.ui.model.type.Float',
+                                            formatOptions: { decimals: 3 }
+                                        }"
+                                        unit="{detailModel>/WeightUnit}"/>
+                                    <Label text="{i18n>netWeight}"/>
+                                    <ObjectNumber
+                                        number="{
+                                            path: 'detailModel>/NetWeight',
+                                            type: 'sap.ui.model.type.Float',
+                                            formatOptions: { decimals: 3 }
+                                        }"
+                                        unit="{detailModel>/WeightUnit}"/>
+                                    <Label text="{i18n>creationDate}"/>
+                                    <Text text="{detailModel>/CreationDate}"/>
+                                </form:content>
+                            </form:SimpleForm>
+                        </items>
+                    </FlexBox>
+                </f:content>
+            </f:DynamicPageHeader>
+        </f:header>
+
+        <!-- CONTENT -->
+        <f:content>
+            <VBox>
+            <!-- SEND HISTORY TABLE -->
+            <VBox class="sapUiSmallMargin">
+                <Title text="{i18n>sendHistoryTitle}" level="H2" class="sapUiSmallMarginBottom"/>
+                <!-- [DETAIL-RESET] Il velo e' di QUEST'AREA: la testata arriva subito dalla riga
+                     cliccata, lo storico no. Senza, la tabella mostrerebbe le righe del materiale
+                     precedente finche' non arriva la risposta. -->
+                <Table
+                    id="logHistoryTable"
+                    inset="false"
+                    busy="{logModel>/busy}"
+                    items="{logModel>/logs}"
+                    mode="SingleSelectMaster"
+                    selectionChange="onLogRowSelect">
+
+                    <columns>
+                        <Column>
+                            <Text text="{i18n>colCounter}"/>
+                        </Column>
+                        <Column>
+                            <Text text="{i18n>colSendDate}"/>
+                        </Column>
+                        <Column>
+                            <Text text="{i18n>colSendTime}"/>
+                        </Column>
+                        <Column hAlign="Center" width="8em">
+                            <Text text="{i18n>colStatus}"/>
+                        </Column>
+                        <Column>
+                            <Text text="{i18n>colMessage}"/>
+                        </Column>
+                    </columns>
+
+                    <items>
+                        <ColumnListItem>
+                            <cells>
+                                <ObjectNumber number="{logModel>Counter}"/>
+                                <Text text="{logModel>SentDate}"/>
+                                <Text text="{logModel>SentTime}"/>
+                                <ObjectStatus
+                                    text="{path: 'logModel>Status', formatter: '.formatStatusText'}"
+                                    state="{path: 'logModel>Status', formatter: '.formatStatusState'}"
+                                    icon="{path: 'logModel>Status', formatter: '.formatStatusIcon'}"/>
+                                <Text text="{logModel>Message}"/>
+                            </cells>
+                        </ColumnListItem>
+                    </items>
+
+                </Table>
+                <!-- [LOG-PAGE] La barra delle pagine: una sola per le tre schede. -->
+                <core:Fragment
+                    fragmentName="avvaleplm.marsplm.sap2plex.main.view.fragments.LogPager"
+                    type="XML"/>
+            </VBox>
+            </VBox>
+        </f:content>
+
+    </f:DynamicPage>
+
+    <!-- JSON Detail Panel (overlay) -->
+    <!-- [LOG-TRACE] Il velo e' del PANNELLO, non della pagina: la lista e' gia' a schermo, ed e'
+         da li' che si e' cliccato. -->
+    <VBox
+        visible="{jsonDetailModel>/visible}"
+        busy="{jsonDetailModel>/busy}"
+        class="jsonDetailPanelOverlay">
+
+        <!-- Panel Header with Close Button -->
+        <Toolbar class="sapUiSmallMarginBottom">
+            <Title text="{i18n>jsonDetailTitle}" level="H3"/>
+            <ToolbarSpacer/>
+            <Button
+                icon="sap-icon://decline"
+                press="onCloseJsonDetail"
+                tooltip="{i18n>closeJsonPanel}"/>
+        </Toolbar>
+
+        <!-- Log Metadata -->
+        <VBox class="sapUiSmallMarginBegin sapUiSmallMarginEnd">
+            <Label text="{i18n>selectedLogInfo}" design="Bold"/>
+            <Text text="{i18n>product}: {jsonDetailModel>/Product}"/>
+            <Text text="{i18n>counter}: {jsonDetailModel>/Counter}"/>
+            <Text text="{i18n>colSendDate}: {jsonDetailModel>/SentDate}"/>
+            <Text text="{i18n>colSendTime}: {jsonDetailModel>/SentTime}"/>
+        </VBox>
+
+        <!-- [LOG-TRACE] Una lettura caduta si DICHIARA, e i due riquadri spariscono: vuoti
+             direbbero «non e' stato mandato niente». -->
+        <MessageStrip
+            visible="{= !!${jsonDetailModel>/error} }"
+            text="{jsonDetailModel>/error}"
+            type="Warning"
+            showIcon="true"
+            class="sapUiSmallMarginTop sapUiSmallMarginBegin sapUiSmallMarginEnd sapUiSmallMarginBottom"/>
+
+        <!-- Request JSON Editor -->
+        <VBox
+            visible="{= !${jsonDetailModel>/error} }"
+            class="sapUiSmallMarginTop sapUiSmallMarginBegin sapUiSmallMarginEnd">
+            <Label text="{i18n>requestJsonLabel}" design="Bold"/>
+            <editor:CodeEditor
+                id="requestJsonEditor"
+                type="json"
+                height="250px"
+                value="{jsonDetailModel>/RequestJsonFormatted}"
+                editable="false"
+                lineNumbers="true"
+                syntaxHints="true"/>
+        </VBox>
+
+        <!-- Response JSON Editor -->
+        <VBox
+            visible="{= !${jsonDetailModel>/error} }"
+            class="sapUiSmallMarginTop sapUiSmallMarginBegin sapUiSmallMarginEnd sapUiSmallMarginBottom">
+            <Label text="{i18n>responseJsonLabel}" design="Bold"/>
+
+            <!-- HTTP Status Code Display -->
+            <ObjectStatus
+                visible="{= ${jsonDetailModel>/ResponseStatus} !== null }"
+                text="{jsonDetailModel>/ResponseStatusText}"
+                state="{path: 'jsonDetailModel>/ResponseStatus', formatter: '.formatHttpStatusState'}"
+                icon="{path: 'jsonDetailModel>/ResponseStatus', formatter: '.formatHttpStatusIcon'}"
+                class="sapUiSmallMarginTop sapUiSmallMarginBottom"/>
+
+            <editor:CodeEditor
+                id="responseJsonEditor"
+                type="json"
+                height="250px"
+                value="{jsonDetailModel>/ResponseJsonFormatted}"
+                editable="false"
+                lineNumbers="true"
+                syntaxHints="true"/>
+        </VBox>
+
+    </VBox>
+
+</mvc:View>

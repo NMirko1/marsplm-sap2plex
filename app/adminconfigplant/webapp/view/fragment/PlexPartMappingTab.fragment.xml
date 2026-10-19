@@ -1,0 +1,240 @@
+<core:FragmentDefinition
+    xmlns="sap.m"
+    xmlns:core="sap.ui.core"
+    xmlns:mp="avvaleplm.marsplm.sap2plex.adminconfigplant.control"
+    xmlns:form="sap.ui.layout.form">
+
+    <NavContainer id="plexMapNav" height="100%">
+
+        <!-- ============ PAGE 1: FIELD LIST ============ -->
+        <Page id="plexMapListPage" showHeader="false" class="sapUiContentPadding">
+            <VBox class="sapUiSmallMarginBottom sapUiSmallMarginTop">
+                <Text text="{i18n>pfmTabIntro}"/>
+            </VBox>
+
+            <!-- [LIST-COUNT] Il conteggio dichiarato: senza, «Mostra di piu'» compare anche quando non
+                 c'e' piu' niente e poi resta a girare. Solo sui binding ASSOLUTI. Vedi GroupsTab e DEC-102. -->
+            <Table
+                id="plexFieldMapTable"
+                items="{
+                    path: 'fieldmap>/ZPlexFieldMap',
+                    parameters: { '$$updateGroupId': 'fieldMapChanges', '$count': true }
+                }"
+                growing="true"
+                growingThreshold="50"
+                mode="MultiSelect">
+
+                <headerToolbar>
+                    <OverflowToolbar>
+                        <Title text="{i18n>pfmTableTitle}"/>
+                        <ToolbarSpacer/>
+                        <Button icon="sap-icon://add" text="{i18n>pfmBtnAdd}" type="Transparent" press=".onAddPlexFieldMap"/>
+                        <Button icon="sap-icon://delete" text="{i18n>pfmBtnDelete}" type="Transparent" press=".onDeletePlexFieldMap"/>
+                        <Button icon="sap-icon://save" text="{i18n>pfmBtnSave}" type="Emphasized" press=".onSavePlexFieldMap"/>
+                        <Button icon="sap-icon://sys-cancel" text="{i18n>pfmBtnCancel}" type="Transparent" press=".onCancelPlexFieldMap"/>
+                    </OverflowToolbar>
+                </headerToolbar>
+
+                <columns>
+                    <Column width="30%"><Text text="{i18n>pfmColPlexField}"/></Column>
+                    <Column width="25%"><Text text="{i18n>pfmColMappingKind}"/></Column>
+                    <Column><Text text="{i18n>pfmColSource}"/></Column>
+                </columns>
+
+                <items>
+                    <ColumnListItem type="Navigation" press=".onPlexFieldMapPress">
+                        <cells>
+                            <ObjectIdentifier title="{fieldmap>PlexField}"/>
+                            <Text text="{fieldmap>MappingKind}"/>
+                            <Text text="{parts: ['fieldmap>MappingKind','fieldmap>FixedValue','fieldmap>SapField'], formatter: '.formatMappingSummary'}"/>
+                        </cells>
+                    </ColumnListItem>
+                </items>
+            </Table>
+        </Page>
+
+        <!-- ============ PAGE 2: FIELD DETAIL ============ -->
+        <Page
+            id="plexMapDetailPage"
+            title="{fieldmap>PlexField}"
+            showNavButton="true"
+            navButtonPress=".onPlexFieldMapBack"
+            class="sapUiContentPadding">
+
+            <form:SimpleForm
+                editable="true"
+                layout="ResponsiveGridLayout"
+                title="{i18n>pfmDetailHeader}">
+                <form:content>
+                    <Label text="{i18n>pfmColPlant}"/>
+                    <Text text="{fieldmap>Plant}"/>
+
+                    <Label text="{i18n>pfmColPlexField}" required="true"/>
+                    <!-- number / name / description are always taken from SAP (MATNR/MAKTX)
+                         and are intentionally NOT offered here. -->
+                    <Select selectedKey="{fieldmap>PlexField}" forceSelection="false" width="100%">
+                        <core:Item key="revision" text="revision"/>
+                        <core:Item key="type" text="type"/>
+                        <core:Item key="group" text="group"/>
+                        <core:Item key="source" text="source"/>
+                        <core:Item key="productType" text="productType"/>
+                        <core:Item key="status" text="status"/>
+                        <core:Item key="note" text="note"/>
+                        <core:Item key="leadTimeDays" text="leadTimeDays"/>
+                        <core:Item key="buildingCode" text="buildingCode"/>
+                        <core:Item key="allergens" text="allergens"/>
+                        <core:Item key="storageConditions" text="storageConditions"/>
+                    </Select>
+
+                    <Label text="{i18n>pfmColMappingKind}" required="true"/>
+                    <Select selectedKey="{fieldmap>MappingKind}" width="100%">
+                        <core:Item key="FIXED" text="{i18n>pfmKindFixed}"/>
+                        <core:Item key="SAP_FIELD" text="{i18n>pfmKindSapField}"/>
+                        <core:Item key="RULE" text="{i18n>pfmKindRule}"/>
+                    </Select>
+
+                    <Label text="{i18n>pfmColFixedValue}" visible="{= %{fieldmap>MappingKind} === 'FIXED' }"/>
+                    <Input value="{fieldmap>FixedValue}" visible="{= %{fieldmap>MappingKind} === 'FIXED' }"/>
+
+                    <Label text="{i18n>pfmColSapField}" visible="{= %{fieldmap>MappingKind} === 'SAP_FIELD' }"/>
+                    <mp:SearchComboBox
+                        selectedKey="{fieldmap>SapField}"
+                        items="{fieldmap>/MatFieldVH}"
+                        placeholder="{i18n>pfmSapFieldPlaceholder}"
+                        visible="{= %{fieldmap>MappingKind} === 'SAP_FIELD' }"
+                        width="100%">
+                        <core:Item key="{fieldmap>FieldName}" text="{fieldmap>Label}"/>
+                    </mp:SearchComboBox>
+                </form:content>
+            </form:SimpleForm>
+
+            <!-- Rules (only for RULE kind) -->
+            <Table
+                id="plexMapRulesTable"
+                items="{
+                    path: 'fieldmap>Rules',
+                    parameters: { '$$updateGroupId': 'fieldMapChanges' },
+                    sorter: { path: 'Sequence' }
+                }"
+                growing="true"
+                growingThreshold="50"
+                mode="MultiSelect"
+                visible="{= %{fieldmap>MappingKind} === 'RULE' }"
+                class="sapUiSmallMarginTop">
+
+                <headerToolbar>
+                    <OverflowToolbar>
+                        <Title text="{i18n>pfmRulesTitle}"/>
+                        <ToolbarSpacer/>
+                        <Button icon="sap-icon://add" text="{i18n>pfmBtnAddRule}" type="Transparent" press=".onAddPlexMapRule"/>
+                        <Button icon="sap-icon://delete" text="{i18n>pfmBtnDeleteRule}" type="Transparent" press=".onDeletePlexMapRule"/>
+                    </OverflowToolbar>
+                </headerToolbar>
+
+                <columns>
+                    <Column width="20%"><Text text="{i18n>pfmColSequence}"/></Column>
+                    <Column><Text text="{i18n>pfmColOutputValue}"/></Column>
+                    <Column width="15%" hAlign="End"><Text text=""/></Column>
+                </columns>
+
+                <items>
+                    <ColumnListItem>
+                        <cells>
+                            <Input value="{fieldmap>Sequence}" type="Number"/>
+                            <Input value="{fieldmap>OutputValue}"/>
+                            <Button icon="sap-icon://navigation-right-arrow" text="{i18n>pfmBtnConditions}" type="Transparent" press=".onRulePress"/>
+                        </cells>
+                    </ColumnListItem>
+                </items>
+            </Table>
+
+            <footer>
+                <OverflowToolbar>
+                    <ToolbarSpacer/>
+                    <Button icon="sap-icon://save" text="{i18n>pfmBtnSave}" type="Emphasized" press=".onSavePlexFieldMap"/>
+                    <Button icon="sap-icon://sys-cancel" text="{i18n>pfmBtnCancel}" type="Transparent" press=".onCancelPlexFieldMap"/>
+                </OverflowToolbar>
+            </footer>
+        </Page>
+
+        <!-- ============ PAGE 3: RULE DETAIL (CONDITIONS) ============ -->
+        <Page
+            id="plexMapRulePage"
+            title="{i18n>pfmRuleDetailTitle}"
+            showNavButton="true"
+            navButtonPress=".onRuleDetailBack"
+            class="sapUiContentPadding">
+
+            <form:SimpleForm
+                editable="true"
+                layout="ResponsiveGridLayout"
+                title="{i18n>pfmRuleDetailHeader}">
+                <form:content>
+                    <Label text="{i18n>pfmColSequence}"/>
+                    <Input value="{fieldmap>Sequence}" type="Number"/>
+                    <Label text="{i18n>pfmColOutputValue}" required="true"/>
+                    <Input value="{fieldmap>OutputValue}"/>
+                </form:content>
+            </form:SimpleForm>
+
+            <Table
+                id="plexMapConditionsTable"
+                items="{
+                    path: 'fieldmap>Conditions',
+                    parameters: { '$$updateGroupId': 'fieldMapChanges' }
+                }"
+                growing="true"
+                growingThreshold="50"
+                mode="MultiSelect"
+                class="sapUiSmallMarginTop">
+
+                <headerToolbar>
+                    <OverflowToolbar>
+                        <Title text="{i18n>pfmConditionsTitle}"/>
+                        <ToolbarSpacer/>
+                        <Button icon="sap-icon://add" text="{i18n>pfmBtnAddCond}" type="Transparent" press=".onAddPlexMapCondition"/>
+                        <Button icon="sap-icon://delete" text="{i18n>pfmBtnDeleteCond}" type="Transparent" press=".onDeletePlexMapCondition"/>
+                    </OverflowToolbar>
+                </headerToolbar>
+
+                <columns>
+                    <Column width="35%"><Text text="{i18n>pfmColCondField}"/></Column>
+                    <Column width="25%"><Text text="{i18n>pfmColCondOperator}"/></Column>
+                    <Column><Text text="{i18n>pfmColCondValue}"/></Column>
+                </columns>
+
+                <items>
+                    <ColumnListItem>
+                        <cells>
+                            <mp:SearchComboBox
+                                selectedKey="{fieldmap>SapField}"
+                                items="{fieldmap>/MatFieldVH}"
+                                placeholder="{i18n>pfmSapFieldPlaceholder}"
+                                width="100%">
+                                <core:Item key="{fieldmap>FieldName}" text="{fieldmap>Label}"/>
+                            </mp:SearchComboBox>
+                            <Select selectedKey="{fieldmap>Operator}" width="100%">
+                                <core:Item key="EQ" text="{i18n>pfmOpEQ}"/>
+                                <core:Item key="NE" text="{i18n>pfmOpNE}"/>
+                                <core:Item key="IN" text="{i18n>pfmOpIN}"/>
+                                <core:Item key="BLANK" text="{i18n>pfmOpBLANK}"/>
+                                <core:Item key="NOTBLANK" text="{i18n>pfmOpNOTBLANK}"/>
+                            </Select>
+                            <Input value="{fieldmap>Value}" placeholder="{i18n>pfmCondValuePlaceholder}"/>
+                        </cells>
+                    </ColumnListItem>
+                </items>
+            </Table>
+
+            <footer>
+                <OverflowToolbar>
+                    <ToolbarSpacer/>
+                    <Button icon="sap-icon://save" text="{i18n>pfmBtnSave}" type="Emphasized" press=".onSavePlexFieldMap"/>
+                    <Button icon="sap-icon://sys-cancel" text="{i18n>pfmBtnCancel}" type="Transparent" press=".onCancelPlexFieldMap"/>
+                </OverflowToolbar>
+            </footer>
+        </Page>
+
+    </NavContainer>
+
+</core:FragmentDefinition>

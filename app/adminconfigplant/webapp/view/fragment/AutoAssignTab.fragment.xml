@@ -1,0 +1,155 @@
+<core:FragmentDefinition
+    xmlns="sap.m"
+    xmlns:core="sap.ui.core"
+    xmlns:mp="avvaleplm.marsplm.sap2plex.adminconfigplant.control">
+
+    <Panel headerText="{i18n>tabAutoAssign}" class="sapUiSmallMargin">
+
+        <VBox class="sapUiSmallMarginBottom">
+            <Text text="{i18n>aaTabIntro}"/>
+        </VBox>
+
+        <!-- [LIST-COUNT] Il conteggio dichiarato: senza, «Mostra di piu'» compare anche quando non
+             c'e' piu' niente e poi resta a girare. Solo sui binding ASSOLUTI. Vedi GroupsTab e DEC-102. -->
+        <Table
+            id="autoAssignTable"
+            items="{
+                path: 'catalog>/ZCycleAutoAssignConfig',
+                parameters: { '$$updateGroupId': 'autoAssignChanges', '$count': true }
+            }"
+            growing="true"
+            growingThreshold="50"
+            mode="MultiSelect">
+
+            <headerToolbar>
+                <OverflowToolbar>
+                    <Title text="{i18n>aaTableTitle}"/>
+                    <ToolbarSpacer/>
+                    <Button icon="sap-icon://add" text="{i18n>aaBtnAdd}" type="Transparent" press=".onAddAutoAssign"/>
+                    <!-- [ROW-COPY] La copia nasce IDENTICA, quindi non e' salvabile finche' non le
+                         si cambia Materiale o Gruppo: la coppia e' unica per plant. Lo dice un
+                         messaggio al momento del gesto, non il Salva. -->
+                    <Button icon="sap-icon://copy" text="{i18n>aaBtnCopy}" type="Transparent" press=".onCopyAutoAssign"/>
+                    <Button icon="sap-icon://delete" text="{i18n>aaBtnDelete}" type="Transparent" press=".onDeleteAutoAssign"/>
+                    <!-- [AA-DUPLICATE] L'id serve a spegnere il pulsante mentre il batch e' in
+                         volo: due click danno due $batch concorrenti, cioe' due transazioni che
+                         non si vedono, e la coppia ripetuta arriva al vincolo del database. -->
+                    <Button id="autoAssignSaveBtn" icon="sap-icon://save" text="{i18n>aaBtnSave}" type="Emphasized" press=".onSaveAutoAssign"/>
+                    <Button icon="sap-icon://sys-cancel" text="{i18n>aaBtnCancel}" type="Transparent" press=".onCancelAutoAssign"/>
+                </OverflowToolbar>
+            </headerToolbar>
+
+            <!-- [COLUMN-SORT] I criteri attivi si DICHIARANO: un elenco filtrato che non dice
+                 come e' filtrato si legge come un elenco corto. -->
+            <infoToolbar>
+                <OverflowToolbar visible="{listCriteria>/autoAssign/visible}">
+                    <Text text="{listCriteria>/autoAssign/text}"/>
+                    <ToolbarSpacer/>
+                    <Button
+                        text="{i18n>colMenuClearAll}"
+                        type="Transparent"
+                        icon="sap-icon://clear-filter"
+                        press=".onClearAutoAssignCriteria"/>
+                </OverflowToolbar>
+            </infoToolbar>
+
+            <!-- [COLUMN-SORT] La `CustomData` `field` e' cio' che rende una colonna ordinabile e
+                 filtrabile: `ColumnMenu.install` la legge e aggancia il menu all'intestazione. Una
+                 colonna SENZA `field` resta un'intestazione muta, ed e' il modo di tenerne fuori
+                 una. Qui NON si dichiara anche `type` come nei fragment della dashboard: ordina il
+                 database, che il tipo delle sue colonne lo sa da se'. -->
+            <columns>
+                <Column width="35%">
+                    <Text text="{i18n>aaColMaterial}"/>
+                    <customData>
+                        <core:CustomData key="field" value="Material"/>
+                    </customData>
+                </Column>
+                <Column width="30%">
+                    <Text text="{i18n>aaColGroup}"/>
+                    <customData>
+                        <core:CustomData key="field" value="ComponentGroup"/>
+                    </customData>
+                </Column>
+                <!-- [COLUMN-SORT] [CODED-VALUES] Si ordina e si filtra sul NOME dell'operazione,
+                     cioe' sul testo che la tendina mostra.
+                     `PlexOperationName` pero' resta VUOTO sulle righe agganciate ai due
+                     pseudo-valori «Prima operazione» e «Ultima operazione»: lo lascia vuoto
+                     `onOperationChange`, e fa bene — quelle due etichette sono TRADOTTE, e una
+                     traduzione non si persiste (DEC-92), o nel dato finirebbe la lingua di chi ha
+                     salvato. Quelle righe si trovano lo stesso, e si ordinano al loro posto: il
+                     FILTRO traduce il criterio nel browser e cerca il codice, l'ORDINAMENTO
+                     risolve l'etichetta sul server nella lingua di chi guarda. Una lingua nuova e'
+                     un file .properties in piu' e nessuna riga di codice. -->
+                <Column width="35%">
+                    <Text text="{i18n>aaColOperation}"/>
+                    <customData>
+                        <core:CustomData key="field" value="PlexOperationName"/>
+                    </customData>
+                </Column>
+            </columns>
+
+            <!-- [ROW-UNSAVED] La barra arancione sul bordo sinistro marca le righe non ancora sul
+                 server: NUOVE (mai inviate) e MODIFICATE (gia' salvate ma toccate). Qui c'e' solo il
+                 testo accessibile, perche' il colore lo mette il controller (`_markUnsavedRows`)
+                 chiedendolo al CONTESTO di ogni riga.
+
+                 NON si torna a un binding su `@$ui5.context.isTransient`: e' la forma che questa
+                 feature ha provato per prima, e non ha colorato niente — nemmeno una riga aggiunta
+                 da zero, che e' transiente per costruzione. I predicati del contesto
+                 (`isTransient()` / `hasPendingChanges()`) sono invece gli stessi che
+                 `onCopyObjectGroup` usa da prima, e che si vedono funzionare a schermo.
+
+                 Il prezzo: una proprieta' legata la rivaluta UI5 al ri-aggancio, questa no — il
+                 colore resta onesto finche' gli inneschi ci sono tutti, `updateFinished` compreso,
+                 che e' quello che copre il riciclo dei controlli di GrowingEnablement.
+                 Perimetro: grep -rn "ROW-UNSAVED" -->
+            <items>
+                <ColumnListItem highlightText="{i18n>rowUnsavedHint}">
+                    <cells>
+                        <Input
+                            value="{catalog>Material}"
+                            showValueHelp="true"
+                            valueHelpRequest=".onMaterialValueHelp"
+                            placeholder="{i18n>aaMaterialPlaceholder}"/>
+                        <!-- [AA-GROUP-VH] Il gruppo si sceglie, non si digita piu'. A valle e'
+                             confrontato per STRINGA ESATTA (`configKey` in
+                             srv/lib/autoAssignRules.js), quindi un refuso non dava nessun errore:
+                             dava una riga di configurazione inerte, che a schermo sembra a posto.
+                             Il testo e' «CODICE - Descrizione» come la tendina delle operazioni
+                             qui accanto, e cio' che si salva e' il SOLO codice.
+                             Un codice in uso ma non fra i gruppi configurati resta in elenco, in
+                             coda e marcato (`_refreshAutoAssignGroupVH`): una cella vuota si
+                             leggerebbe come «mai compilato». -->
+                        <mp:SearchComboBox
+                            selectedKey="{catalog>ComponentGroup}"
+                            items="{
+                                path: 'groupVH>/items',
+                                templateShareable: true
+                            }"
+                            placeholder="{i18n>aaGroupPlaceholder}"
+                            width="100%">
+                            <core:Item key="{groupVH>key}" text="{groupVH>text}"/>
+                        </mp:SearchComboBox>
+                        <!-- [COMBO-CONTAINS] SearchComboBox e non ComboBox: il filtro di UI5 e' sul
+                             PREFISSO, quindi «V09» trovava V090-Sgrassaggio+Veniciatura e «90» no.
+                             Qui il testo e' «CODICE - Nome» e chi cerca ricorda il nome. -->
+                        <mp:SearchComboBox
+                            selectedKey="{catalog>PlexOperation}"
+                            items="{
+                                path: 'plexOps>/operations',
+                                templateShareable: true
+                            }"
+                            selectionChange=".onOperationChange"
+                            placeholder="{i18n>aaOperationPlaceholder}"
+                            width="100%">
+                            <core:Item key="{plexOps>key}" text="{plexOps>text}"/>
+                        </mp:SearchComboBox>
+                    </cells>
+                </ColumnListItem>
+            </items>
+
+        </Table>
+    </Panel>
+
+</core:FragmentDefinition>

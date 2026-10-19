@@ -1,0 +1,251 @@
+/* Enter your custom styles here */
+
+/* JSON Detail Panel Overlay */
+.jsonDetailPanelOverlay {
+    position: fixed;
+    top: 0;
+    right: 0;
+    width: 40%;
+    height: 100vh;
+    background-color: white;
+    border-left: 2px solid #0854A0; /* SAP Blue border */
+    box-shadow: -4px 0 12px rgba(0, 0, 0, 0.15);
+    z-index: 1000;
+    overflow-y: auto;
+    padding: 1rem;
+}
+
+/* ========================================
+   Production Order Detail - Tree Styling
+   SAP GUI-style: uniform row color per level
+   ======================================== */
+
+/* Tree container */
+.treePanel {
+    background: white;
+    border: 1px solid #D9D9D9;
+    border-radius: 0.25rem;
+}
+
+/* All tree items - SAP GUI base style */
+.treePanel .sapMTreeItemBase {
+    border-bottom: 1px solid #E8E8E8;
+    min-height: 2.25rem;
+}
+
+/* Level 1 — Root (Order): light yellow-green, like SAP folder */
+.treePanel .sapMTreeItemBase[aria-level="1"] {
+    background-color: #EDF7ED;
+}
+
+/* Level 2 — Operations: light blue tint */
+.treePanel .sapMTreeItemBase[aria-level="2"] {
+    background-color: #EBF3FB;
+}
+
+/* Level 3 — Components: white/very light gray */
+.treePanel .sapMTreeItemBase[aria-level="3"] {
+    background-color: #F7F7F7;
+}
+
+/* Hover effect per level */
+.treePanel .sapMTreeItemBase[aria-level="1"]:hover {
+    background-color: #DFF0DF;
+}
+.treePanel .sapMTreeItemBase[aria-level="2"]:hover {
+    background-color: #DCEAF5;
+}
+.treePanel .sapMTreeItemBase[aria-level="3"]:hover {
+    background-color: #EFEFEF;
+}
+
+/* Node content layout */
+.treeNodeContent {
+    padding: 0.25rem 0;
+}
+
+/* Title text - same font, weight varies by level */
+.treeNodeTitle {
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: #333;
+}
+
+.treeNodeDesc {
+    font-size: 0.75rem;
+    color: #666;
+    margin-top: 0.0625rem;
+}
+
+/* Icon sizing per level */
+.treeIconOrder {
+    font-size: 1.125rem !important;
+    color: #107E3E !important;
+}
+
+.treeIconOperation {
+    font-size: 1rem !important;
+    color: #0854A0 !important;
+}
+
+.treeIconComponent {
+    font-size: 0.875rem !important;
+    color: #888 !important;
+}
+
+/* Placeholder panel */
+.treePlaceholder {
+    background: white;
+    border: 1px dashed #CCC;
+    border-radius: 0.25rem;
+    padding: 2rem 1rem;
+    min-height: 300px;
+}
+
+/* ========================================
+   Plex Cycle Tree - Same blue theme as SAP
+   ======================================== */
+
+.plexTreePanel {
+    background: white;
+    border: 1px solid #D9D9D9;
+    border-radius: 0.25rem;
+}
+
+.plexTreePanel .sapMTreeItemBase {
+    border-bottom: 1px solid #E8E8E8;
+    min-height: 2.25rem;
+}
+
+/* Level 1 — Root (Order): same green as SAP tree */
+.plexTreePanel .sapMTreeItemBase[aria-level="1"] {
+    background-color: #EDF7ED;
+}
+
+/* Level 2 — Plex Operations: same blue as SAP operations */
+.plexTreePanel .sapMTreeItemBase[aria-level="2"] {
+    background-color: #EBF3FB;
+}
+
+.plexTreePanel .sapMTreeItemBase[aria-level="1"]:hover {
+    background-color: #DFF0DF;
+}
+.plexTreePanel .sapMTreeItemBase[aria-level="2"]:hover {
+    background-color: #DCEAF5;
+}
+
+/* Level 3 — Components under Plex operations: light gray */
+.plexTreePanel .sapMTreeItemBase[aria-level="3"] {
+    background-color: #F7F7F7;
+}
+.plexTreePanel .sapMTreeItemBase[aria-level="3"]:hover {
+    background-color: #EFEFEF;
+}
+
+.treeIconPlexOperation {
+    font-size: 1rem !important;
+    color: #0854A0 !important;
+}
+
+.plexTreePanel .sapMTreeItemBase.sapUiDnDDragging {
+    opacity: 0.5;
+}
+
+/* ========================================
+   Operation Linking - Highlight Styles
+   ======================================== */
+
+.treeNodeHighlighted {
+    background-color: #FFF9C4 !important;
+    border-left: 3px solid #F9A825 !important;
+}
+
+.treeNodeHighlighted:hover {
+    background-color: #FFF176 !important;
+}
+
+/* Link icon */
+.linkIcon {
+    font-size: 0.875rem !important;
+    cursor: pointer;
+    padding: 0.25rem;
+    margin-left: 0.5rem;
+    opacity: 0.7;
+    flex-shrink: 0;
+}
+
+.linkIcon:hover {
+    opacity: 1;
+}
+
+/* ========================================
+   [WC-POPOVER-WIDTH] Popover dei work center approvati — larghezza sul contenuto
+   ======================================== */
+
+/* Il fragment non dichiara `contentWidth`: la larghezza la decide la riga piu' larga della lista,
+   cosi' l'avviso «gia' su V090-...» della [W1-08] non finisce dietro una barra di scorrimento
+   orizzontale. Qui restano solo i due limiti.
+
+   Il selettore e' COMPOSTO, non discendente: `class` sul ResponsivePopover viene inoltrato al
+   Popover interno (`addStyleClass`), quindi la classe atterra sulla stessa radice `.sapMPopover`.
+   Su cellulare il controllo interno e' un Dialog: la regola non si applica, ed e' corretto.
+
+   Il `max-width` sta sulla RADICE e non su `.sapMPopoverCont`: su quello UI5 scrive `max-width`
+   inline a ogni riposizionamento (`_getContentDimensionsCss`) e l'inline vincerebbe. */
+.marsPlmWcPopover.sapMPopover {
+    min-width: 31.25rem;   /* 500px: la larghezza storica, quando nessuna riga porta l'avviso */
+    max-width: 48rem;      /* 768px: oltre torna la barra, invece di un popover che copre la pagina */
+}
+/* ========================================
+   [ORDER-COMP-REMOVE] Componente rimosso dall'ordine (feature 0026).
+   Nell'albero SAP il componente resta VISIBILE — è da lì che si trascina per rimetterlo in gioco —
+   ma va distinto: senza marcatore «rimosso a mano» e «non ancora assegnato a un'operazione» sono
+   la stessa cosa a schermo, e hanno rimedi opposti.
+   Il barrato sta sul testo del nodo, non sull'intera riga, così la descrizione (che dichiara il
+   perché) resta leggibile.
+   ======================================== */
+
+.treeNodeComponentRemoved .treeNodeTitle {
+    text-decoration: line-through;
+    color: #BB0000 !important;
+}
+
+.treeIconComponentRemoved {
+    font-size: 0.875rem !important;
+    color: #BB0000 !important;
+}
+
+/* ========================================
+   [COMP-SOURCE] Componente collocato a mano (feature 0036).
+   Icona di CODA della riga componente, nei due alberi Plex — ciclo del materiale e ordine.
+   Sta in coda e non sulla testa del nodo perché la testa porta già due significati: il fantasma
+   (#0a6ed1) e il rimosso (#BB0000). Un terzo sullo stesso pixel non si leggerebbe.
+   `.linkIcon` dà già dimensione, padding, margine e flex-shrink: qui restano le due sole
+   differenze — questa icona NON si preme (dichiara, non agisce) e non si schiarisce al passaggio
+   del mouse, perché non è un comando da scoprire ma un fatto sulla riga.
+   Il colore sta nell'attributo `color` dell'icona e non qui, dov'è un valore che un refresh del
+   modello non potrebbe cambiare.
+   ======================================== */
+
+.treeIconManualAssign {
+    cursor: default;
+    opacity: 1;
+}
+
+/* ========================================
+   [COMP-ORPHAN] Componente dell'albero Plex che in SAP non esiste più (feature 0037).
+   Barrato come il rimosso a mano — è la stessa idea, «questa riga non fa più parte del lavoro» — ma
+   di un colore diverso, perché le due cause hanno rimedi OPPOSTI: il rimosso si rimette in gioco
+   trascinandolo dall'albero SAP, l'orfano no, in SAP non c'è più e va guardato là.
+   L'icona di coda non si preme e non si schiarisce: dichiara, non agisce.
+   ======================================== */
+
+.treeNodeCompOrphan .treeNodeTitle {
+    text-decoration: line-through;
+    color: #BB0000 !important;
+}
+
+.treeIconCompOrphan {
+    cursor: default;
+    opacity: 1;
+}

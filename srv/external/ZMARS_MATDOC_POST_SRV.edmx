@@ -1,0 +1,185 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  [MATDOC-POST] CONTRATTO - Registrazione movimento merci, forma OData V4.
+
+  GENERATO da srv/external/generate-matdoc-contract.js, che compila ZMARS_MATDOC_POST_SRV.cds con
+  `cds compile --to edmx-v4`. NON MODIFICARE A MANO: si cambia il generatore e si rilancia.
+
+  A COSA SERVE. Proposta di contratto per l'endpoint che il team Integration deve realizzare. Non e'
+  un servizio esposto ne' consumato da questa applicazione: srv/external/ non e' caricata da CAP.
+
+  COS'E'. Una sola Action non associata, invocata con
+      POST <service root>/PostMaterialDocument
+      { "Header": { ... }, "Items": [ { ... }, { ... } ], "TestRun": false }
+  Nessun EntityType e nessun EntitySet in tutto il documento: non esistendo entity, non esiste
+  nemmeno un deep insert da fare. Le N righe sono un parametro Collection(...), che OData V4 ammette
+  e OData V2 no. E' l'unica delle tre forme che soddisfa insieme i tre vincoli: un endpoint, una
+  chiamata, nessun deep insert.
+
+  DA VERIFICARE PRIMA DI SCEGLIERLA: chi la ospita. L'endpoint non passa dal Gateway ma da Cloud
+  Integration, quindi la domanda e' una sola: CPI dispone di un sender adapter OData V4? Il sender
+  OData di CPI e' V2; se non esiste l'equivalente V4, questa forma non e' realizzabile e la strada
+  e' ZMARS_MATDOC_POST.schema.json su HTTPS sender.
+
+  NOTA SUI VALORI. In OData V4 JSON: le date sono ISO ("2026-08-06"), non /Date(ms)/ - Edm.DateTime
+  in V4 non esiste piu'. I decimali sono numeri JSON (stringhe solo con IEEE754Compatible=true).
+
+  Confronto delle tre forme: ZMARS_MATDOC_POST_CONTRACT.md
+-->
+<edmx:Edmx Version="4.0" xmlns:edmx="http://docs.oasis-open.org/odata/ns/edmx">
+  <edmx:Reference Uri="https://sap.github.io/odata-vocabularies/vocabularies/Common.xml">
+    <edmx:Include Alias="Common" Namespace="com.sap.vocabularies.Common.v1"/>
+  </edmx:Reference>
+  <edmx:Reference Uri="https://oasis-tcs.github.io/odata-vocabularies/vocabularies/Org.OData.Core.V1.xml">
+    <edmx:Include Alias="Core" Namespace="Org.OData.Core.V1"/>
+  </edmx:Reference>
+  <edmx:DataServices>
+    <Schema Namespace="ZMARS_MATDOC_POST_SRV" xmlns="http://docs.oasis-open.org/odata/ns/edm">
+      <Annotation Term="Core.Links">
+        <Collection>
+          <Record>
+            <PropertyValue Property="rel" String="author"/>
+            <PropertyValue Property="href" String="https://cap.cloud.sap"/>
+          </Record>
+        </Collection>
+      </Annotation>
+      <EntityContainer Name="EntityContainer">
+        <ActionImport Name="PostMaterialDocument" Action="ZMARS_MATDOC_POST_SRV.PostMaterialDocument"/>
+      </EntityContainer>
+      <ComplexType Name="MatDocHeader">
+        <Property Name="InventoryTransactionType" Type="Edm.String" MaxLength="2"/>
+        <Property Name="DocumentDate" Type="Edm.Date"/>
+        <Property Name="PostingDate" Type="Edm.Date"/>
+        <Property Name="CreationDate" Type="Edm.Date"/>
+        <Property Name="CreationTime" Type="Edm.TimeOfDay"/>
+        <Property Name="CreatedByUser" Type="Edm.String" MaxLength="12"/>
+        <Property Name="MaterialDocumentHeaderText" Type="Edm.String" MaxLength="25"/>
+        <Property Name="ReferenceDocument" Type="Edm.String" MaxLength="16"/>
+        <Property Name="VersionForPrintingSlip" Type="Edm.String" MaxLength="1"/>
+        <Property Name="ManualPrintIsTriggered" Type="Edm.String" MaxLength="1"/>
+        <Property Name="CtrlPostgForExtWhseMgmtSyst" Type="Edm.String" MaxLength="1"/>
+        <Property Name="GoodsMovementCode" Type="Edm.String" MaxLength="2"/>
+      </ComplexType>
+      <ComplexType Name="MatDocItem">
+        <Property Name="Material" Type="Edm.String" MaxLength="40"/>
+        <Property Name="Plant" Type="Edm.String" MaxLength="4"/>
+        <Property Name="StorageLocation" Type="Edm.String" MaxLength="4"/>
+        <Property Name="Batch" Type="Edm.String" MaxLength="10"/>
+        <Property Name="BatchBySupplier" Type="Edm.String" MaxLength="15"/>
+        <Property Name="GoodsMovementType" Type="Edm.String" MaxLength="3"/>
+        <Property Name="InventoryStockType" Type="Edm.String" MaxLength="2"/>
+        <Property Name="InventoryValuationType" Type="Edm.String" MaxLength="10"/>
+        <Property Name="InventorySpecialStockType" Type="Edm.String" MaxLength="1"/>
+        <Property Name="Supplier" Type="Edm.String" MaxLength="10"/>
+        <Property Name="Customer" Type="Edm.String" MaxLength="10"/>
+        <Property Name="SalesOrder" Type="Edm.String" MaxLength="10"/>
+        <Property Name="SalesOrderItem" Type="Edm.String" MaxLength="6"/>
+        <Property Name="SalesOrderScheduleLine" Type="Edm.String" MaxLength="4"/>
+        <Property Name="PurchaseOrder" Type="Edm.String" MaxLength="10"/>
+        <Property Name="PurchaseOrderItem" Type="Edm.String" MaxLength="5"/>
+        <Property Name="WBSElement" Type="Edm.String" MaxLength="24"/>
+        <Property Name="ManufacturingOrder" Type="Edm.String" MaxLength="12"/>
+        <Property Name="ManufacturingOrderItem" Type="Edm.String" MaxLength="4"/>
+        <Property Name="GoodsMovementRefDocType" Type="Edm.String" MaxLength="1"/>
+        <Property Name="GoodsMovementReasonCode" Type="Edm.String" MaxLength="4"/>
+        <Property Name="Delivery" Type="Edm.String" MaxLength="10"/>
+        <Property Name="DeliveryItem" Type="Edm.String" MaxLength="6"/>
+        <Property Name="AccountAssignmentCategory" Type="Edm.String" MaxLength="1"/>
+        <Property Name="CostCenter" Type="Edm.String" MaxLength="10"/>
+        <Property Name="ControllingArea" Type="Edm.String" MaxLength="4"/>
+        <Property Name="CostObject" Type="Edm.String" MaxLength="12"/>
+        <Property Name="GLAccount" Type="Edm.String" MaxLength="10"/>
+        <Property Name="FunctionalArea" Type="Edm.String" MaxLength="16"/>
+        <Property Name="ProfitabilitySegment" Type="Edm.String" MaxLength="10"/>
+        <Property Name="ProfitCenter" Type="Edm.String" MaxLength="10"/>
+        <Property Name="MasterFixedAsset" Type="Edm.String" MaxLength="12"/>
+        <Property Name="FixedAsset" Type="Edm.String" MaxLength="4"/>
+        <Property Name="MaterialBaseUnit" Type="Edm.String" MaxLength="3"/>
+        <Property Name="QuantityInBaseUnit" Type="Edm.Decimal" Precision="13" Scale="3"/>
+        <Property Name="EntryUnit" Type="Edm.String" MaxLength="3"/>
+        <Property Name="QuantityInEntryUnit" Type="Edm.Decimal" Precision="13" Scale="3"/>
+        <Property Name="CompanyCodeCurrency" Type="Edm.String" MaxLength="5"/>
+        <Property Name="GdsMvtExtAmtInCoCodeCrcy" Type="Edm.Decimal" Precision="14" Scale="3"/>
+        <Property Name="SlsPrcAmtInclVATInCoCodeCrcy" Type="Edm.Decimal" Precision="14" Scale="3"/>
+        <Property Name="FiscalYear" Type="Edm.String" MaxLength="4"/>
+        <Property Name="FiscalYearPeriod" Type="Edm.String" MaxLength="7"/>
+        <Property Name="FiscalYearVariant" Type="Edm.String" MaxLength="2"/>
+        <Property Name="IssgOrRcvgMaterial" Type="Edm.String" MaxLength="40"/>
+        <Property Name="IssgOrRcvgBatch" Type="Edm.String" MaxLength="10"/>
+        <Property Name="IssuingOrReceivingPlant" Type="Edm.String" MaxLength="4"/>
+        <Property Name="IssuingOrReceivingStorageLoc" Type="Edm.String" MaxLength="4"/>
+        <Property Name="IssuingOrReceivingStockType" Type="Edm.String" MaxLength="2"/>
+        <Property Name="IssgOrRcvgSpclStockInd" Type="Edm.String" MaxLength="1"/>
+        <Property Name="IssuingOrReceivingValType" Type="Edm.String" MaxLength="10"/>
+        <Property Name="IsCompletelyDelivered" Type="Edm.Boolean"/>
+        <Property Name="MaterialDocumentItemText" Type="Edm.String" MaxLength="50"/>
+        <Property Name="GoodsRecipientName" Type="Edm.String" MaxLength="12"/>
+        <Property Name="UnloadingPointName" Type="Edm.String" MaxLength="25"/>
+        <Property Name="ShelfLifeExpirationDate" Type="Edm.Date"/>
+        <Property Name="ManufactureDate" Type="Edm.Date"/>
+        <Property Name="SerialNumbersAreCreatedAutomly" Type="Edm.Boolean"/>
+        <Property Name="Reservation" Type="Edm.String" MaxLength="10"/>
+        <Property Name="ReservationItem" Type="Edm.String" MaxLength="4"/>
+        <Property Name="ReservationItemRecordType" Type="Edm.String" MaxLength="1"/>
+        <Property Name="ReservationIsFinallyIssued" Type="Edm.Boolean"/>
+        <Property Name="SpecialStockIdfgSalesOrder" Type="Edm.String" MaxLength="10"/>
+        <Property Name="SpecialStockIdfgSalesOrderItem" Type="Edm.String" MaxLength="6"/>
+        <Property Name="SpecialStockIdfgWBSElement" Type="Edm.String" MaxLength="24"/>
+        <Property Name="IsAutomaticallyCreated" Type="Edm.String" MaxLength="1"/>
+        <Property Name="MaterialDocumentLine" Type="Edm.String" MaxLength="6"/>
+        <Property Name="MaterialDocumentParentLine" Type="Edm.String" MaxLength="6"/>
+        <Property Name="HierarchyNodeLevel" Type="Edm.String" MaxLength="2"/>
+        <Property Name="GoodsMovementIsCancelled" Type="Edm.Boolean"/>
+        <Property Name="ReversedMaterialDocumentYear" Type="Edm.String" MaxLength="4"/>
+        <Property Name="ReversedMaterialDocument" Type="Edm.String" MaxLength="10"/>
+        <Property Name="ReversedMaterialDocumentItem" Type="Edm.String" MaxLength="4"/>
+        <Property Name="ReferenceDocumentFiscalYear" Type="Edm.String" MaxLength="4"/>
+        <Property Name="InvtryMgmtRefDocumentItem" Type="Edm.String" MaxLength="4"/>
+        <Property Name="InvtryMgmtReferenceDocument" Type="Edm.String" MaxLength="10"/>
+        <Property Name="MaterialDocumentPostingType" Type="Edm.String" MaxLength="1"/>
+        <Property Name="InventoryUsabilityCode" Type="Edm.String" MaxLength="1"/>
+        <Property Name="EWMWarehouse" Type="Edm.String" MaxLength="4"/>
+        <Property Name="EWMStorageBin" Type="Edm.String" MaxLength="18"/>
+        <Property Name="HandlingUnitExternalID" Type="Edm.String" MaxLength="20"/>
+        <Property Name="DebitCreditCode" Type="Edm.String" MaxLength="1"/>
+        <Property Name="CrossPlantConfigurableProduct" Type="Edm.String" MaxLength="40"/>
+        <Property Name="ProductCharacteristic1" Type="Edm.String" MaxLength="18"/>
+        <Property Name="ProductCharacteristic2" Type="Edm.String" MaxLength="18"/>
+        <Property Name="ProductCharacteristic3" Type="Edm.String" MaxLength="18"/>
+        <Property Name="ProductSeasonYear" Type="Edm.String" MaxLength="4"/>
+        <Property Name="ProductSeason" Type="Edm.String" MaxLength="10"/>
+        <Property Name="ProductCollection" Type="Edm.String" MaxLength="10"/>
+        <Property Name="ProductTheme" Type="Edm.String" MaxLength="10"/>
+        <Property Name="StockSegment" Type="Edm.String" MaxLength="40"/>
+        <Property Name="IssgOrRcvgStockSegment" Type="Edm.String" MaxLength="40"/>
+      </ComplexType>
+      <ComplexType Name="BapiRet2">
+        <Property Name="TYPE" Type="Edm.String" MaxLength="1"/>
+        <Property Name="ID" Type="Edm.String" MaxLength="20"/>
+        <Property Name="NUMBER" Type="Edm.String" MaxLength="3"/>
+        <Property Name="MESSAGE" Type="Edm.String" MaxLength="220"/>
+        <Property Name="LOG_NO" Type="Edm.String" MaxLength="20"/>
+        <Property Name="LOG_MSG_NO" Type="Edm.String" MaxLength="6"/>
+        <Property Name="MESSAGE_V1" Type="Edm.String" MaxLength="50"/>
+        <Property Name="MESSAGE_V2" Type="Edm.String" MaxLength="50"/>
+        <Property Name="MESSAGE_V3" Type="Edm.String" MaxLength="50"/>
+        <Property Name="MESSAGE_V4" Type="Edm.String" MaxLength="50"/>
+        <Property Name="PARAMETER" Type="Edm.String" MaxLength="32"/>
+        <Property Name="ROW" Type="Edm.String" MaxLength="10"/>
+        <Property Name="FIELD" Type="Edm.String" MaxLength="30"/>
+        <Property Name="SYSTEM" Type="Edm.String" MaxLength="10"/>
+      </ComplexType>
+      <ComplexType Name="MatDocResult">
+        <Property Name="MaterialDocument" Type="Edm.String" MaxLength="10"/>
+        <Property Name="MaterialDocumentYear" Type="Edm.String" MaxLength="4"/>
+        <Property Name="Messages" Type="Collection(ZMARS_MATDOC_POST_SRV.BapiRet2)" Nullable="true"/>
+      </ComplexType>
+      <Action Name="PostMaterialDocument" IsBound="false">
+        <Parameter Name="Header" Type="ZMARS_MATDOC_POST_SRV.MatDocHeader"/>
+        <Parameter Name="Items" Type="Collection(ZMARS_MATDOC_POST_SRV.MatDocItem)" Nullable="true"/>
+        <Parameter Name="TestRun" Type="Edm.Boolean"/>
+        <ReturnType Type="ZMARS_MATDOC_POST_SRV.MatDocResult"/>
+      </Action>
+    </Schema>
+  </edmx:DataServices>
+</edmx:Edmx>

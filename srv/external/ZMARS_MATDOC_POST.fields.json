@@ -1,0 +1,866 @@
+{
+  "_comment": "GENERATO da srv/external/generate-matdoc-contract.js a partire da OP_API_MATERIAL_DOCUMENT_SRV.edmx. NON MODIFICARE A MANO. Inventario dei 108 campi del documento materiale con il loro tipo ABAP: e' cio' da cui srv/lib/materialDocPost.js ricava il nome maiuscolo, la formattazione del valore e il valore iniziale. Tenerne una seconda copia nel codice di runtime sarebbe il modo sicuro per farle divergere.",
+  "_kinds": "char = testo | numc = numerico riempito a zeri | dats = YYYYMMDD | tims = HHMMSS | dec = decimale col punto | xfeld = flag \"X\" o \"\"",
+  "header": [
+    {
+      "name": "MaterialDocumentYear",
+      "abap": "MATERIALDOCUMENTYEAR",
+      "kind": "numc",
+      "sent": false,
+      "length": 4,
+      "label": "Material Document Year"
+    },
+    {
+      "name": "MaterialDocument",
+      "abap": "MATERIALDOCUMENT",
+      "kind": "char",
+      "sent": false,
+      "length": 10,
+      "label": "Material Document"
+    },
+    {
+      "name": "InventoryTransactionType",
+      "abap": "INVENTORYTRANSACTIONTYPE",
+      "kind": "char",
+      "sent": false,
+      "length": 2,
+      "label": "Transaction/Event Type"
+    },
+    {
+      "name": "DocumentDate",
+      "abap": "DOCUMENTDATE",
+      "kind": "dats",
+      "sent": true,
+      "label": "Document Date"
+    },
+    {
+      "name": "PostingDate",
+      "abap": "POSTINGDATE",
+      "kind": "dats",
+      "sent": true,
+      "label": "Posting Date"
+    },
+    {
+      "name": "CreationDate",
+      "abap": "CREATIONDATE",
+      "kind": "dats",
+      "sent": false,
+      "label": "Entry Date"
+    },
+    {
+      "name": "CreationTime",
+      "abap": "CREATIONTIME",
+      "kind": "tims",
+      "sent": true,
+      "label": "Time of Entry"
+    },
+    {
+      "name": "CreatedByUser",
+      "abap": "CREATEDBYUSER",
+      "kind": "char",
+      "sent": false,
+      "length": 12,
+      "label": "User Name"
+    },
+    {
+      "name": "MaterialDocumentHeaderText",
+      "abap": "MATERIALDOCUMENTHEADERTEXT",
+      "kind": "char",
+      "sent": true,
+      "length": 25,
+      "label": "Document Header Text"
+    },
+    {
+      "name": "ReferenceDocument",
+      "abap": "REFERENCEDOCUMENT",
+      "kind": "char",
+      "sent": true,
+      "length": 16,
+      "label": "Reference"
+    },
+    {
+      "name": "VersionForPrintingSlip",
+      "abap": "VERSIONFORPRINTINGSLIP",
+      "kind": "char",
+      "sent": false,
+      "length": 1,
+      "label": "Print Version"
+    },
+    {
+      "name": "ManualPrintIsTriggered",
+      "abap": "MANUALPRINTISTRIGGERED",
+      "kind": "char",
+      "sent": false,
+      "length": 1,
+      "label": "Print Active"
+    },
+    {
+      "name": "CtrlPostgForExtWhseMgmtSyst",
+      "abap": "CTRLPOSTGFOREXTWHSEMGMTSYST",
+      "kind": "char",
+      "sent": false,
+      "length": 1,
+      "label": "External WMS Control"
+    },
+    {
+      "name": "GoodsMovementCode",
+      "abap": "GOODSMOVEMENTCODE",
+      "kind": "char",
+      "sent": true,
+      "length": 2,
+      "label": "Goods Movement Code"
+    }
+  ],
+  "item": [
+    {
+      "name": "MaterialDocumentYear",
+      "abap": "MATERIALDOCUMENTYEAR",
+      "kind": "numc",
+      "sent": false,
+      "length": 4,
+      "label": "Material Document Year"
+    },
+    {
+      "name": "MaterialDocument",
+      "abap": "MATERIALDOCUMENT",
+      "kind": "char",
+      "sent": false,
+      "length": 10,
+      "label": "Material Document"
+    },
+    {
+      "name": "MaterialDocumentItem",
+      "abap": "MATERIALDOCUMENTITEM",
+      "kind": "numc",
+      "sent": false,
+      "length": 4,
+      "label": "Material Document Item"
+    },
+    {
+      "name": "Material",
+      "abap": "MATERIAL",
+      "kind": "char",
+      "sent": true,
+      "length": 40,
+      "label": "Material"
+    },
+    {
+      "name": "Plant",
+      "abap": "PLANT",
+      "kind": "char",
+      "sent": true,
+      "length": 4,
+      "label": "Plant"
+    },
+    {
+      "name": "StorageLocation",
+      "abap": "STORAGELOCATION",
+      "kind": "char",
+      "sent": true,
+      "length": 4,
+      "label": "Storage Location"
+    },
+    {
+      "name": "Batch",
+      "abap": "BATCH",
+      "kind": "char",
+      "sent": false,
+      "length": 10,
+      "label": "Batch"
+    },
+    {
+      "name": "BatchBySupplier",
+      "abap": "BATCHBYSUPPLIER",
+      "kind": "char",
+      "sent": false,
+      "length": 15,
+      "label": "Supplier Batch"
+    },
+    {
+      "name": "GoodsMovementType",
+      "abap": "GOODSMOVEMENTTYPE",
+      "kind": "char",
+      "sent": true,
+      "length": 3,
+      "label": "Movement Type"
+    },
+    {
+      "name": "InventoryStockType",
+      "abap": "INVENTORYSTOCKTYPE",
+      "kind": "char",
+      "sent": false,
+      "length": 2,
+      "label": "Stock Type"
+    },
+    {
+      "name": "InventoryValuationType",
+      "abap": "INVENTORYVALUATIONTYPE",
+      "kind": "char",
+      "sent": false,
+      "length": 10,
+      "label": "Valuation Type"
+    },
+    {
+      "name": "InventorySpecialStockType",
+      "abap": "INVENTORYSPECIALSTOCKTYPE",
+      "kind": "char",
+      "sent": false,
+      "length": 1,
+      "label": "Special Stock Type"
+    },
+    {
+      "name": "Supplier",
+      "abap": "SUPPLIER",
+      "kind": "char",
+      "sent": false,
+      "length": 10,
+      "label": "Supplier"
+    },
+    {
+      "name": "Customer",
+      "abap": "CUSTOMER",
+      "kind": "char",
+      "sent": false,
+      "length": 10,
+      "label": "Customer"
+    },
+    {
+      "name": "SalesOrder",
+      "abap": "SALESORDER",
+      "kind": "char",
+      "sent": false,
+      "length": 10,
+      "label": "Sales Order"
+    },
+    {
+      "name": "SalesOrderItem",
+      "abap": "SALESORDERITEM",
+      "kind": "numc",
+      "sent": false,
+      "length": 6,
+      "label": "Sales Order Item"
+    },
+    {
+      "name": "SalesOrderScheduleLine",
+      "abap": "SALESORDERSCHEDULELINE",
+      "kind": "numc",
+      "sent": false,
+      "length": 4,
+      "label": "Sales Order Schedule"
+    },
+    {
+      "name": "PurchaseOrder",
+      "abap": "PURCHASEORDER",
+      "kind": "char",
+      "sent": false,
+      "length": 10,
+      "label": "Purchase Order"
+    },
+    {
+      "name": "PurchaseOrderItem",
+      "abap": "PURCHASEORDERITEM",
+      "kind": "numc",
+      "sent": false,
+      "length": 5,
+      "label": "Purchase Order Item"
+    },
+    {
+      "name": "WBSElement",
+      "abap": "WBSELEMENT",
+      "kind": "char",
+      "sent": false,
+      "length": 24,
+      "label": "WBS Element"
+    },
+    {
+      "name": "ManufacturingOrder",
+      "abap": "MANUFACTURINGORDER",
+      "kind": "char",
+      "sent": true,
+      "length": 12,
+      "label": "Manufacturing Order"
+    },
+    {
+      "name": "ManufacturingOrderItem",
+      "abap": "MANUFACTURINGORDERITEM",
+      "kind": "numc",
+      "sent": false,
+      "length": 4,
+      "label": "Manufacturing Order Item"
+    },
+    {
+      "name": "GoodsMovementRefDocType",
+      "abap": "GOODSMOVEMENTREFDOCTYPE",
+      "kind": "char",
+      "sent": false,
+      "length": 1,
+      "label": "Reference Document Type"
+    },
+    {
+      "name": "GoodsMovementReasonCode",
+      "abap": "GOODSMOVEMENTREASONCODE",
+      "kind": "numc",
+      "sent": true,
+      "length": 4,
+      "label": "Reason for Movement"
+    },
+    {
+      "name": "Delivery",
+      "abap": "DELIVERY",
+      "kind": "char",
+      "sent": false,
+      "length": 10,
+      "label": "Delivery"
+    },
+    {
+      "name": "DeliveryItem",
+      "abap": "DELIVERYITEM",
+      "kind": "numc",
+      "sent": false,
+      "length": 6,
+      "label": "Delivery Item"
+    },
+    {
+      "name": "AccountAssignmentCategory",
+      "abap": "ACCOUNTASSIGNMENTCATEGORY",
+      "kind": "char",
+      "sent": false,
+      "length": 1,
+      "label": "Account Assignment Category"
+    },
+    {
+      "name": "CostCenter",
+      "abap": "COSTCENTER",
+      "kind": "char",
+      "sent": true,
+      "length": 10,
+      "label": "Cost Center"
+    },
+    {
+      "name": "ControllingArea",
+      "abap": "CONTROLLINGAREA",
+      "kind": "char",
+      "sent": false,
+      "length": 4,
+      "label": "Controlling Area"
+    },
+    {
+      "name": "CostObject",
+      "abap": "COSTOBJECT",
+      "kind": "char",
+      "sent": false,
+      "length": 12,
+      "label": "Cost Object"
+    },
+    {
+      "name": "GLAccount",
+      "abap": "GLACCOUNT",
+      "kind": "char",
+      "sent": false,
+      "length": 10,
+      "label": "G/L Account"
+    },
+    {
+      "name": "FunctionalArea",
+      "abap": "FUNCTIONALAREA",
+      "kind": "char",
+      "sent": false,
+      "length": 16,
+      "label": "Functional Area"
+    },
+    {
+      "name": "ProfitabilitySegment",
+      "abap": "PROFITABILITYSEGMENT",
+      "kind": "char",
+      "sent": false,
+      "length": 10,
+      "label": "Profitability Segment"
+    },
+    {
+      "name": "ProfitCenter",
+      "abap": "PROFITCENTER",
+      "kind": "char",
+      "sent": false,
+      "length": 10,
+      "label": "Profit Center"
+    },
+    {
+      "name": "MasterFixedAsset",
+      "abap": "MASTERFIXEDASSET",
+      "kind": "char",
+      "sent": false,
+      "length": 12,
+      "label": "Asset"
+    },
+    {
+      "name": "FixedAsset",
+      "abap": "FIXEDASSET",
+      "kind": "char",
+      "sent": false,
+      "length": 4,
+      "label": "Asset Subnumber"
+    },
+    {
+      "name": "MaterialBaseUnit",
+      "abap": "MATERIALBASEUNIT",
+      "kind": "char",
+      "sent": true,
+      "length": 3,
+      "label": "Base Unit of Measure"
+    },
+    {
+      "name": "QuantityInBaseUnit",
+      "abap": "QUANTITYINBASEUNIT",
+      "kind": "dec",
+      "sent": true,
+      "precision": 13,
+      "scale": 3,
+      "label": "Quantity"
+    },
+    {
+      "name": "EntryUnit",
+      "abap": "ENTRYUNIT",
+      "kind": "char",
+      "sent": true,
+      "length": 3,
+      "label": "Unit of Entry"
+    },
+    {
+      "name": "QuantityInEntryUnit",
+      "abap": "QUANTITYINENTRYUNIT",
+      "kind": "dec",
+      "sent": true,
+      "precision": 13,
+      "scale": 3,
+      "label": "Quantity in Entry Unit"
+    },
+    {
+      "name": "CompanyCodeCurrency",
+      "abap": "COMPANYCODECURRENCY",
+      "kind": "char",
+      "sent": false,
+      "length": 5,
+      "label": "Company Code Currency"
+    },
+    {
+      "name": "GdsMvtExtAmtInCoCodeCrcy",
+      "abap": "GDSMVTEXTAMTINCOCODECRCY",
+      "kind": "dec",
+      "sent": false,
+      "precision": 14,
+      "scale": 3,
+      "label": "External Amount in LC"
+    },
+    {
+      "name": "SlsPrcAmtInclVATInCoCodeCrcy",
+      "abap": "SLSPRCAMTINCLVATINCOCODECRCY",
+      "kind": "dec",
+      "sent": false,
+      "precision": 14,
+      "scale": 3,
+      "label": "Sales Value Including VAT"
+    },
+    {
+      "name": "FiscalYear",
+      "abap": "FISCALYEAR",
+      "kind": "numc",
+      "sent": false,
+      "length": 4,
+      "label": "Fiscal Year"
+    },
+    {
+      "name": "FiscalYearPeriod",
+      "abap": "FISCALYEARPERIOD",
+      "kind": "numc",
+      "sent": false,
+      "length": 7,
+      "label": "Fiscal Year &amp; Period from Posting date"
+    },
+    {
+      "name": "FiscalYearVariant",
+      "abap": "FISCALYEARVARIANT",
+      "kind": "char",
+      "sent": false,
+      "length": 2,
+      "label": "Fiscal Year Variant"
+    },
+    {
+      "name": "IssgOrRcvgMaterial",
+      "abap": "ISSGORRCVGMATERIAL",
+      "kind": "char",
+      "sent": false,
+      "length": 40,
+      "label": "Transfer Material"
+    },
+    {
+      "name": "IssgOrRcvgBatch",
+      "abap": "ISSGORRCVGBATCH",
+      "kind": "char",
+      "sent": false,
+      "length": 10,
+      "label": "Transfer Batch"
+    },
+    {
+      "name": "IssuingOrReceivingPlant",
+      "abap": "ISSUINGORRECEIVINGPLANT",
+      "kind": "char",
+      "sent": false,
+      "length": 4,
+      "label": "Rec/Iss Plant"
+    },
+    {
+      "name": "IssuingOrReceivingStorageLoc",
+      "abap": "ISSUINGORRECEIVINGSTORAGELOC",
+      "kind": "char",
+      "sent": false,
+      "length": 4,
+      "label": "Storage Location"
+    },
+    {
+      "name": "IssuingOrReceivingStockType",
+      "abap": "ISSUINGORRECEIVINGSTOCKTYPE",
+      "kind": "char",
+      "sent": false,
+      "length": 2,
+      "label": "Transfer Stock Type"
+    },
+    {
+      "name": "IssgOrRcvgSpclStockInd",
+      "abap": "ISSGORRCVGSPCLSTOCKIND",
+      "kind": "char",
+      "sent": false,
+      "length": 1,
+      "label": "Transfer Special Stock Type"
+    },
+    {
+      "name": "IssuingOrReceivingValType",
+      "abap": "ISSUINGORRECEIVINGVALTYPE",
+      "kind": "char",
+      "sent": false,
+      "length": 10,
+      "label": "Transfer Batch (Valuation Type)"
+    },
+    {
+      "name": "IsCompletelyDelivered",
+      "abap": "ISCOMPLETELYDELIVERED",
+      "kind": "xfeld",
+      "sent": true,
+      "label": "Delivery Completed"
+    },
+    {
+      "name": "MaterialDocumentItemText",
+      "abap": "MATERIALDOCUMENTITEMTEXT",
+      "kind": "char",
+      "sent": true,
+      "length": 50,
+      "label": "Text"
+    },
+    {
+      "name": "GoodsRecipientName",
+      "abap": "GOODSRECIPIENTNAME",
+      "kind": "char",
+      "sent": false,
+      "length": 12,
+      "label": "Goods Recipient"
+    },
+    {
+      "name": "UnloadingPointName",
+      "abap": "UNLOADINGPOINTNAME",
+      "kind": "char",
+      "sent": false,
+      "length": 25,
+      "label": "Unloading Point"
+    },
+    {
+      "name": "ShelfLifeExpirationDate",
+      "abap": "SHELFLIFEEXPIRATIONDATE",
+      "kind": "dats",
+      "sent": true,
+      "label": "SLED/BBD"
+    },
+    {
+      "name": "ManufactureDate",
+      "abap": "MANUFACTUREDATE",
+      "kind": "dats",
+      "sent": true,
+      "label": "Date of Manufacture"
+    },
+    {
+      "name": "SerialNumbersAreCreatedAutomly",
+      "abap": "SERIALNUMBERSARECREATEDAUTOMLY",
+      "kind": "xfeld",
+      "sent": false,
+      "label": "Create Serial Number Automatically"
+    },
+    {
+      "name": "Reservation",
+      "abap": "RESERVATION",
+      "kind": "numc",
+      "sent": true,
+      "length": 10,
+      "label": "Reservation"
+    },
+    {
+      "name": "ReservationItem",
+      "abap": "RESERVATIONITEM",
+      "kind": "numc",
+      "sent": true,
+      "length": 4,
+      "label": "Reservation Item"
+    },
+    {
+      "name": "ReservationItemRecordType",
+      "abap": "RESERVATIONITEMRECORDTYPE",
+      "kind": "char",
+      "sent": false,
+      "length": 1,
+      "label": "Reservation Record Type"
+    },
+    {
+      "name": "ReservationIsFinallyIssued",
+      "abap": "RESERVATIONISFINALLYISSUED",
+      "kind": "xfeld",
+      "sent": false,
+      "label": "Final-Issue Reservation"
+    },
+    {
+      "name": "SpecialStockIdfgSalesOrder",
+      "abap": "SPECIALSTOCKIDFGSALESORDER",
+      "kind": "char",
+      "sent": false,
+      "length": 10,
+      "label": "Sales Order"
+    },
+    {
+      "name": "SpecialStockIdfgSalesOrderItem",
+      "abap": "SPECIALSTOCKIDFGSALESORDERITEM",
+      "kind": "numc",
+      "sent": false,
+      "length": 6,
+      "label": "Sales Order Item"
+    },
+    {
+      "name": "SpecialStockIdfgWBSElement",
+      "abap": "SPECIALSTOCKIDFGWBSELEMENT",
+      "kind": "char",
+      "sent": false,
+      "length": 24,
+      "label": "WBS Element"
+    },
+    {
+      "name": "IsAutomaticallyCreated",
+      "abap": "ISAUTOMATICALLYCREATED",
+      "kind": "char",
+      "sent": false,
+      "length": 1,
+      "label": "Automatically Created"
+    },
+    {
+      "name": "MaterialDocumentLine",
+      "abap": "MATERIALDOCUMENTLINE",
+      "kind": "numc",
+      "sent": false,
+      "length": 6,
+      "label": "Line ID"
+    },
+    {
+      "name": "MaterialDocumentParentLine",
+      "abap": "MATERIALDOCUMENTPARENTLINE",
+      "kind": "numc",
+      "sent": false,
+      "length": 6,
+      "label": "Parent line ID"
+    },
+    {
+      "name": "HierarchyNodeLevel",
+      "abap": "HIERARCHYNODELEVEL",
+      "kind": "numc",
+      "sent": false,
+      "length": 2,
+      "label": "Hierarchy Level"
+    },
+    {
+      "name": "GoodsMovementIsCancelled",
+      "abap": "GOODSMOVEMENTISCANCELLED",
+      "kind": "xfeld",
+      "sent": false,
+      "label": "Is Item Cancelled"
+    },
+    {
+      "name": "ReversedMaterialDocumentYear",
+      "abap": "REVERSEDMATERIALDOCUMENTYEAR",
+      "kind": "numc",
+      "sent": false,
+      "length": 4,
+      "label": "Reversed Document Year"
+    },
+    {
+      "name": "ReversedMaterialDocument",
+      "abap": "REVERSEDMATERIALDOCUMENT",
+      "kind": "char",
+      "sent": false,
+      "length": 10,
+      "label": "Reversed Material Document"
+    },
+    {
+      "name": "ReversedMaterialDocumentItem",
+      "abap": "REVERSEDMATERIALDOCUMENTITEM",
+      "kind": "numc",
+      "sent": false,
+      "length": 4,
+      "label": "Reversed Document Item"
+    },
+    {
+      "name": "ReferenceDocumentFiscalYear",
+      "abap": "REFERENCEDOCUMENTFISCALYEAR",
+      "kind": "numc",
+      "sent": false,
+      "length": 4,
+      "label": "Fiscal Year (Reference Document)"
+    },
+    {
+      "name": "InvtryMgmtRefDocumentItem",
+      "abap": "INVTRYMGMTREFDOCUMENTITEM",
+      "kind": "numc",
+      "sent": false,
+      "length": 4,
+      "label": "Reference Document Item"
+    },
+    {
+      "name": "InvtryMgmtReferenceDocument",
+      "abap": "INVTRYMGMTREFERENCEDOCUMENT",
+      "kind": "char",
+      "sent": false,
+      "length": 10,
+      "label": "Reference Document"
+    },
+    {
+      "name": "MaterialDocumentPostingType",
+      "abap": "MATERIALDOCUMENTPOSTINGTYPE",
+      "kind": "char",
+      "sent": false,
+      "length": 1,
+      "label": "Type of Posting"
+    },
+    {
+      "name": "InventoryUsabilityCode",
+      "abap": "INVENTORYUSABILITYCODE",
+      "kind": "char",
+      "sent": false,
+      "length": 1,
+      "label": "Posting Control Stock Type"
+    },
+    {
+      "name": "EWMWarehouse",
+      "abap": "EWMWAREHOUSE",
+      "kind": "char",
+      "sent": false,
+      "length": 4,
+      "label": "Warehouse Number"
+    },
+    {
+      "name": "EWMStorageBin",
+      "abap": "EWMSTORAGEBIN",
+      "kind": "char",
+      "sent": false,
+      "length": 18,
+      "label": "Storage Bin"
+    },
+    {
+      "name": "HandlingUnitExternalID",
+      "abap": "HANDLINGUNITEXTERNALID",
+      "kind": "char",
+      "sent": false,
+      "length": 20,
+      "label": "Handling Unit"
+    },
+    {
+      "name": "DebitCreditCode",
+      "abap": "DEBITCREDITCODE",
+      "kind": "char",
+      "sent": false,
+      "length": 1,
+      "label": "Debit/Credit Indicator"
+    },
+    {
+      "name": "CrossPlantConfigurableProduct",
+      "abap": "CROSSPLANTCONFIGURABLEPRODUCT",
+      "kind": "char",
+      "sent": false,
+      "length": 40,
+      "label": "Cross-plant CM"
+    },
+    {
+      "name": "ProductCharacteristic1",
+      "abap": "PRODUCTCHARACTERISTIC1",
+      "kind": "char",
+      "sent": false,
+      "length": 18,
+      "label": "Color"
+    },
+    {
+      "name": "ProductCharacteristic2",
+      "abap": "PRODUCTCHARACTERISTIC2",
+      "kind": "char",
+      "sent": false,
+      "length": 18,
+      "label": "Main Size"
+    },
+    {
+      "name": "ProductCharacteristic3",
+      "abap": "PRODUCTCHARACTERISTIC3",
+      "kind": "char",
+      "sent": false,
+      "length": 18,
+      "label": "Second Size"
+    },
+    {
+      "name": "ProductSeasonYear",
+      "abap": "PRODUCTSEASONYEAR",
+      "kind": "char",
+      "sent": false,
+      "length": 4,
+      "label": "Season Year"
+    },
+    {
+      "name": "ProductSeason",
+      "abap": "PRODUCTSEASON",
+      "kind": "char",
+      "sent": false,
+      "length": 10,
+      "label": "Season"
+    },
+    {
+      "name": "ProductCollection",
+      "abap": "PRODUCTCOLLECTION",
+      "kind": "char",
+      "sent": false,
+      "length": 10,
+      "label": "Collection"
+    },
+    {
+      "name": "ProductTheme",
+      "abap": "PRODUCTTHEME",
+      "kind": "char",
+      "sent": false,
+      "length": 10,
+      "label": "Theme"
+    },
+    {
+      "name": "StockSegment",
+      "abap": "STOCKSEGMENT",
+      "kind": "char",
+      "sent": false,
+      "length": 40,
+      "label": "Stock Segment"
+    },
+    {
+      "name": "IssgOrRcvgStockSegment",
+      "abap": "ISSGORRCVGSTOCKSEGMENT",
+      "kind": "char",
+      "sent": false,
+      "length": 40,
+      "label": "Rec. Stock Segment"
+    }
+  ]
+}

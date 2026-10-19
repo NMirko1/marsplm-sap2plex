@@ -1,0 +1,303 @@
+<core:FragmentDefinition
+    xmlns="sap.m"
+    xmlns:core="sap.ui.core"
+    xmlns:form="sap.ui.layout.form">
+
+    <VBox class="sapUiSmallMargin">
+
+        <!-- [PLEX-CONN] Connessione a Plex del plant (feature 0020).
+             PERSISTENZA REALE per-plant su ZPlexConnConfig (modello 'catalog', update group
+             'plexConnChanges'). È l'UNICA fonte della connessione: non esistono più né i fallback
+             su variabili d'ambiente né il tenant di test che era cablato nel codice.
+
+             I controlli sono legati al modello JSON 'plexConn' e non all'OData, per la stessa
+             ragione del blocco Ordinamento più in basso: la riga di configurazione può NON
+             esistere, e aprire la schermata non deve crearla. La scrive onSavePlexConn, che crea
+             la riga solo al primo salvataggio.
+
+             DUE CANALI, cinque campi: Plex si raggiunge su due host distinti con due schemi di
+             autenticazione distinti, e servono entrambi (Connect API con la Consumer Key nell'header,
+             Data Source API in Basic auth sul tenant). Un solo URL non basta. -->
+        <form:SimpleForm
+            editable="true"
+            layout="ResponsiveGridLayout"
+            labelSpanL="4" labelSpanM="4" labelSpanS="12"
+            emptySpanL="4" emptySpanM="4"
+            columnsL="1" columnsM="1"
+            title="{i18n>grpPlexConn}">
+            <form:content>
+                <!-- Dichiarato, non lasciato dedurre: finché la riga non esiste, per questo plant
+                     NESSUN flusso verso Plex parte (fail-closed). Stesso pattern della striscia
+                     dell'ordinamento più in basso. -->
+                <MessageStrip
+                    id="plexConnNotConfiguredStrip"
+                    type="Warning"
+                    showIcon="true"
+                    class="sapUiSmallMarginBottom"
+                    visible="{= !${plexConn>/exists} }"
+                    text="{plexConn>/notConfiguredText}"/>
+
+                <Label text="{i18n>pconnLblBaseUrl}" tooltip="PLEX_CONNECT_BASE_URL"/>
+                <VBox>
+                    <Input
+                        id="plexConnBaseUrl"
+                        value="{plexConn>/BaseUrl}"
+                        maxLength="255"
+                        placeholder="{i18n>pconnPhBaseUrl}"
+                        valueState="{plexConn>/baseUrlState}"
+                        valueStateText="{plexConn>/baseUrlStateText}"
+                        change=".onPlexConnChange"/>
+                    <Text text="{i18n>pconnHelpHost}" class="sapUiTinyMarginTop"/>
+                </VBox>
+
+                <!-- [PLEX-SECRET] NON è un `type="Password"`, ed è di proposito: il gestore
+                     password del browser si aggancia SOLO a un `<input type="password">` nel DOM.
+                     Trovandone uno, Chrome prendeva come «username» il campo di testo che lo
+                     precede — l'URL Connect qui sopra — e offriva di archiviare in Google Password
+                     Manager la Consumer Key di Plex; lo stesso aggancio abilita l'AUTO-COMPILAZIONE,
+                     che riscriverebbe in silenzio la chiave all'apertura della schermata.
+                     Il mascheramento passa quindi al CSS (`.marsPlmSecretInput` in css/style.css),
+                     che nessun gestore password interpreta. Chi «corregge» questo campo rimettendo
+                     `type="Password"` riporta indietro il difetto: vedi DEC-79 e
+                     test/plexSecretFields.test.js, che lo rifiuta.
+                     Conseguenza accettata: un input di testo mascherato in CSS si può selezionare e
+                     copiare in chiaro, cosa che `type=password` impediva. È coerente con la scelta
+                     di tenere i due segreti rileggibili da questa schermata. -->
+                <Label text="{i18n>pconnLblConsumerKey}" tooltip="X-Plex-Connect-Api-Key"/>
+                <Input
+                    id="plexConnConsumerKey"
+                    value="{plexConn>/ConsumerKey}"
+                    class="marsPlmSecretInput"
+                    maxLength="255"
+                    valueState="{plexConn>/consumerKeyState}"
+                    valueStateText="{plexConn>/consumerKeyStateText}"
+                    change=".onPlexConnChange"/>
+
+                <Label text="{i18n>pconnLblDsUrl}" tooltip="PLEX_DATASOURCE_BASE_URL"/>
+                <VBox>
+                    <Input
+                        id="plexConnDsUrl"
+                        value="{plexConn>/DataSourceUrl}"
+                        maxLength="255"
+                        placeholder="{i18n>pconnPhDsUrl}"
+                        valueState="{plexConn>/dsUrlState}"
+                        valueStateText="{plexConn>/dsUrlStateText}"
+                        change=".onPlexConnChange"/>
+                    <Text text="{i18n>pconnHelpDs}" class="sapUiTinyMarginTop"/>
+                </VBox>
+
+                <Label text="{i18n>pconnLblDsUser}" tooltip="Data Source Basic auth user"/>
+                <Input
+                    id="plexConnDsUser"
+                    value="{plexConn>/DataSourceUser}"
+                    maxLength="255"
+                    valueState="{plexConn>/dsUserState}"
+                    valueStateText="{plexConn>/dsUserStateText}"
+                    change=".onPlexConnChange"/>
+
+                <!-- [PLEX-SECRET] Nemmeno questo è un `type="Password"`: stessa ragione del campo
+                     Consumer Key qui sopra. -->
+                <Label text="{i18n>pconnLblDsPassword}" tooltip="Data Source Basic auth password"/>
+                <Input
+                    id="plexConnDsPassword"
+                    value="{plexConn>/DataSourcePassword}"
+                    class="marsPlmSecretInput"
+                    maxLength="255"
+                    change=".onPlexConnChange"/>
+
+                <!-- Esito dell'ultimo test.
+                     DUE BLOCCHI che si escludono. Subito dopo un test si mostra l'esito PER
+                     CANALE, con due semafori distinti: sono due host e due autenticazioni, e
+                     sapere quale dei due si è rotto è tutta l'informazione utile. Riaprendo la
+                     schermata resta il solo riepilogo persistito, perché LastTest* è una colonna
+                     sola: si mostra ciò che è stato salvato, senza ricostruire un dettaglio per
+                     canale che nessuno ha memorizzato. -->
+                <Label text="{i18n>pconnLblLastTestConnect}" visible="{= !!${plexConn>/liveTest} }"/>
+                <ObjectStatus
+                    visible="{= !!${plexConn>/liveTest} }"
+                    state="{= ${plexConn>/liveTest/connectOk} ? 'Success' : 'Error' }"
+                    icon="{= ${plexConn>/liveTest/connectOk} ? 'sap-icon://sys-enter-2' : 'sap-icon://error' }"
+                    text="{plexConn>/liveTest/connectMessage}"/>
+
+                <Label text="{i18n>pconnLblLastTestDs}" visible="{= !!${plexConn>/liveTest} }"/>
+                <ObjectStatus
+                    visible="{= !!${plexConn>/liveTest} }"
+                    state="{= ${plexConn>/liveTest/dataSourceOk} ? 'Success' : 'Error' }"
+                    icon="{= ${plexConn>/liveTest/dataSourceOk} ? 'sap-icon://sys-enter-2' : 'sap-icon://error' }"
+                    text="{plexConn>/liveTest/dataSourceMessage}"/>
+
+                <Label text="{i18n>pconnLblLastTest}"
+                       visible="{= !${plexConn>/liveTest} &amp;&amp; !!${plexConn>/LastTestedAt} }"/>
+                <ObjectStatus
+                    visible="{= !${plexConn>/liveTest} &amp;&amp; !!${plexConn>/LastTestedAt} }"
+                    state="{= ${plexConn>/LastTestStatus} === 'S' ? 'Success' : 'Error' }"
+                    icon="{= ${plexConn>/LastTestStatus} === 'S' ? 'sap-icon://sys-enter-2' : 'sap-icon://error' }"
+                    text="{plexConn>/lastTestText}"/>
+
+                <!-- Salvataggio ESPLICITO: i cinque campi si validano insieme e la riga può non
+                     esistere ancora. Il test è separato dal salvataggio ed è abilitato solo su una
+                     riga già salvata: provare valori che non sono ancora quelli in vigore
+                     direbbe poco. -->
+                <Label text=""/>
+                <HBox class="sapUiTinyMarginTop">
+                    <Button text="{i18n>pconnBtnSave}" type="Emphasized" icon="sap-icon://save"
+                            enabled="{plexConn>/dirty}" press=".onSavePlexConn"
+                            class="sapUiTinyMarginEnd"/>
+                    <Button text="{i18n>pconnBtnCancel}" type="Transparent" icon="sap-icon://sys-cancel"
+                            enabled="{plexConn>/dirty}" press=".onCancelPlexConn"
+                            class="sapUiTinyMarginEnd"/>
+                    <Button text="{i18n>pconnBtnTest}" type="Transparent" icon="sap-icon://connected"
+                            enabled="{= ${plexConn>/exists} &amp;&amp; !${plexConn>/dirty} }"
+                            press=".onTestPlexConn"/>
+                </HBox>
+            </form:content>
+        </form:SimpleForm>
+
+        <!-- [W1-23] Qui stavano tre gruppi INTERAMENTE MOCK — «Connection & Authentication»,
+             «Scheduler & Frequency», «Data Governance» — piu' tre campi mock dentro il gruppo qui
+             sotto: dodici controlli sul modello JSON 'plants', handler onConfigChange che mostrava
+             «Configuration updated» senza salvare niente. Rimossi, non implementati, perche' quello
+             che promettevano di configurare o non e' configurabile o si configura altrove:
+
+             - SAP_HOST: l'indirizzo di SAP viene dalla destination BTP MARS_SAP_CON;
+             - le tre CRON e GLOBAL_SCHEDULER_MODE: i job girano fuori dal server web come
+               cf run-task / SAP Job Scheduler, e la loro cadenza sta nella configurazione dello
+               scheduler su Cloud Foundry;
+             - DELTA_WINDOW_MINUTES: la finestra delle letture Plex e' il watermark persistito su
+               ZJobReadWatermark (feature 0021);
+             - ALERT_CHANNEL: il canale e' la mail e i destinatari stanno nella scheda «Notifiche
+               job» (ZJobNotifyRecipient); Teams e PagerDuty non esistono nel progetto;
+             - AUDIT_LOG_LEVEL: il log e' sempre testata in upsert + posizioni append-only col JSON
+               mascherato sui segreti, non e' un livello da scegliere;
+             - CONNECT/READ_TIMEOUT_SEC, RETRY_BACKOFF_MODE, CIRCUIT_BREAKER_ENABLED: non esiste
+               codice che li legga.
+
+             Prima di loro, la feature 0020 aveva gia' tolto da qui PLEX_API_BASE_URL, AUTH_MODE e
+             TLS_VERIFY: descrivevano la connessione a Plex, che ora e' il blocco REALE in testa a
+             questa scheda. Stesso trattamento dato ai finti delle schede «Cicli» (0016), «Ordini di
+             produzione» (0017) e «Distinta base» (0019). -->
+
+        <!-- Error Handling & Retry -->
+        <form:SimpleForm
+            editable="true"
+            layout="ResponsiveGridLayout"
+            labelSpanL="4" labelSpanM="4" labelSpanS="12"
+            emptySpanL="4" emptySpanM="4"
+            columnsL="1" columnsM="1"
+            title="{i18n>grpErrorHandling}"
+            class="sapUiMediumMarginTop">
+            <form:content>
+                <!-- Unico campo del gruppo: persistenza REALE per-plant su ZPlant (modello OData
+                     'catalog'). Vuoto = nessun limite ai retry. -->
+
+                <Label text="{i18n>lblRetryMaxAttempts}" tooltip="RETRY_MAX_ATTEMPTS"/>
+                <Input value="{catalog>MaxRetryAttempts}" type="Number" placeholder="{i18n>phRetryMaxAttempts}" change=".onSaveMaxRetry"/>
+            </form:content>
+        </form:SimpleForm>
+
+        <!-- Routings & Components (persistenza REALE per-plant su ZPlant, modello 'catalog') -->
+        <form:SimpleForm
+            editable="true"
+            layout="ResponsiveGridLayout"
+            labelSpanL="4" labelSpanM="4" labelSpanS="12"
+            emptySpanL="4" emptySpanM="4"
+            columnsL="1" columnsM="1"
+            title="{i18n>grpRoutings}"
+            class="sapUiMediumMarginTop">
+            <form:content>
+                <Label text="{i18n>lblAutoAssignBomOnSync}" tooltip="AUTO_ASSIGN_BOM_ON_SYNC"/>
+                <CheckBox selected="{catalog>AutoAssignBomOnSync}" select=".onSaveAutoAssignFlag"/>
+            </form:content>
+        </form:SimpleForm>
+
+        <!-- [MATDOC-POST] Movimenti merci: abilitazione alla registrazione reale (persistenza REALE
+             per-plant su ZPlant, modello 'catalog', stesso schema del flag qui sopra).
+             E' un flag di ABILITAZIONE: casella vuota = nessuna registrazione, e coincide con lo
+             stato di un plant mai configurato. Spuntarla e' l'azione che ha conseguenze. -->
+        <form:SimpleForm
+            editable="true"
+            layout="ResponsiveGridLayout"
+            labelSpanL="4" labelSpanM="4" labelSpanS="12"
+            emptySpanL="4" emptySpanM="4"
+            columnsL="1" columnsM="1"
+            title="{i18n>grpGoodsMovement}"
+            class="sapUiMediumMarginTop">
+            <form:content>
+                <Label text="{i18n>lblMatDocPostEnabled}" tooltip="IV_TEST_RUN"/>
+                <CheckBox selected="{catalog>MatDocPostEnabled}" select=".onSaveMatDocPostEnabled"/>
+                <Label text=""/>
+                <Text text="{i18n>lblMatDocPostEnabledHint}" class="sapUiTinyMarginBottom"/>
+            </form:content>
+        </form:SimpleForm>
+
+        <!-- Plex work list sort order (feature 0014).
+             REAL per-plant persistence on ZPlexJobSortConfig (model 'catalog', update group
+             'jobSortChanges'). The controls are bound to the JSON model 'jobSort': the OData row
+             may NOT exist, and opening the screen must not create it (FR-24, M-12). The write is
+             done by onSaveJobSort, which creates the row only on the first save.
+             The two value controls stay editable with the switch off: it is the condition to
+             prepare a plant without activating it (FR-26). -->
+        <form:SimpleForm
+            editable="true"
+            layout="ResponsiveGridLayout"
+            labelSpanL="4" labelSpanM="4" labelSpanS="12"
+            emptySpanL="4" emptySpanM="4"
+            columnsL="1" columnsM="1"
+            title="{i18n>grpJobSort}"
+            class="sapUiMediumMarginTop">
+            <form:content>
+                <!-- M-12: declared, not inferred. Visible only while the row does not exist.
+                     Text composed in the controller (i18n placeholder + escaped apostrophe),
+                     same pattern as the Material Categories tab strip. -->
+                <MessageStrip
+                    id="jobSortNotConfiguredStrip"
+                    type="Information"
+                    showIcon="true"
+                    class="sapUiSmallMarginBottom"
+                    visible="{= !${jobSort>/exists} }"
+                    text="{jobSort>/notConfiguredText}"/>
+
+                <Label text="{i18n>jsortLblEnabled}" tooltip="PLEX_JOB_SORT_ENABLED"/>
+                <CheckBox selected="{jobSort>/IsEnabled}" select=".onJobSortDirty"/>
+
+                <Label text="{i18n>jsortLblDueDateSort}" tooltip="DUE_DATE_SORT"/>
+                <VBox>
+                    <CheckBox selected="{jobSort>/DueDateSort}" select=".onJobSortDirty"/>
+                    <!-- The consequence of the switch being off is written, not left to be
+                         inferred (FDD §7.2). -->
+                    <Text text="{i18n>jsortDueDateHint}" class="sapUiTinyMarginBegin"/>
+                </VBox>
+
+                <Label text="{i18n>jsortLblFrozenStates}" tooltip="FROZEN_JOB_STATUS_LIST"/>
+                <VBox>
+                    <!-- maxLength=200 is the contract limit of the Plex parameter, enforced by the
+                         service on the SENT value, before normalisation (contract C-11): without
+                         the client cap the user would get the generic CAP type error. -->
+                    <Input
+                        id="jobSortFrozenStates"
+                        value="{jobSort>/FrozenJobStatusList}"
+                        maxLength="200"
+                        placeholder="{i18n>jsortPlaceholder}"
+                        valueState="{jobSort>/frozenValueState}"
+                        valueStateText="{jobSort>/frozenValueStateText}"
+                        change=".onFrozenStatesChange"/>
+                    <!-- M-13: permanent help text, with the consequence of an empty list. -->
+                    <Text text="{i18n>jsortFrozenHelp}" class="sapUiTinyMarginTop"/>
+                </VBox>
+
+                <!-- Explicit save: no implicit save on typing (FDD §7.3). The three fields are
+                     validated and normalised together and the row may not exist yet. -->
+                <Label text=""/>
+                <HBox class="sapUiTinyMarginTop">
+                    <Button text="{i18n>jsortBtnSave}" type="Emphasized" icon="sap-icon://save"
+                            enabled="{jobSort>/dirty}" press=".onSaveJobSort"
+                            class="sapUiTinyMarginEnd"/>
+                    <Button text="{i18n>jsortBtnCancel}" type="Transparent" icon="sap-icon://sys-cancel"
+                            enabled="{jobSort>/dirty}" press=".onCancelJobSort"/>
+                </HBox>
+            </form:content>
+        </form:SimpleForm>
+
+    </VBox>
+
+</core:FragmentDefinition>

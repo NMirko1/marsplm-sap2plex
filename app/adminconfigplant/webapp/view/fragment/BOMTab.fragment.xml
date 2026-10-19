@@ -1,0 +1,159 @@
+<core:FragmentDefinition
+    xmlns="sap.m"
+    xmlns:core="sap.ui.core"
+    xmlns:form="sap.ui.layout.form">
+
+    <!-- ============================================================
+         [PHANTOM-EXPLODE] Motore di esplosione dei componenti fantasma, per plant
+         (feature 0019).
+
+         Questo tab era INTERAMENTE MOCK: sei controlli legati al modello JSON `plants`
+         (BOM_USAGE, ALTERNATIVE_BOM_SELECTION, PHANTOM_ASSEMBLY_HANDLING,
+         EFFECTIVITY_DATE_MODE, ENGINEERING_CHANGE_MANAGEMENT, EXCLUDE_BULK_ITEMS) il cui
+         unico effetto era un toast. Tre di essi DIVENTANO reali qui — l'utilizzo distinta,
+         l'alternativa e la data di validita' sono esattamente i criteri con cui il motore
+         sceglie ed esplode una distinta. Gli altri tre sono stati RIMOSSI: nessun flusso li
+         governa, e lasciare interruttori finti accanto a controlli che decidono cosa finisce
+         su Plex avrebbe fatto credere che salvassero qualcosa. E' la stessa scelta fatta sul
+         tab "Routings" con la 0016 e su "Ordini di produzione" con la 0017.
+
+         `PHANTOM_ASSEMBLY_HANDLING` non torna come Select a due valori: SKIP e'
+         semplicemente l'interruttore spento (che sta nelle due tab dell'oggetto governato),
+         EXPLODE_THROUGH e' l'unico comportamento implementato.
+
+         I controlli sono legati al modello JSON `phx` perche' la riga OData puo' NON esistere
+         e aprire la schermata non deve crearla: nasce al primo salvataggio, come i blocchi
+         della 0014 e della 0017.
+         ============================================================ -->
+    <VBox class="sapUiSmallMargin">
+
+        <MessageStrip
+            text="{i18n>phxTabIntro}"
+            type="Information"
+            showIcon="true"
+            class="sapUiSmallMarginBottom"/>
+
+        <form:SimpleForm
+            editable="true"
+            layout="ResponsiveGridLayout"
+            labelSpanL="4" labelSpanM="4" labelSpanS="12"
+            emptySpanL="3" emptySpanM="3"
+            columnsL="1" columnsM="1"
+            title="{i18n>phxGroupEngine}">
+            <form:content>
+
+                <!-- Dichiarato, non lasciato intuire. Information e NON Warning: qui «non
+                     configurato» significa «come prima», non «il plant non lavora». -->
+                <MessageStrip
+                    id="phxNotConfiguredStrip"
+                    type="Information"
+                    showIcon="true"
+                    class="sapUiSmallMarginBottom"
+                    visible="{= !${phx>/exists} }"
+                    text="{phx>/notConfiguredText}"/>
+
+                <Label text="{i18n>phxLblMaxDepth}" tooltip="MaxDepth" required="true"/>
+                <VBox>
+                    <!-- maxLength allineato a cio' che la validazione ammette (1..20): oltre,
+                         il rifiuto arriverebbe da CAP con un messaggio tecnico che non
+                         possiamo riscrivere (DEC-40), quindi la difesa utile e' qui. -->
+                    <Input
+                        id="phxMaxDepth"
+                        value="{phx>/maxDepth}"
+                        type="Number"
+                        maxLength="2"
+                        valueState="{phx>/depthState}"
+                        valueStateText="{phx>/depthStateText}"
+                        liveChange=".onPhantomDirty"/>
+                    <Text text="{i18n>phxHelpMaxDepth}" class="sapUiTinyMarginTop"/>
+                </VBox>
+
+                <Label text="{i18n>phxLblBomUsage}" tooltip="BomUsage"/>
+                <VBox>
+                    <!-- Testo libero di proposito: l'utilizzo distinta e' customizing SAP del
+                         cliente (T416), quindi un elenco chiuso sarebbe sbagliato per chi ne ha
+                         aggiunti. Vuoto = nessun vincolo. Stessa scelta del tab "Routings". -->
+                    <Input
+                        value="{phx>/bomUsage}"
+                        maxLength="1"
+                        placeholder="{i18n>phxAnyPlaceholder}"
+                        liveChange=".onPhantomDirty"/>
+                    <Text text="{i18n>phxHelpBomUsage}" class="sapUiTinyMarginTop"/>
+                </VBox>
+
+                <Label text="{i18n>phxLblBomVariant}" tooltip="BomVariant"/>
+                <VBox>
+                    <Input
+                        value="{phx>/bomVariant}"
+                        maxLength="2"
+                        placeholder="{i18n>phxAnyPlaceholder}"
+                        liveChange=".onPhantomDirty"/>
+                    <Text text="{i18n>phxHelpBomVariant}" class="sapUiTinyMarginTop"/>
+                </VBox>
+
+                <Label text="{i18n>phxLblDateMode}" tooltip="EffectivityDateMode"/>
+                <VBox>
+                    <Select selectedKey="{phx>/dateMode}" change=".onPhantomDirty">
+                        <core:Item key="TODAY" text="{i18n>phxDateToday}"/>
+                        <core:Item key="ORDER_START_DATE" text="{i18n>phxDateOrderStart}"/>
+                    </Select>
+                    <Text text="{i18n>phxHelpDateMode}" class="sapUiTinyMarginTop"/>
+                </VBox>
+
+                <!-- ============================================================
+                     [ROUTING-COMP-SOURCE] La data di riferimento della distinta per i cicli
+                     (feature 0025).
+
+                     E' l'interruttore della SECONDA lettura del job dei cicli: con la data
+                     impostata, oltre ai componenti agganciati alle operazioni in SAP il job
+                     legge la distinta del materiale di testata a quella data e aggiunge cio'
+                     che manca, collocandolo con le regole dei gruppi oggetto.
+
+                     Va fissata MOLTO avanti nel tempo — fine 2500 — e non e' un trucco: cosi'
+                     qualunque componente che una modifica tecnica fara' entrare in distinta
+                     risulta gia' oggi, e nessuno deve ricordarsi di aggiornare il campo. Una
+                     data vicina invecchierebbe in silenzio.
+
+                     VUOTA = seconda lettura spenta, cioe' il comportamento di prima. E' anche
+                     lo stato del primo rilascio, ed e' la ragione per cui il campo non e'
+                     `required`.
+
+                     `valueFormat` e `displayFormat` sono separati apposta: il primo e' la forma
+                     in cui il valore viaggia verso CAP (`yyyy-MM-dd`, quella di un campo Date),
+                     il secondo quella che l'utente legge. Senza il primo, il DatePicker
+                     manderebbe la data nel formato locale e il campo verrebbe rifiutato.
+                     ============================================================ -->
+                <Label text="{i18n>phxLblKeyDate}" tooltip="RoutingBomKeyDate"/>
+                <VBox>
+                    <DatePicker
+                        id="phxRoutingBomKeyDate"
+                        value="{phx>/routingBomKeyDate}"
+                        valueFormat="yyyy-MM-dd"
+                        displayFormat="dd/MM/yyyy"
+                        placeholder="{i18n>phxKeyDatePlaceholder}"
+                        valueState="{phx>/keyDateState}"
+                        valueStateText="{phx>/keyDateStateText}"
+                        change=".onPhantomKeyDateChange"/>
+                    <Text text="{i18n>phxHelpKeyDate}" class="sapUiTinyMarginTop"/>
+                </VBox>
+
+                <!-- Che il Salva sia condiviso fra le tre tab va SCRITTO: la riga e' una sola,
+                     e scoprirlo salvando sarebbe una sorpresa. -->
+                <Label text=""/>
+                <Text text="{i18n>phxHelpSharedSave}" class="sapUiSmallMarginBottom"/>
+
+                <Label text=""/>
+                <HBox class="sapUiTinyMarginTop">
+                    <Button text="{i18n>phxBtnSave}" type="Emphasized" icon="sap-icon://save"
+                            enabled="{phx>/dirty}" press=".onSavePhantomConfig"
+                            class="sapUiTinyMarginEnd"/>
+                    <Button text="{i18n>phxBtnCancel}" type="Transparent" icon="sap-icon://sys-cancel"
+                            enabled="{phx>/dirty}" press=".onCancelPhantomConfig"/>
+                </HBox>
+
+            </form:content>
+        </form:SimpleForm>
+
+    </VBox>
+
+</core:FragmentDefinition>

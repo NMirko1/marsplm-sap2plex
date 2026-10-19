@@ -1,0 +1,85 @@
+<mvc:View controllerName="avvaleplm.marsplm.sap2plex.main.controller.DashboardNavigation"
+    xmlns:mvc="sap.ui.core.mvc"
+    xmlns="sap.m"
+    xmlns:f="sap.f"
+    xmlns:core="sap.ui.core">
+ 
+    <f:DynamicPage>
+        <!-- HEADER SECTION -->
+        <f:title>
+            <f:DynamicPageTitle>
+                <f:heading><Title text="{i18n>dashboardTitle}"/></f:heading>
+                <f:actions>
+                    <Label text="{i18n>plantFilterLabel}" class="sapUiTinyMarginEnd"/>
+                    <!-- [PLANT-ACCESS] I plant su cui l'utente ha un ruolo (feature 0048). Prima
+                         leggeva `catalog>/ZPlant` filtrando `Status = 'Active'` QUI, nella view:
+                         mostrava tutti i plant attivi — anche i non licenziati, e a chiunque. Il
+                         filtro non serve più: il perimetro lo decide il server. -->
+                    <MultiComboBox
+                        id="plantFilter"
+                        width="22rem"
+                        placeholder="{i18n>plantFilterPlaceholder}"
+                        selectionChange=".onPlantFilterChange"
+                        selectionFinish=".onPlantFilterChange"
+                        items="{plantScope>/plants}">
+                        <core:Item key="{plantScope>Plant}" text="{plantScope>Plant} - {plantScope>Name}"/>
+                    </MultiComboBox>
+                </f:actions>
+            </f:DynamicPageTitle>
+        </f:title>
+
+        <!-- [PLANT-ACCESS] Perché un plant non c'è. Sta QUI e non nei MessageStrip delle tre
+             schede: il perimetro è uno e non tre, e la nota di scheda viene azzerata a ogni
+             lettura (`_loadTab`), quindi là sparirebbe al primo Aggiorna. -->
+        <f:header>
+            <f:DynamicPageHeader pinnable="false">
+                <MessageStrip
+                    visible="{plantScope>/note/visible}"
+                    text="{plantScope>/note/text}"
+                    type="{plantScope>/note/type}"
+                    showIcon="true"/>
+            </f:DynamicPageHeader>
+        </f:header>
+
+        <!-- CONTENT WITH TABS -->
+        <f:content>
+            <IconTabBar
+                id="dashboardTabs"
+                headerMode="Inline"
+                expandable="false">
+                <items>
+                    <IconTabFilter
+                        key="products"
+                        text="{i18n>tabProducts}"
+                        icon="sap-icon://product">
+                        <core:Fragment
+                            fragmentName="avvaleplm.marsplm.sap2plex.main.view.fragments.ProductsTab"
+                            type="XML"/>
+                    </IconTabFilter>
+
+                    <IconTabFilter
+                        key="routings"
+                        text="{i18n>tabRoutings}"
+                        icon="sap-icon://workflow-tasks">
+                        <core:Fragment
+                            fragmentName="avvaleplm.marsplm.sap2plex.main.view.fragments.RoutingsTab"
+                            type="XML"/>
+                    </IconTabFilter>
+
+                    <IconTabFilter
+                        key="productionOrders"
+                        text="{i18n>tabProductionOrders}"
+                        icon="sap-icon://factory">
+                        <core:Fragment
+                            fragmentName="avvaleplm.marsplm.sap2plex.main.view.fragments.ProductionOrdersTab"
+                            type="XML"/>
+                    </IconTabFilter>
+
+                    <!-- Future tabs will be added here -->
+                </items>
+            </IconTabBar>
+        </f:content>
+
+    </f:DynamicPage>
+</mvc:View>
+ 

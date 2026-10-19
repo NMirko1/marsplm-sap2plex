@@ -1,0 +1,661 @@
+<mvc:View controllerName="avvaleplm.marsplm.sap2plex.main.controller.ProdOrderDetail"
+    xmlns:mvc="sap.ui.core.mvc"
+    xmlns:core="sap.ui.core"
+    xmlns="sap.m"
+    xmlns:f="sap.f"
+    xmlns:form="sap.ui.layout.form"
+    xmlns:dnd="sap.ui.core.dnd"
+    xmlns:editor="sap.ui.codeeditor"
+    xmlns:t="sap.ui.table"
+    xmlns:rowmodes="sap.ui.table.rowmodes">
+
+    <!-- busyIndicatorDelay="0": il ritardo predefinito di UI5 e' un secondo, e in quel secondo non
+         compare ne' il velo ne' il livello che intercetta i clic — cioe' esattamente la finestra in
+         cui l'utente impaziente preme una seconda volta «Auto-Assegna». Il prezzo e' un lampo di
+         velo sulle letture rapidissime (canale ONPREM in locale): cosmetico, contro un secondo di
+         pagina cliccabile che e' funzionale. -->
+    <f:DynamicPage busy="{detailModel>/busy}" busyIndicatorDelay="0">
+        <!-- HEADER -->
+        <f:title>
+            <f:DynamicPageTitle>
+                <f:heading>
+                    <Title text="{parts: ['i18n>prodOrderDetailTitle', 'detailModel>/ManufacturingOrder'], formatter: '.formatTitle'}" class="sapUiSmallMarginEnd"/>
+                </f:heading>
+                <f:actions>
+                    <Button
+                        text="{i18n>btnCreateJob}"
+                        press="onCreateJobInPlex"
+                        type="Emphasized"
+                        icon="sap-icon://sap-box"/>
+                    <!-- Feature 0012: split entry point. Visible and disabled with the reason
+                         readable without pressing it (FR-01, FR-02, M-01) -->
+                    <Button
+                        id="btnSplitJob"
+                        text="{i18n>btnSplitJob}"
+                        press=".onOpenSplitDialog"
+                        type="Ghost"
+                        icon="sap-icon://split"
+                        enabled="{splitModel>/canOpen}"
+                        tooltip="{splitModel>/openTooltip}"/>
+                    <Button
+                        text="{i18n>btnBack}"
+                        press="onBack"
+                        icon="sap-icon://nav-back"/>
+                </f:actions>
+                <f:breadcrumbs>
+                    <Breadcrumbs>
+                        <Link text="{i18n>backToProdOrders}" press="onBack"/>
+                    </Breadcrumbs>
+                </f:breadcrumbs>
+            </f:DynamicPageTitle>
+        </f:title>
+
+        <!-- ORDER INFORMATION HEADER -->
+        <f:header>
+            <f:DynamicPageHeader pinnable="true">
+                <f:content>
+                    <FlexBox width="100%" justifyContent="SpaceBetween" wrap="Wrap">
+                        <items>
+                            <form:SimpleForm editable="false" layout="ResponsiveGridLayout"
+                                labelSpanL="6" labelSpanM="6" labelSpanS="12"
+                                class="sapUiSmallMarginEnd">
+                                <form:layoutData>
+                                    <FlexItemData growFactor="1" baseSize="30%"/>
+                                </form:layoutData>
+                                <form:content>
+                                    <Label text="{i18n>manufacturingOrder}"/>
+                                    <Text text="{detailModel>/ManufacturingOrder}"/>
+                                    <Label text="{i18n>orderType}"/>
+                                    <Text text="{detailModel>/ManufacturingOrderType}"/>
+                                    <Label text="{i18n>material}"/>
+                                    <Text text="{detailModel>/Material}"/>
+                                    <Label text="{i18n>orderDescription}"/>
+                                    <Text text="{detailModel>/OrderLongText}"/>
+                                    <Label text="{i18n>productionPlant}"/>
+                                    <Text text="{detailModel>/ProductionPlant}"/>
+                                </form:content>
+                            </form:SimpleForm>
+                            <form:SimpleForm editable="false" layout="ResponsiveGridLayout"
+                                labelSpanL="6" labelSpanM="6" labelSpanS="12"
+                                class="sapUiSmallMarginEnd">
+                                <form:layoutData>
+                                    <FlexItemData growFactor="1" baseSize="30%"/>
+                                </form:layoutData>
+                                <form:content>
+                                    <Label text="{i18n>totalQuantity}"/>
+                                    <ObjectNumber
+                                        number="{
+                                            path: 'detailModel>/TotalQuantity',
+                                            type: 'sap.ui.model.type.Float',
+                                            formatOptions: { decimals: 3 }
+                                        }"
+                                        unit="{detailModel>/ProductionUnit}"/>
+                                    <Label text="{i18n>confirmedYield}"/>
+                                    <ObjectNumber
+                                        number="{
+                                            path: 'detailModel>/MfgOrderConfirmedYieldQty',
+                                            type: 'sap.ui.model.type.Float',
+                                            formatOptions: { decimals: 3 }
+                                        }"
+                                        unit="{detailModel>/ProductionUnit}"/>
+                                    <Label text="{i18n>productionSupervisor}"/>
+                                    <Text text="{detailModel>/ProductionSupervisor}"/>
+                                    <Label text="{i18n>salesOrder}"/>
+                                    <Text text="{detailModel>/SalesOrder}"/>
+                                </form:content>
+                            </form:SimpleForm>
+                            <form:SimpleForm editable="false" layout="ResponsiveGridLayout"
+                                labelSpanL="6" labelSpanM="6" labelSpanS="12">
+                                <form:layoutData>
+                                    <FlexItemData growFactor="1" baseSize="30%"/>
+                                </form:layoutData>
+                                <form:content>
+                                    <Label text="{i18n>plannedStartDate}"/>
+                                    <Text text="{detailModel>/MfgOrderPlannedStartDate}"/>
+                                    <Label text="{i18n>plannedEndDate}"/>
+                                    <Text text="{detailModel>/MfgOrderPlannedEndDate}"/>
+                                    <Label text="{i18n>orderStatus}"/>
+                                    <ObjectStatus
+                                        text="{path: 'detailModel>/OrderIsReleased', formatter: '.formatProdOrderStatus'}"
+                                        state="{path: 'detailModel>/OrderIsReleased', formatter: '.formatProdOrderState'}"/>
+                                    <Label text="{i18n>prodOrderCreationDate}"/>
+                                    <Text text="{detailModel>/MfgOrderCreationDate}"/>
+                                </form:content>
+                            </form:SimpleForm>
+                        </items>
+                    </FlexBox>
+                </f:content>
+            </f:DynamicPageHeader>
+        </f:header>
+
+        <!-- CONTENT: IconTabBar with Cycle trees, Send History and Packages -->
+        <f:content>
+            <VBox width="100%">
+
+            <!-- Feature 0012: permanent indication of a split order (FR-29) and of the
+                 divergence between SAP order quantity and sum of the Plex jobs (FR-30, M-15) -->
+            <MessageStrip
+                id="splitOrderStrip"
+                visible="{splitModel>/isSplit}"
+                text="{splitModel>/splitStripText}"
+                type="Information"
+                showIcon="true"
+                class="sapUiSmallMarginBegin sapUiSmallMarginEnd sapUiSmallMarginTop"/>
+            <MessageStrip
+                id="splitOrderMismatchStrip"
+                visible="{splitModel>/mismatch}"
+                text="{splitModel>/mismatchText}"
+                type="Warning"
+                showIcon="true"
+                class="sapUiSmallMarginBegin sapUiSmallMarginEnd sapUiTinyMarginTop"/>
+
+            <IconTabBar id="prodOrderDetailTabs" headerMode="Inline" expandable="false" class="sapUiSmallMargin">
+                <items>
+                    <!-- Tab 1: Cycle Trees (existing content, unchanged) -->
+                    <IconTabFilter key="cycle" text="{i18n>tabProdOrderCycle}" icon="sap-icon://tree">
+            <FlexBox width="100%" class="sapUiMediumMargin" wrap="Wrap">
+                <items>
+                    <!-- LEFT: Operations & Components Tree -->
+                    <VBox class="sapUiSmallMarginEnd" width="48%">
+                        <Title text="{i18n>operationsTreeTitle}" level="H2" class="sapUiSmallMarginBottom"/>
+                        <OverflowToolbar class="sapUiSmallMarginBottom">
+                            <Button
+                                text="{i18n>btnRefreshCycle}"
+                                icon="sap-icon://refresh"
+                                press="onRefreshSapTree"/>
+                            <Button
+                                id="btnClearHighlight"
+                                text="{i18n>btnClearHighlight}"
+                                icon="sap-icon://eraser"
+                                press="onClearHighlights"/>
+                            <ToolbarSpacer/>
+                        </OverflowToolbar>
+                        <VBox class="treePanel">
+                            <!-- [DETAIL-RESET] Il velo e' di QUEST'AREA: la testata arriva subito
+                                 dalla riga cliccata, l'albero no. -->
+                            <Tree
+                                id="operationsTree"
+                                busy="{treeModel>/busy}"
+                                items="{path: 'treeModel>/nodes', templateShareable: false}"
+                                toggleOpenState="onSapTreeToggle">
+
+                                <dragDropConfig>
+                                    <dnd:DragInfo sourceAggregation="items"/>
+                                </dragDropConfig>
+
+                                <CustomTreeItem class="{treeModel>cssClass}">
+                                    <HBox alignItems="Center" class="treeNodeContent">
+                                        <core:Icon
+                                            src="{treeModel>icon}"
+                                            class="{treeModel>iconClass}"
+                                            color="{treeModel>iconColor}"/>
+                                        <VBox class="sapUiSmallMarginBegin" width="100%">
+                                            <Text text="{treeModel>text}" class="treeNodeTitle"/>
+                                            <Text text="{treeModel>description}" class="treeNodeDesc"/>
+                                        </VBox>
+                                        <core:Icon
+                                            src="sap-icon://chain-link"
+                                            class="linkIcon"
+                                            visible="{= ${treeModel>nodeType} === 'operation'}"
+                                            color="{= ${treeModel>hasLink} ? '#0854A0' : '#CCCCCC'}"
+                                            press="onHighlightLinkedPlexOps"/>
+                                    </HBox>
+                                </CustomTreeItem>
+                            </Tree>
+                        </VBox>
+                    </VBox>
+
+                    <!-- RIGHT: Plex Cycle Tree -->
+                    <VBox width="48%">
+                        <Title text="{i18n>plexCycleTitle}" level="H2" class="sapUiSmallMarginBottom"/>
+
+                        <!-- Toolbar -->
+                        <OverflowToolbar class="sapUiSmallMarginBottom">
+                            <Button
+                                id="btnAddOperations"
+                                text="{i18n>btnAddOperations}"
+                                icon="sap-icon://add"
+                                press="onAddPlexOperations"
+                                type="Emphasized"/>
+                            <Button
+                                id="btnRemoveOperation"
+                                text="{i18n>btnRemoveOperation}"
+                                icon="sap-icon://delete"
+                                press="onRemovePlexOperation"
+                                enabled="{plexCycleModel>/removeEnabled}"/>
+                            <Button
+                                id="btnAutoAssign"
+                                text="{i18n>btnAutoAssign}"
+                                icon="sap-icon://chain-link"
+                                press="onAutoAssignComponents"/>
+                            <!-- priority="NeverOverflow": il pulsante di salvataggio non entra MAI
+                                 nel menu «...». OverflowToolbar riempie quel menu partendo DAL
+                                 FONDO, e finche' «Salva Ciclo» era l'ultimo elemento ci finiva per
+                                 primo: l'utente costruiva l'albero e usciva senza salvare, senza
+                                 nessun segnale. Lo scambio di posizione con «Importa dal Ciclo» lo
+                                 allontana dal bordo, questa riga lo blinda a qualunque larghezza
+                                 della finestra. -->
+                            <Button
+                                id="btnSaveCycle"
+                                text="{i18n>btnSaveCycle}"
+                                icon="sap-icon://save"
+                                press="onSavePlexCycle"
+                                type="Accept"
+                                enabled="{plexCycleModel>/dirty}">
+                                <layoutData>
+                                    <OverflowToolbarLayoutData priority="NeverOverflow"/>
+                                </layoutData>
+                            </Button>
+                            <ToolbarSpacer/>
+                            <Button
+                                id="btnMoveUp"
+                                icon="sap-icon://navigation-up-arrow"
+                                tooltip="{i18n>btnMoveUp}"
+                                press="onMoveOperationUp"
+                                enabled="{plexCycleModel>/moveUpEnabled}"/>
+                            <Button
+                                id="btnMoveDown"
+                                icon="sap-icon://navigation-down-arrow"
+                                tooltip="{i18n>btnMoveDown}"
+                                press="onMoveOperationDown"
+                                enabled="{plexCycleModel>/moveDownEnabled}"/>
+                            <ToolbarSeparator/>
+                            <!-- [ORDER-CYCLE-IMPORT] Ri-importa il ciclo salvato del materiale.
+                                 L'import automatico scatta solo all'apertura a ciclo vuoto: senza
+                                 questo pulsante, un ciclo corretto dopo il primo salvataggio non
+                                 arrivava piu' sull'ordine. -->
+                            <Button
+                                id="btnImportFromRouting"
+                                text="{i18n>btnImportFromRouting}"
+                                icon="sap-icon://download-from-cloud"
+                                press="onImportFromRouting"/>
+                        </OverflowToolbar>
+
+                        <!-- [ORDER-CYCLE-IMPORT] Esito dell'import del ciclo del materiale, ANCHE
+                             quando non ha importato niente: il testo lo compone il server e nomina
+                             il caso (nessun ciclo salvato, ciclo su un altro gruppo/contatore,
+                             ciclo fuori perimetro, ...). Prima quel caso finiva in console e a
+                             schermo restava un albero vuoto senza spiegazione. -->
+                        <MessageStrip
+                            id="msImportInfo"
+                            visible="{importInfoModel>/visible}"
+                            type="{importInfoModel>/type}"
+                            text="{importInfoModel>/text}"
+                            showIcon="true"
+                            showCloseButton="true"
+                            close="onCloseImportInfo"
+                            class="sapUiSmallMarginBottom"/>
+
+                        <!-- [ORDER-COMP-REMOVE] Le rimozioni in vigore su quest'ordine, e il motivo
+                             per cui il tasto Rimuovi è spento sui componenti dopo l'invio. Due
+                             strisce e non una: un elenco di rimozioni e un divieto sono due fatti
+                             indipendenti, e possono essere veri insieme. -->
+                        <MessageStrip
+                            id="msRemovedComponents"
+                            visible="{= ${plexCycleModel>/removedCount} > 0 }"
+                            type="Warning"
+                            text="{plexCycleModel>/removedText}"
+                            showIcon="true"
+                            class="sapUiSmallMarginBottom"/>
+                        <MessageStrip
+                            id="msRemoveBlocked"
+                            visible="{plexCycleModel>/alreadySent}"
+                            type="Information"
+                            text="{i18n>orderCompRemoveBlocked}"
+                            showIcon="true"
+                            class="sapUiSmallMarginBottom"/>
+
+                        <!-- Plex Cycle Tree -->
+                        <VBox class="treePanel plexTreePanel">
+                            <Tree
+                                id="plexCycleTree"
+                                busy="{plexCycleModel>/busy}"
+                                items="{path: 'plexCycleModel>/nodes', templateShareable: false}"
+                                mode="SingleSelectMaster"
+                                selectionChange="onPlexTreeSelectionChange"
+                                toggleOpenState="onPlexTreeToggle">
+
+                                <dragDropConfig>
+                                    <dnd:DragInfo sourceAggregation="items"/>
+                                    <dnd:DropInfo
+                                        targetAggregation="items"
+                                        dropPosition="OnOrBetween"
+                                        dropLayout="Vertical"
+                                        drop="onPlexTreeDrop"/>
+                                </dragDropConfig>
+
+                                <CustomTreeItem class="{plexCycleModel>cssClass}">
+                                    <HBox alignItems="Center" class="treeNodeContent">
+                                        <core:Icon
+                                            src="{plexCycleModel>icon}"
+                                            class="{plexCycleModel>iconClass}"
+                                            color="{plexCycleModel>iconColor}"/>
+                                        <VBox class="sapUiSmallMarginBegin" width="100%">
+                                            <Text text="{plexCycleModel>text}" class="treeNodeTitle"/>
+                                            <Text text="{plexCycleModel>description}" class="treeNodeDesc"/>
+                                        </VBox>
+                                        <core:Icon
+                                            src="sap-icon://chain-link"
+                                            class="linkIcon"
+                                            visible="{= ${plexCycleModel>nodeType} === 'plexOperation'}"
+                                            color="{= ${plexCycleModel>hasLink} ? '#0854A0' : '#CCCCCC'}"
+                                            press="onHighlightLinkedSapOp"/>
+                                        <core:Icon
+                                            src="sap-icon://edit"
+                                            class="linkIcon"
+                                            visible="{= ${plexCycleModel>nodeType} === 'plexOperation'}"
+                                            color="#666666"
+                                            tooltip="{i18n>editLink}"
+                                            press="onLinkPlexOperation"/>
+                                        <!-- [COMP-SOURCE] Componente collocato a mano (feature 0036).
+                                             Identica alla gemella in RoutingDetail.view.xml: il
+                                             template di riga e' una COPIA, non un fragment condiviso,
+                                             quindi il marcatore va scritto due volte — e dimenticare
+                                             questa meta' lascerebbe l'icona sul solo ciclo.
+                                             NON va nell'albero SAP di sinistra: la' i componenti non
+                                             sono assegnati a nessuna operazione, e il marcatore che
+                                             vive la' e' quello dei rimossi ([ORDER-COMP-REMOVE]). -->
+                                        <core:Icon
+                                            src="sap-icon://pushpin-on"
+                                            class="linkIcon treeIconManualAssign"
+                                            visible="{= ${plexCycleModel>nodeType} === 'plexComponent' &amp;&amp; ${plexCycleModel>isManual} }"
+                                            color="#0854A0"
+                                            tooltip="{i18n>compManualAssigned}"/>
+                                        <!-- [COMP-ORPHAN] Il componente non e' piu' fra quelli
+                                             dell'ordine in SAP (feature 0037). Non c'e' sulla view
+                                             del CICLO, e non e' una dimenticanza: la' il browser non
+                                             ha la seconda lettura del server (la distinta alla data
+                                             di riferimento), quindi il suo insieme e' piu' STRETTO e
+                                             il marcatore darebbe falsi positivi — direbbe «sara'
+                                             rimosso» di righe che la sincronizzazione tiene. Sul
+                                             ciclo la notizia arriva dal messaggio dell'invio. -->
+                                        <core:Icon
+                                            src="sap-icon://alert"
+                                            class="linkIcon treeIconCompOrphan"
+                                            visible="{= ${plexCycleModel>nodeType} === 'plexComponent' &amp;&amp; ${plexCycleModel>isOrphan} }"
+                                            color="#BB0000"
+                                            tooltip="{i18n>compOrphanTooltip}"/>
+                                    </HBox>
+                                </CustomTreeItem>
+                            </Tree>
+                        </VBox>
+                    </VBox>
+                </items>
+            </FlexBox>
+                    </IconTabFilter>
+
+                    <!-- Tab 2: Send History (Plex exchange logs) -->
+                    <IconTabFilter key="logs" text="{i18n>tabSyncHistory}" icon="sap-icon://history">
+                        <VBox class="sapUiSmallMargin">
+                            <Title text="{i18n>prodOrderSyncLogTitle}" level="H2" class="sapUiSmallMarginBottom"/>
+                            <Table
+                                id="prodOrderLogTable"
+                                inset="false"
+                                busy="{prodOrderLogModel>/busy}"
+                                items="{prodOrderLogModel>/logs}"
+                                mode="SingleSelectMaster"
+                                selectionChange="onProdOrderLogRowSelect">
+
+                                <columns>
+                                    <Column width="5em"><Text text="{i18n>colCounter}"/></Column>
+                                    <!-- [ORDER-LOG-OP] Dalla 0031 questa lista mescola cinque cose —
+                                         invio job, spacchettamento, chiusura tecnica, documento
+                                         materiale, conferma d'ordine — e senza questa colonna si
+                                         somigliano tutte. -->
+                                    <Column width="11em"><Text text="{i18n>colOperation}"/></Column>
+                                    <Column width="8em"><Text text="{i18n>colSendDate}"/></Column>
+                                    <Column width="7em"><Text text="{i18n>colSendTime}"/></Column>
+                                    <Column hAlign="Center" width="8em"><Text text="{i18n>colStatus}"/></Column>
+                                    <Column><Text text="{i18n>colMessage}"/></Column>
+                                </columns>
+
+                                <items>
+                                    <ColumnListItem>
+                                        <cells>
+                                            <ObjectNumber number="{prodOrderLogModel>Counter}"/>
+                                            <Text text="{path: 'prodOrderLogModel>Operation', formatter: '.formatOrderOperation'}"/>
+                                            <Text text="{prodOrderLogModel>SentDate}"/>
+                                            <Text text="{prodOrderLogModel>SentTime}"/>
+                                            <ObjectStatus
+                                                text="{path: 'prodOrderLogModel>Status', formatter: '.formatStatusText'}"
+                                                state="{path: 'prodOrderLogModel>Status', formatter: '.formatStatusState'}"
+                                                icon="{path: 'prodOrderLogModel>Status', formatter: '.formatStatusIcon'}"/>
+                                            <Text text="{prodOrderLogModel>Message}"/>
+                                        </cells>
+                                    </ColumnListItem>
+                                </items>
+                            </Table>
+
+                            <!-- [LOG-PAGE] La barra delle pagine: una sola per le tre schede. -->
+                            <core:Fragment
+                                fragmentName="avvaleplm.marsplm.sap2plex.main.view.fragments.LogPager"
+                                type="XML"/>
+
+                            <!-- JSON Detail Panel -->
+                            <!-- [LOG-TRACE] Il velo e' del PANNELLO, non della pagina: la lista e'
+                                 gia' a schermo, ed e' da li' che si e' cliccato. -->
+                            <VBox
+                                visible="{prodOrderJsonDetailModel>/visible}"
+                                busy="{prodOrderJsonDetailModel>/busy}"
+                                class="sapUiSmallMarginTop">
+
+                                <Toolbar class="sapUiSmallMarginBottom">
+                                    <Title text="{i18n>routingJsonDetailTitle}" level="H3"/>
+                                    <ToolbarSpacer/>
+                                    <Button
+                                        icon="sap-icon://decline"
+                                        press="onCloseProdOrderJsonDetail"
+                                        tooltip="{i18n>closeJsonPanel}"/>
+                                </Toolbar>
+
+                                <VBox class="sapUiSmallMarginBegin sapUiSmallMarginEnd">
+                                    <Label text="{i18n>selectedLogInfo}" design="Bold"/>
+                                    <Text text="{i18n>colCounter}: {prodOrderJsonDetailModel>/Counter}"/>
+                                    <Text text="{i18n>colSendDate}: {prodOrderJsonDetailModel>/SentDate}"/>
+                                    <Text text="{i18n>colSendTime}: {prodOrderJsonDetailModel>/SentTime}"/>
+                                </VBox>
+
+                                <!-- [LOG-TRACE] Una lettura caduta si DICHIARA, e i due riquadri
+                                     spariscono: vuoti direbbero «non e' stato mandato niente». -->
+                                <MessageStrip
+                                    visible="{= !!${prodOrderJsonDetailModel>/error} }"
+                                    text="{prodOrderJsonDetailModel>/error}"
+                                    type="Warning"
+                                    showIcon="true"
+                                    class="sapUiSmallMarginTop sapUiSmallMarginBegin sapUiSmallMarginEnd sapUiSmallMarginBottom"/>
+
+                                <VBox
+                                    visible="{= !${prodOrderJsonDetailModel>/error} }"
+                                    class="sapUiSmallMarginTop sapUiSmallMarginBegin sapUiSmallMarginEnd">
+                                    <Label text="{i18n>requestJsonLabel}" design="Bold"/>
+                                    <editor:CodeEditor
+                                        id="prodOrderRequestJsonEditor"
+                                        type="json"
+                                        height="250px"
+                                        value="{prodOrderJsonDetailModel>/RequestJsonFormatted}"
+                                        editable="false"
+                                        lineNumbers="true"
+                                        syntaxHints="true"/>
+                                </VBox>
+
+                                <VBox
+                                    visible="{= !${prodOrderJsonDetailModel>/error} }"
+                                    class="sapUiSmallMarginTop sapUiSmallMarginBegin sapUiSmallMarginEnd sapUiSmallMarginBottom">
+                                    <Label text="{i18n>responseJsonLabel}" design="Bold"/>
+                                    <ObjectStatus
+                                        visible="{= ${prodOrderJsonDetailModel>/ResponseStatus} !== null }"
+                                        text="{prodOrderJsonDetailModel>/ResponseStatusText}"
+                                        state="{path: 'prodOrderJsonDetailModel>/ResponseStatus', formatter: '.formatHttpStatusState'}"
+                                        icon="{path: 'prodOrderJsonDetailModel>/ResponseStatus', formatter: '.formatHttpStatusIcon'}"
+                                        class="sapUiSmallMarginTop sapUiSmallMarginBottom"/>
+                                    <editor:CodeEditor
+                                        id="prodOrderResponseJsonEditor"
+                                        type="json"
+                                        height="250px"
+                                        value="{prodOrderJsonDetailModel>/ResponseJsonFormatted}"
+                                        editable="false"
+                                        lineNumbers="true"
+                                        syntaxHints="true"/>
+                                </VBox>
+                            </VBox>
+                        </VBox>
+                    </IconTabFilter>
+
+                    <!-- Tab 3: Packages of the order (feature 0012, FR-28) -->
+                    <IconTabFilter
+                        key="packages"
+                        text="{i18n>tabProdOrderPackages}"
+                        icon="sap-icon://split"
+                        count="{splitModel>/packageCountText}">
+                        <!-- [DETAIL-RESET] Il velo e' di QUEST'AREA: senza, la scheda mostrerebbe i
+                             pacchetti dell'ordine precedente finche' `_loadSplitInfo` non risponde. -->
+                        <VBox class="sapUiSmallMargin" busy="{splitModel>/tabBusy}">
+                            <Title text="{i18n>splitPackagesTitle}" level="H2" class="sapUiSmallMarginBottom"/>
+
+                            <!-- Summary row above the table (TDD §4.2) -->
+                            <HBox wrap="Wrap" class="sapUiSmallMarginBottom">
+                                <VBox class="sapUiMediumMarginEnd">
+                                    <Label text="{i18n>splitMainQty}"/>
+                                    <ObjectNumber
+                                        emphasized="true"
+                                        number="{
+                                            path: 'splitModel>/mainQuantity',
+                                            type: 'sap.ui.model.type.Float',
+                                            formatOptions: { decimals: 3 }
+                                        }"
+                                        unit="{splitModel>/unit}"/>
+                                </VBox>
+                                <VBox class="sapUiMediumMarginEnd">
+                                    <Label text="{i18n>splitLotSum}"/>
+                                    <ObjectNumber
+                                        number="{
+                                            path: 'splitModel>/lotSum',
+                                            type: 'sap.ui.model.type.Float',
+                                            formatOptions: { decimals: 3 }
+                                        }"
+                                        unit="{splitModel>/unit}"/>
+                                </VBox>
+                                <VBox class="sapUiMediumMarginEnd">
+                                    <Label text="{i18n>splitReferenceQty}"/>
+                                    <ObjectNumber
+                                        number="{
+                                            path: 'splitModel>/referenceQuantity',
+                                            type: 'sap.ui.model.type.Float',
+                                            formatOptions: { decimals: 3 }
+                                        }"
+                                        unit="{splitModel>/unit}"/>
+                                </VBox>
+                                <VBox>
+                                    <Label text="{i18n>splitSapOrderQty}"/>
+                                    <ObjectNumber
+                                        number="{
+                                            path: 'splitModel>/sapOrderQuantity',
+                                            type: 'sap.ui.model.type.Float',
+                                            formatOptions: { decimals: 3 }
+                                        }"
+                                        unit="{splitModel>/unit}"/>
+                                </VBox>
+                            </HBox>
+
+                            <OverflowToolbar class="sapUiSmallMarginBottom">
+                                <Button
+                                    id="btnSplitRefreshPackages"
+                                    text="{i18n>btnSplitRefresh}"
+                                    icon="sap-icon://refresh"
+                                    press=".onSplitRefresh"/>
+                                <ToolbarSpacer/>
+                            </OverflowToolbar>
+
+                            <Text
+                                id="splitNoPackagesText"
+                                visible="{= !${splitModel>/hasPackages} }"
+                                text="{i18n>splitNoPackages}"/>
+
+                            <t:Table
+                                id="splitPackagesTable"
+                                visible="{splitModel>/hasPackages}"
+                                rows="{splitModel>/packages}"
+                                selectionMode="None"
+                                enableColumnReordering="false"
+                                columnHeaderVisible="true">
+                                <t:rowMode>
+                                    <rowmodes:Fixed rowCount="6"/>
+                                </t:rowMode>
+                                <t:columns>
+                                    <t:Column width="12rem" sortProperty="PackageJobNumber" filterProperty="PackageJobNumber">
+                                        <t:label>
+                                            <Label text="{i18n>colSplitPackageCode}"/>
+                                        </t:label>
+                                        <t:template>
+                                            <Text text="{splitModel>PackageJobNumber}"/>
+                                        </t:template>
+                                    </t:Column>
+                                    <t:Column width="9rem" hAlign="End" sortProperty="Quantity" filterProperty="Quantity">
+                                        <t:label>
+                                            <Label text="{i18n>colSplitQuantity}"/>
+                                        </t:label>
+                                        <t:template>
+                                            <ObjectNumber
+                                                number="{
+                                                    path: 'splitModel>Quantity',
+                                                    type: 'sap.ui.model.type.Float',
+                                                    formatOptions: { decimals: 3 }
+                                                }"
+                                                unit="{splitModel>/unit}"/>
+                                        </t:template>
+                                    </t:Column>
+                                    <t:Column width="13rem" sortProperty="CreatedAt" filterProperty="CreatedAt">
+                                        <t:label>
+                                            <Label text="{i18n>colSplitCreatedAt}"/>
+                                        </t:label>
+                                        <t:template>
+                                            <Text text="{path: 'splitModel>CreatedAt', formatter: '.formatSplitDateTime'}"/>
+                                        </t:template>
+                                    </t:Column>
+                                    <t:Column width="15rem" sortProperty="SplitState" filterProperty="SplitState">
+                                        <t:label>
+                                            <Label text="{i18n>colSplitState}"/>
+                                        </t:label>
+                                        <t:template>
+                                            <ObjectStatus
+                                                text="{path: 'splitModel>SplitState', formatter: '.formatSplitStateText'}"
+                                                state="{path: 'splitModel>SplitState', formatter: '.formatSplitStateState'}"
+                                                icon="{path: 'splitModel>SplitState', formatter: '.formatSplitStateIcon'}"/>
+                                        </t:template>
+                                    </t:Column>
+                                    <t:Column sortProperty="LastMessage" filterProperty="LastMessage">
+                                        <t:label>
+                                            <Label text="{i18n>colSplitLastMessage}"/>
+                                        </t:label>
+                                        <t:template>
+                                            <Text text="{splitModel>LastMessage}" wrapping="false"/>
+                                        </t:template>
+                                    </t:Column>
+                                    <!-- Remedy command carried by the anomalous row (FR-28, FR-26) -->
+                                    <t:Column width="9rem" hAlign="Center">
+                                        <t:label>
+                                            <Label text="{i18n>colSplitAction}"/>
+                                        </t:label>
+                                        <t:template>
+                                            <Button
+                                                text="{path: 'splitModel>SplitState', formatter: '.formatSplitRemedyText'}"
+                                                icon="sap-icon://wrench"
+                                                type="Ghost"
+                                                visible="{path: 'splitModel>SplitState', formatter: '.formatSplitRemedyVisible'}"
+                                                press=".onSplitFixPackage"/>
+                                        </t:template>
+                                    </t:Column>
+                                </t:columns>
+                            </t:Table>
+                        </VBox>
+                    </IconTabFilter>
+
+                </items>
+            </IconTabBar>
+
+            </VBox>
+        </f:content>
+
+    </f:DynamicPage>
+
+</mvc:View>

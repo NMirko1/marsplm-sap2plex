@@ -1,0 +1,78 @@
+<mvc:View
+    controllerName="avvaleplm.marsplm.sap2plex.adminconfigplant.controller.PlantDashboard"
+    xmlns:mvc="sap.ui.core.mvc"
+    xmlns="sap.m"
+    xmlns:core="sap.ui.core"
+    xmlns:f="sap.f">
+
+    <Page
+        id="plantDashboardPage"
+        title="{i18n>dashboardTitle}"
+        showNavButton="false">
+
+        <subHeader>
+            <OverflowToolbar>
+                <Label text="{i18n>dashboardSubtitle}" class="sapUiSmallMarginBegin sapMTitleStyleH5"/>
+                <ToolbarSpacer/>
+                <Button text="{i18n>btnAddPlant}" icon="sap-icon://add" type="Emphasized" press=".onAddPlant"/>
+                <Button text="{i18n>btnEditStatus}" icon="sap-icon://edit" press=".onEditStatus"/>
+                <Button text="{i18n>btnDeletePlant}" icon="sap-icon://delete" type="Reject" press=".onDeletePlant"/>
+            </OverflowToolbar>
+        </subHeader>
+
+        <content>
+            <FlexBox
+                id="tilesContainer"
+                wrap="Wrap"
+                justifyContent="Start"
+                alignItems="Start"
+                items="{catalog>/ZPlant}"
+                class="sapUiSmallMargin">
+
+                <GenericTile
+                    header="{catalog>PlantCode}"
+                    subheader="{catalog>PlantName}"
+                    frameType="OneByOne"
+                    state="{
+                        path: 'catalog>Status',
+                        formatter: '.formatTileState'
+                    }"
+                    press=".onPlantTilePress"
+                    class="sapUiSmallMarginEnd sapUiSmallMarginBottom">
+                    <tileContent>
+                        <TileContent>
+                            <content>
+                                <VBox alignItems="Center" justifyContent="Center" height="100%">
+                                    <core:Icon
+                                        src="sap-icon://factory"
+                                        size="2.5rem"
+                                        color="{
+                                            path: 'catalog>Status',
+                                            formatter: '.formatIconColor'
+                                        }"
+                                        class="sapUiSmallMarginBottom"/>
+                                    <ObjectStatus
+                                        text="{
+                                            path: 'catalog>Status',
+                                            formatter: '.formatStatusText'
+                                        }"
+                                        state="{
+                                            path: 'catalog>Status',
+                                            formatter: '.formatStatusState'
+                                        }"
+                                        icon="{
+                                            path: 'catalog>Status',
+                                            formatter: '.formatStatusIcon'
+                                        }"/>
+                                </VBox>
+                            </content>
+                        </TileContent>
+                    </tileContent>
+                </GenericTile>
+
+            </FlexBox>
+        </content>
+
+    </Page>
+
+</mvc:View>

@@ -1,0 +1,171 @@
+{
+    "_version": "1.80.0",
+    "sap.app": {
+        "id": "avvaleplm.marsplm.sap2plex.adminconfiglicense",
+        "type": "application",
+        "i18n": {
+            "bundleUrl": "i18n/i18n.properties",
+            "supportedLocales": [
+                "",
+                "it"
+            ],
+            "fallbackLocale": ""
+        },
+        "applicationVersion": {
+            "version": "0.0.1"
+        },
+        "title": "{{appTitle}}",
+        "description": "{{appDescription}}",
+        "resources": "resources.json",
+        "sourceTemplate": {
+            "id": "@sap/generator-fiori:lrop",
+            "version": "1.20.2",
+            "toolsId": "a1b2c3d4-0000-43be-8bfe-0d233608bff2"
+        },
+        "dataSources": {
+            "mainService": {
+                "uri": "odata/v4/catalog/",
+                "type": "OData",
+                "settings": {
+                    "annotations": [],
+                    "odataVersion": "4.0"
+                }
+            }
+        }
+    },
+    "sap.ui": {
+        "technology": "UI5",
+        "icons": {
+            "icon": "",
+            "favIcon": "",
+            "phone": "",
+            "phone@2": "",
+            "tablet": "",
+            "tablet@2": ""
+        },
+        "deviceTypes": {
+            "desktop": true,
+            "tablet": true,
+            "phone": true
+        }
+    },
+    "sap.ui5": {
+        "flexEnabled": true,
+        "dependencies": {
+            "minUI5Version": "1.142.0",
+            "libs": {
+                "sap.m": {},
+                "sap.ui.core": {},
+                "sap.fe.templates": {}
+            }
+        },
+        "contentDensities": {
+            "compact": true,
+            "cozy": true
+        },
+        "models": {
+            "i18n": {
+                "type": "sap.ui.model.resource.ResourceModel",
+                "settings": {
+                    "bundleName": "avvaleplm.marsplm.sap2plex.adminconfiglicense.i18n.i18n",
+                    "supportedLocales": [
+                        "",
+                        "it"
+                    ],
+                    "fallbackLocale": ""
+                }
+            },
+            "": {
+                "dataSource": "mainService",
+                "preload": true,
+                "settings": {
+                    "operationMode": "Server",
+                    "autoExpandSelect": true,
+                    "earlyRequests": true
+                }
+            },
+            "@i18n": {
+                "type": "sap.ui.model.resource.ResourceModel",
+                "uri": "i18n/i18n.properties",
+                "settings": {
+                    "supportedLocales": [
+                        "",
+                        "it"
+                    ]
+                }
+            }
+        },
+        "resources": {
+            "css": []
+        },
+        "routing": {
+            "config": {},
+            "routes": [
+                {
+                    "pattern": ":?query:",
+                    "name": "ZLicenseConfigList",
+                    "target": "ZLicenseConfigList"
+                },
+                {
+                    "pattern": "ZLicenseConfig({key}):?query:",
+                    "name": "ZLicenseConfigObjectPage",
+                    "target": "ZLicenseConfigObjectPage"
+                }
+            ],
+            "targets": {
+                "ZLicenseConfigList": {
+                    "type": "Component",
+                    "id": "ZLicenseConfigList",
+                    "name": "sap.fe.templates.ListReport",
+                    "options": {
+                        "settings": {
+                            "contextPath": "/ZLicenseConfig",
+                            "variantManagement": "Page",
+                            "navigation": {
+                                "ZLicenseConfig": {
+                                    "detail": {
+                                        "route": "ZLicenseConfigObjectPage"
+                                    }
+                                }
+                            },
+                            "controlConfiguration": {
+                                "@com.sap.vocabularies.UI.v1.LineItem": {
+                                    "tableSettings": {
+                                        "type": "ResponsiveTable",
+                                        "selectionMode": "Multi"
+                                    }
+                                }
+                            },
+                            "initialLoad": "Enabled",
+                            "creationMode": {
+                                "name": "Sync",
+                                "createAtEnd": true
+                            }
+                        }
+                    }
+                },
+                "ZLicenseConfigObjectPage": {
+                    "type": "Component",
+                    "id": "ZLicenseConfigObjectPage",
+                    "name": "sap.fe.templates.ObjectPage",
+                    "options": {
+                        "settings": {
+                            "editableHeaderContent": false,
+                            "contextPath": "/ZLicenseConfig"
+                        }
+                    }
+                }
+            }
+        },
+        "flexBundle": false
+    },
+    "sap.fiori": {
+        "registrationIds": [],
+        "archeType": "transactional"
+    },
+    "sap.fe": {
+        "app": {
+            "enableLazyLoading": true
+        }
+    }
+}

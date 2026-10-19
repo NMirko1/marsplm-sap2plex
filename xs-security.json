@@ -1,0 +1,22 @@
+{
+  "scopes": [
+    {
+      "name": "$XSAPPNAME.JOBSCHEDULER",
+      "description": "JOBSCHEDULER",
+      "grant-as-authority-to-apps": [
+        "$XSSERVICENAME(marsplm-sap2plex-job-scheduler)"
+      ]
+    }
+  ],
+  "attributes": [],
+  "role-templates": [
+    {
+      "name": "JOBSCHEDULER",
+      "description": "generated",
+      "scope-references": [
+        "$XSAPPNAME.JOBSCHEDULER"
+      ],
+      "attribute-references": []
+    }
+  ]
+}

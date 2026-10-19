@@ -1,0 +1,47 @@
+<core:FragmentDefinition
+    xmlns="sap.m"
+    xmlns:core="sap.ui.core"
+    xmlns:l="sap.ui.layout">
+
+    <Dialog
+        id="copyTemplateDialog"
+        title="{i18n>dlgCopyTemplateTitle}"
+        contentWidth="460px"
+        draggable="true"
+        resizable="true">
+
+        <content>
+            <l:VerticalLayout width="100%" class="sapUiContentPadding">
+                <MessageStrip
+                    text="{i18n>dlgCopyTemplateWarning}"
+                    type="Warning"
+                    showIcon="true"
+                    class="sapUiSmallMarginBottom"/>
+                <Label text="{i18n>dlgTemplateSelect}" required="true" labelFor="copyTemplateBox"/>
+                <ComboBox
+                    id="copyTemplateBox"
+                    width="100%"
+                    placeholder="{i18n>dlgTemplateSelectPlaceholder}"
+                    selectionChange=".onCopyTemplateSelectChange"
+                    items="{templateModel>/RoutingTemplates}">
+                    <core:Item key="{templateModel>ID}" text="{templateModel>TemplateCode} - {templateModel>Description}"/>
+                </ComboBox>
+            </l:VerticalLayout>
+        </content>
+
+        <beginButton>
+            <Button
+                text="{i18n>dlgBtnCopy}"
+                type="Emphasized"
+                enabled="{copyTmpl>/canImport}"
+                press=".onCopyTemplateConfirm"/>
+        </beginButton>
+        <endButton>
+            <Button
+                text="{i18n>dlgBtnCancel}"
+                press=".onCopyTemplateCancel"/>
+        </endButton>
+
+    </Dialog>
+
+</core:FragmentDefinition>

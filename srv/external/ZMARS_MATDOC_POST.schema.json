@@ -1,0 +1,820 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://marsplm.com/schemas/ZMARS_MATDOC_POST.schema.json",
+  "title": "Registrazione movimento merci — ZMARS_MATERIAL_DOC_POST",
+  "description": "CONTRATTO IN ESERCIZIO fra SAP BTP e Cloud Integration. POST su un HTTPS sender (/http/btpmars/sapecc/1110.02/materialdocument), nessuno strato OData: niente deep insert, niente letterali /Date(ms)/. Una sola chiamata porta testata e N righe, che l'iFlow gira a BAPI_GOODSMVT_CREATE in una sola invocazione (IS_HEADER + IT_ITEM): un documento materiale e' atomico, o passa tutto o non passa nulla. VALORI IN LETTERALI XSD, sempre stringa: la FM e' esposta come web service e Simple Transformation valida contro i tipi XSD dei data element ABAP. DATS \"2026-08-07\", TIMS \"09:30:00\", NUMC riempito a zeri, DEC col punto, XFELD \"X\". I campi SENZA VALORE si OMETTONO: per una data vuota non esiste letterale xsd:date legale. GENERATO da srv/external/generate-matdoc-contract.js: non modificare a mano. Spiegazione: ZMARS_MATDOC_POST_CONTRACT.md",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "IS_HEADER",
+    "IT_ITEM",
+    "IV_GOODS_MOVEMENT_CODE",
+    "IV_TEST_RUN"
+  ],
+  "properties": {
+    "IS_HEADER": {
+      "type": "object",
+      "description": "Testata del documento. L'endpoint accetta 14 campi; si inviano solo quelli valorizzati, gli altri sono omessi. MATERIALDOCUMENT e MATERIALDOCUMENTYEAR non si inviano mai: le assegna SAP e tornano in risposta.",
+      "additionalProperties": false,
+      "required": [
+        "MATERIALDOCUMENTYEAR",
+        "MATERIALDOCUMENT",
+        "INVENTORYTRANSACTIONTYPE",
+        "DOCUMENTDATE",
+        "POSTINGDATE",
+        "CREATIONDATE",
+        "CREATIONTIME",
+        "CREATEDBYUSER",
+        "MATERIALDOCUMENTHEADERTEXT",
+        "REFERENCEDOCUMENT",
+        "VERSIONFORPRINTINGSLIP",
+        "MANUALPRINTISTRIGGERED",
+        "CTRLPOSTGFOREXTWHSEMGMTSYST",
+        "GOODSMOVEMENTCODE"
+      ],
+      "properties": {
+        "MATERIALDOCUMENTYEAR": {
+          "type": "string",
+          "pattern": "^([0-9]{4})?$",
+          "description": "[non valorizzato: presente ma vuoto] NUMC(4) Material Document Year"
+        },
+        "MATERIALDOCUMENT": {
+          "type": "string",
+          "maxLength": 10,
+          "description": "[non valorizzato: presente ma vuoto] CHAR(10) Material Document"
+        },
+        "INVENTORYTRANSACTIONTYPE": {
+          "type": "string",
+          "maxLength": 2,
+          "description": "[non valorizzato: presente ma vuoto] CHAR(2) Transaction/Event Type"
+        },
+        "DOCUMENTDATE": {
+          "type": "string",
+          "pattern": "^([0-9]{4}-[0-9]{2}-[0-9]{2})?$",
+          "description": "[INVIATO] DATS Document Date"
+        },
+        "POSTINGDATE": {
+          "type": "string",
+          "pattern": "^([0-9]{4}-[0-9]{2}-[0-9]{2})?$",
+          "description": "[INVIATO] DATS Posting Date"
+        },
+        "CREATIONDATE": {
+          "type": "string",
+          "pattern": "^([0-9]{4}-[0-9]{2}-[0-9]{2})?$",
+          "description": "[non valorizzato: presente ma vuoto] DATS Entry Date"
+        },
+        "CREATIONTIME": {
+          "type": "string",
+          "pattern": "^([0-9]{2}:[0-9]{2}:[0-9]{2})?$",
+          "description": "[INVIATO] TIMS Time of Entry"
+        },
+        "CREATEDBYUSER": {
+          "type": "string",
+          "maxLength": 12,
+          "description": "[non valorizzato: presente ma vuoto] CHAR(12) User Name"
+        },
+        "MATERIALDOCUMENTHEADERTEXT": {
+          "type": "string",
+          "maxLength": 25,
+          "description": "[INVIATO] CHAR(25) Document Header Text"
+        },
+        "REFERENCEDOCUMENT": {
+          "type": "string",
+          "maxLength": 16,
+          "description": "[INVIATO] CHAR(16) Reference"
+        },
+        "VERSIONFORPRINTINGSLIP": {
+          "type": "string",
+          "maxLength": 1,
+          "description": "[non valorizzato: presente ma vuoto] CHAR(1) Print Version"
+        },
+        "MANUALPRINTISTRIGGERED": {
+          "type": "string",
+          "maxLength": 1,
+          "description": "[non valorizzato: presente ma vuoto] CHAR(1) Print Active"
+        },
+        "CTRLPOSTGFOREXTWHSEMGMTSYST": {
+          "type": "string",
+          "maxLength": 1,
+          "description": "[non valorizzato: presente ma vuoto] CHAR(1) External WMS Control"
+        },
+        "GOODSMOVEMENTCODE": {
+          "type": "string",
+          "maxLength": 2,
+          "description": "[INVIATO] CHAR(2) Goods Movement Code"
+        }
+      }
+    },
+    "IT_ITEM": {
+      "type": "object",
+      "description": "Tabella delle righe. L'array e' annidato sotto la chiave \"item\", come rende una tabella ABAP in JSON.",
+      "additionalProperties": false,
+      "required": [
+        "item"
+      ],
+      "properties": {
+        "item": {
+          "type": "array",
+          "minItems": 1,
+          "description": "Le righe devono viaggiare TUTTE in questa chiamata: la registrazione e' atomica e non e' spezzabile in piu' richieste.",
+          "items": {
+            "type": "object",
+            "description": "Riga. L'endpoint accetta 94 campi; si inviano solo quelli valorizzati. GOODSMOVEMENTTYPE (261, 551, ...) sta sulla riga: tipi movimento diversi convivono nello stesso documento.",
+            "additionalProperties": false,
+            "required": [
+              "MATERIALDOCUMENTYEAR",
+              "MATERIALDOCUMENT",
+              "MATERIALDOCUMENTITEM",
+              "MATERIAL",
+              "PLANT",
+              "STORAGELOCATION",
+              "BATCH",
+              "BATCHBYSUPPLIER",
+              "GOODSMOVEMENTTYPE",
+              "INVENTORYSTOCKTYPE",
+              "INVENTORYVALUATIONTYPE",
+              "INVENTORYSPECIALSTOCKTYPE",
+              "SUPPLIER",
+              "CUSTOMER",
+              "SALESORDER",
+              "SALESORDERITEM",
+              "SALESORDERSCHEDULELINE",
+              "PURCHASEORDER",
+              "PURCHASEORDERITEM",
+              "WBSELEMENT",
+              "MANUFACTURINGORDER",
+              "MANUFACTURINGORDERITEM",
+              "GOODSMOVEMENTREFDOCTYPE",
+              "GOODSMOVEMENTREASONCODE",
+              "DELIVERY",
+              "DELIVERYITEM",
+              "ACCOUNTASSIGNMENTCATEGORY",
+              "COSTCENTER",
+              "CONTROLLINGAREA",
+              "COSTOBJECT",
+              "GLACCOUNT",
+              "FUNCTIONALAREA",
+              "PROFITABILITYSEGMENT",
+              "PROFITCENTER",
+              "MASTERFIXEDASSET",
+              "FIXEDASSET",
+              "MATERIALBASEUNIT",
+              "QUANTITYINBASEUNIT",
+              "ENTRYUNIT",
+              "QUANTITYINENTRYUNIT",
+              "COMPANYCODECURRENCY",
+              "GDSMVTEXTAMTINCOCODECRCY",
+              "SLSPRCAMTINCLVATINCOCODECRCY",
+              "FISCALYEAR",
+              "FISCALYEARPERIOD",
+              "FISCALYEARVARIANT",
+              "ISSGORRCVGMATERIAL",
+              "ISSGORRCVGBATCH",
+              "ISSUINGORRECEIVINGPLANT",
+              "ISSUINGORRECEIVINGSTORAGELOC",
+              "ISSUINGORRECEIVINGSTOCKTYPE",
+              "ISSGORRCVGSPCLSTOCKIND",
+              "ISSUINGORRECEIVINGVALTYPE",
+              "ISCOMPLETELYDELIVERED",
+              "MATERIALDOCUMENTITEMTEXT",
+              "GOODSRECIPIENTNAME",
+              "UNLOADINGPOINTNAME",
+              "SHELFLIFEEXPIRATIONDATE",
+              "MANUFACTUREDATE",
+              "SERIALNUMBERSARECREATEDAUTOMLY",
+              "RESERVATION",
+              "RESERVATIONITEM",
+              "RESERVATIONITEMRECORDTYPE",
+              "RESERVATIONISFINALLYISSUED",
+              "SPECIALSTOCKIDFGSALESORDER",
+              "SPECIALSTOCKIDFGSALESORDERITEM",
+              "SPECIALSTOCKIDFGWBSELEMENT",
+              "ISAUTOMATICALLYCREATED",
+              "MATERIALDOCUMENTLINE",
+              "MATERIALDOCUMENTPARENTLINE",
+              "HIERARCHYNODELEVEL",
+              "GOODSMOVEMENTISCANCELLED",
+              "REVERSEDMATERIALDOCUMENTYEAR",
+              "REVERSEDMATERIALDOCUMENT",
+              "REVERSEDMATERIALDOCUMENTITEM",
+              "REFERENCEDOCUMENTFISCALYEAR",
+              "INVTRYMGMTREFDOCUMENTITEM",
+              "INVTRYMGMTREFERENCEDOCUMENT",
+              "MATERIALDOCUMENTPOSTINGTYPE",
+              "INVENTORYUSABILITYCODE",
+              "EWMWAREHOUSE",
+              "EWMSTORAGEBIN",
+              "HANDLINGUNITEXTERNALID",
+              "DEBITCREDITCODE",
+              "CROSSPLANTCONFIGURABLEPRODUCT",
+              "PRODUCTCHARACTERISTIC1",
+              "PRODUCTCHARACTERISTIC2",
+              "PRODUCTCHARACTERISTIC3",
+              "PRODUCTSEASONYEAR",
+              "PRODUCTSEASON",
+              "PRODUCTCOLLECTION",
+              "PRODUCTTHEME",
+              "STOCKSEGMENT",
+              "ISSGORRCVGSTOCKSEGMENT"
+            ],
+            "properties": {
+              "MATERIALDOCUMENTYEAR": {
+                "type": "string",
+                "pattern": "^([0-9]{4})?$",
+                "description": "[non valorizzato: presente ma vuoto] NUMC(4) Material Document Year"
+              },
+              "MATERIALDOCUMENT": {
+                "type": "string",
+                "maxLength": 10,
+                "description": "[non valorizzato: presente ma vuoto] CHAR(10) Material Document"
+              },
+              "MATERIALDOCUMENTITEM": {
+                "type": "string",
+                "pattern": "^([0-9]{4})?$",
+                "description": "[non valorizzato: presente ma vuoto] NUMC(4) Material Document Item"
+              },
+              "MATERIAL": {
+                "type": "string",
+                "maxLength": 40,
+                "description": "[INVIATO] CHAR(40) Material"
+              },
+              "PLANT": {
+                "type": "string",
+                "maxLength": 4,
+                "description": "[INVIATO] CHAR(4) Plant"
+              },
+              "STORAGELOCATION": {
+                "type": "string",
+                "maxLength": 4,
+                "description": "[INVIATO] CHAR(4) Storage Location"
+              },
+              "BATCH": {
+                "type": "string",
+                "maxLength": 10,
+                "description": "[non valorizzato: presente ma vuoto] CHAR(10) Batch"
+              },
+              "BATCHBYSUPPLIER": {
+                "type": "string",
+                "maxLength": 15,
+                "description": "[non valorizzato: presente ma vuoto] CHAR(15) Supplier Batch"
+              },
+              "GOODSMOVEMENTTYPE": {
+                "type": "string",
+                "maxLength": 3,
+                "description": "[INVIATO] CHAR(3) Movement Type"
+              },
+              "INVENTORYSTOCKTYPE": {
+                "type": "string",
+                "maxLength": 2,
+                "description": "[non valorizzato: presente ma vuoto] CHAR(2) Stock Type"
+              },
+              "INVENTORYVALUATIONTYPE": {
+                "type": "string",
+                "maxLength": 10,
+                "description": "[non valorizzato: presente ma vuoto] CHAR(10) Valuation Type"
+              },
+              "INVENTORYSPECIALSTOCKTYPE": {
+                "type": "string",
+                "maxLength": 1,
+                "description": "[non valorizzato: presente ma vuoto] CHAR(1) Special Stock Type"
+              },
+              "SUPPLIER": {
+                "type": "string",
+                "maxLength": 10,
+                "description": "[non valorizzato: presente ma vuoto] CHAR(10) Supplier"
+              },
+              "CUSTOMER": {
+                "type": "string",
+                "maxLength": 10,
+                "description": "[non valorizzato: presente ma vuoto] CHAR(10) Customer"
+              },
+              "SALESORDER": {
+                "type": "string",
+                "maxLength": 10,
+                "description": "[non valorizzato: presente ma vuoto] CHAR(10) Sales Order"
+              },
+              "SALESORDERITEM": {
+                "type": "string",
+                "pattern": "^([0-9]{6})?$",
+                "description": "[non valorizzato: presente ma vuoto] NUMC(6) Sales Order Item"
+              },
+              "SALESORDERSCHEDULELINE": {
+                "type": "string",
+                "pattern": "^([0-9]{4})?$",
+                "description": "[non valorizzato: presente ma vuoto] NUMC(4) Sales Order Schedule"
+              },
+              "PURCHASEORDER": {
+                "type": "string",
+                "maxLength": 10,
+                "description": "[non valorizzato: presente ma vuoto] CHAR(10) Purchase Order"
+              },
+              "PURCHASEORDERITEM": {
+                "type": "string",
+                "pattern": "^([0-9]{5})?$",
+                "description": "[non valorizzato: presente ma vuoto] NUMC(5) Purchase Order Item"
+              },
+              "WBSELEMENT": {
+                "type": "string",
+                "maxLength": 24,
+                "description": "[non valorizzato: presente ma vuoto] CHAR(24) WBS Element"
+              },
+              "MANUFACTURINGORDER": {
+                "type": "string",
+                "maxLength": 12,
+                "description": "[INVIATO] CHAR(12) Manufacturing Order"
+              },
+              "MANUFACTURINGORDERITEM": {
+                "type": "string",
+                "pattern": "^([0-9]{4})?$",
+                "description": "[non valorizzato: presente ma vuoto] NUMC(4) Manufacturing Order Item"
+              },
+              "GOODSMOVEMENTREFDOCTYPE": {
+                "type": "string",
+                "maxLength": 1,
+                "description": "[non valorizzato: presente ma vuoto] CHAR(1) Reference Document Type"
+              },
+              "GOODSMOVEMENTREASONCODE": {
+                "type": "string",
+                "pattern": "^([0-9]{4})?$",
+                "description": "[INVIATO] NUMC(4) Reason for Movement"
+              },
+              "DELIVERY": {
+                "type": "string",
+                "maxLength": 10,
+                "description": "[non valorizzato: presente ma vuoto] CHAR(10) Delivery"
+              },
+              "DELIVERYITEM": {
+                "type": "string",
+                "pattern": "^([0-9]{6})?$",
+                "description": "[non valorizzato: presente ma vuoto] NUMC(6) Delivery Item"
+              },
+              "ACCOUNTASSIGNMENTCATEGORY": {
+                "type": "string",
+                "maxLength": 1,
+                "description": "[non valorizzato: presente ma vuoto] CHAR(1) Account Assignment Category"
+              },
+              "COSTCENTER": {
+                "type": "string",
+                "maxLength": 10,
+                "description": "[INVIATO] CHAR(10) Cost Center"
+              },
+              "CONTROLLINGAREA": {
+                "type": "string",
+                "maxLength": 4,
+                "description": "[non valorizzato: presente ma vuoto] CHAR(4) Controlling Area"
+              },
+              "COSTOBJECT": {
+                "type": "string",
+                "maxLength": 12,
+                "description": "[non valorizzato: presente ma vuoto] CHAR(12) Cost Object"
+              },
+              "GLACCOUNT": {
+                "type": "string",
+                "maxLength": 10,
+                "description": "[non valorizzato: presente ma vuoto] CHAR(10) G/L Account"
+              },
+              "FUNCTIONALAREA": {
+                "type": "string",
+                "maxLength": 16,
+                "description": "[non valorizzato: presente ma vuoto] CHAR(16) Functional Area"
+              },
+              "PROFITABILITYSEGMENT": {
+                "type": "string",
+                "maxLength": 10,
+                "description": "[non valorizzato: presente ma vuoto] CHAR(10) Profitability Segment"
+              },
+              "PROFITCENTER": {
+                "type": "string",
+                "maxLength": 10,
+                "description": "[non valorizzato: presente ma vuoto] CHAR(10) Profit Center"
+              },
+              "MASTERFIXEDASSET": {
+                "type": "string",
+                "maxLength": 12,
+                "description": "[non valorizzato: presente ma vuoto] CHAR(12) Asset"
+              },
+              "FIXEDASSET": {
+                "type": "string",
+                "maxLength": 4,
+                "description": "[non valorizzato: presente ma vuoto] CHAR(4) Asset Subnumber"
+              },
+              "MATERIALBASEUNIT": {
+                "type": "string",
+                "maxLength": 3,
+                "description": "[INVIATO] CHAR(3) Base Unit of Measure"
+              },
+              "QUANTITYINBASEUNIT": {
+                "type": "string",
+                "pattern": "^(-?[0-9]+(\\.[0-9]+)?)?$",
+                "description": "[INVIATO] DEC Quantity"
+              },
+              "ENTRYUNIT": {
+                "type": "string",
+                "maxLength": 3,
+                "description": "[INVIATO] CHAR(3) Unit of Entry"
+              },
+              "QUANTITYINENTRYUNIT": {
+                "type": "string",
+                "pattern": "^(-?[0-9]+(\\.[0-9]+)?)?$",
+                "description": "[INVIATO] DEC Quantity in Entry Unit"
+              },
+              "COMPANYCODECURRENCY": {
+                "type": "string",
+                "maxLength": 5,
+                "description": "[non valorizzato: presente ma vuoto] CHAR(5) Company Code Currency"
+              },
+              "GDSMVTEXTAMTINCOCODECRCY": {
+                "type": "string",
+                "pattern": "^(-?[0-9]+(\\.[0-9]+)?)?$",
+                "description": "[non valorizzato: presente ma vuoto] DEC External Amount in LC"
+              },
+              "SLSPRCAMTINCLVATINCOCODECRCY": {
+                "type": "string",
+                "pattern": "^(-?[0-9]+(\\.[0-9]+)?)?$",
+                "description": "[non valorizzato: presente ma vuoto] DEC Sales Value Including VAT"
+              },
+              "FISCALYEAR": {
+                "type": "string",
+                "pattern": "^([0-9]{4})?$",
+                "description": "[non valorizzato: presente ma vuoto] NUMC(4) Fiscal Year"
+              },
+              "FISCALYEARPERIOD": {
+                "type": "string",
+                "pattern": "^([0-9]{7})?$",
+                "description": "[non valorizzato: presente ma vuoto] NUMC(7) Fiscal Year &amp; Period from Posting date"
+              },
+              "FISCALYEARVARIANT": {
+                "type": "string",
+                "maxLength": 2,
+                "description": "[non valorizzato: presente ma vuoto] CHAR(2) Fiscal Year Variant"
+              },
+              "ISSGORRCVGMATERIAL": {
+                "type": "string",
+                "maxLength": 40,
+                "description": "[non valorizzato: presente ma vuoto] CHAR(40) Transfer Material"
+              },
+              "ISSGORRCVGBATCH": {
+                "type": "string",
+                "maxLength": 10,
+                "description": "[non valorizzato: presente ma vuoto] CHAR(10) Transfer Batch"
+              },
+              "ISSUINGORRECEIVINGPLANT": {
+                "type": "string",
+                "maxLength": 4,
+                "description": "[non valorizzato: presente ma vuoto] CHAR(4) Rec/Iss Plant"
+              },
+              "ISSUINGORRECEIVINGSTORAGELOC": {
+                "type": "string",
+                "maxLength": 4,
+                "description": "[non valorizzato: presente ma vuoto] CHAR(4) Storage Location"
+              },
+              "ISSUINGORRECEIVINGSTOCKTYPE": {
+                "type": "string",
+                "maxLength": 2,
+                "description": "[non valorizzato: presente ma vuoto] CHAR(2) Transfer Stock Type"
+              },
+              "ISSGORRCVGSPCLSTOCKIND": {
+                "type": "string",
+                "maxLength": 1,
+                "description": "[non valorizzato: presente ma vuoto] CHAR(1) Transfer Special Stock Type"
+              },
+              "ISSUINGORRECEIVINGVALTYPE": {
+                "type": "string",
+                "maxLength": 10,
+                "description": "[non valorizzato: presente ma vuoto] CHAR(10) Transfer Batch (Valuation Type)"
+              },
+              "ISCOMPLETELYDELIVERED": {
+                "type": "string",
+                "enum": [
+                  "X",
+                  ""
+                ],
+                "description": "[INVIATO] XFELD Delivery Completed"
+              },
+              "MATERIALDOCUMENTITEMTEXT": {
+                "type": "string",
+                "maxLength": 50,
+                "description": "[INVIATO] CHAR(50) Text"
+              },
+              "GOODSRECIPIENTNAME": {
+                "type": "string",
+                "maxLength": 12,
+                "description": "[non valorizzato: presente ma vuoto] CHAR(12) Goods Recipient"
+              },
+              "UNLOADINGPOINTNAME": {
+                "type": "string",
+                "maxLength": 25,
+                "description": "[non valorizzato: presente ma vuoto] CHAR(25) Unloading Point"
+              },
+              "SHELFLIFEEXPIRATIONDATE": {
+                "type": "string",
+                "pattern": "^([0-9]{4}-[0-9]{2}-[0-9]{2})?$",
+                "description": "[INVIATO] DATS SLED/BBD"
+              },
+              "MANUFACTUREDATE": {
+                "type": "string",
+                "pattern": "^([0-9]{4}-[0-9]{2}-[0-9]{2})?$",
+                "description": "[INVIATO] DATS Date of Manufacture"
+              },
+              "SERIALNUMBERSARECREATEDAUTOMLY": {
+                "type": "string",
+                "enum": [
+                  "X",
+                  ""
+                ],
+                "description": "[non valorizzato: presente ma vuoto] XFELD Create Serial Number Automatically"
+              },
+              "RESERVATION": {
+                "type": "string",
+                "pattern": "^([0-9]{10})?$",
+                "description": "[INVIATO] NUMC(10) Reservation"
+              },
+              "RESERVATIONITEM": {
+                "type": "string",
+                "pattern": "^([0-9]{4})?$",
+                "description": "[INVIATO] NUMC(4) Reservation Item"
+              },
+              "RESERVATIONITEMRECORDTYPE": {
+                "type": "string",
+                "maxLength": 1,
+                "description": "[non valorizzato: presente ma vuoto] CHAR(1) Reservation Record Type"
+              },
+              "RESERVATIONISFINALLYISSUED": {
+                "type": "string",
+                "enum": [
+                  "X",
+                  ""
+                ],
+                "description": "[non valorizzato: presente ma vuoto] XFELD Final-Issue Reservation"
+              },
+              "SPECIALSTOCKIDFGSALESORDER": {
+                "type": "string",
+                "maxLength": 10,
+                "description": "[non valorizzato: presente ma vuoto] CHAR(10) Sales Order"
+              },
+              "SPECIALSTOCKIDFGSALESORDERITEM": {
+                "type": "string",
+                "pattern": "^([0-9]{6})?$",
+                "description": "[non valorizzato: presente ma vuoto] NUMC(6) Sales Order Item"
+              },
+              "SPECIALSTOCKIDFGWBSELEMENT": {
+                "type": "string",
+                "maxLength": 24,
+                "description": "[non valorizzato: presente ma vuoto] CHAR(24) WBS Element"
+              },
+              "ISAUTOMATICALLYCREATED": {
+                "type": "string",
+                "maxLength": 1,
+                "description": "[non valorizzato: presente ma vuoto] CHAR(1) Automatically Created"
+              },
+              "MATERIALDOCUMENTLINE": {
+                "type": "string",
+                "pattern": "^([0-9]{6})?$",
+                "description": "[non valorizzato: presente ma vuoto] NUMC(6) Line ID"
+              },
+              "MATERIALDOCUMENTPARENTLINE": {
+                "type": "string",
+                "pattern": "^([0-9]{6})?$",
+                "description": "[non valorizzato: presente ma vuoto] NUMC(6) Parent line ID"
+              },
+              "HIERARCHYNODELEVEL": {
+                "type": "string",
+                "pattern": "^([0-9]{2})?$",
+                "description": "[non valorizzato: presente ma vuoto] NUMC(2) Hierarchy Level"
+              },
+              "GOODSMOVEMENTISCANCELLED": {
+                "type": "string",
+                "enum": [
+                  "X",
+                  ""
+                ],
+                "description": "[non valorizzato: presente ma vuoto] XFELD Is Item Cancelled"
+              },
+              "REVERSEDMATERIALDOCUMENTYEAR": {
+                "type": "string",
+                "pattern": "^([0-9]{4})?$",
+                "description": "[non valorizzato: presente ma vuoto] NUMC(4) Reversed Document Year"
+              },
+              "REVERSEDMATERIALDOCUMENT": {
+                "type": "string",
+                "maxLength": 10,
+                "description": "[non valorizzato: presente ma vuoto] CHAR(10) Reversed Material Document"
+              },
+              "REVERSEDMATERIALDOCUMENTITEM": {
+                "type": "string",
+                "pattern": "^([0-9]{4})?$",
+                "description": "[non valorizzato: presente ma vuoto] NUMC(4) Reversed Document Item"
+              },
+              "REFERENCEDOCUMENTFISCALYEAR": {
+                "type": "string",
+                "pattern": "^([0-9]{4})?$",
+                "description": "[non valorizzato: presente ma vuoto] NUMC(4) Fiscal Year (Reference Document)"
+              },
+              "INVTRYMGMTREFDOCUMENTITEM": {
+                "type": "string",
+                "pattern": "^([0-9]{4})?$",
+                "description": "[non valorizzato: presente ma vuoto] NUMC(4) Reference Document Item"
+              },
+              "INVTRYMGMTREFERENCEDOCUMENT": {
+                "type": "string",
+                "maxLength": 10,
+                "description": "[non valorizzato: presente ma vuoto] CHAR(10) Reference Document"
+              },
+              "MATERIALDOCUMENTPOSTINGTYPE": {
+                "type": "string",
+                "maxLength": 1,
+                "description": "[non valorizzato: presente ma vuoto] CHAR(1) Type of Posting"
+              },
+              "INVENTORYUSABILITYCODE": {
+                "type": "string",
+                "maxLength": 1,
+                "description": "[non valorizzato: presente ma vuoto] CHAR(1) Posting Control Stock Type"
+              },
+              "EWMWAREHOUSE": {
+                "type": "string",
+                "maxLength": 4,
+                "description": "[non valorizzato: presente ma vuoto] CHAR(4) Warehouse Number"
+              },
+              "EWMSTORAGEBIN": {
+                "type": "string",
+                "maxLength": 18,
+                "description": "[non valorizzato: presente ma vuoto] CHAR(18) Storage Bin"
+              },
+              "HANDLINGUNITEXTERNALID": {
+                "type": "string",
+                "maxLength": 20,
+                "description": "[non valorizzato: presente ma vuoto] CHAR(20) Handling Unit"
+              },
+              "DEBITCREDITCODE": {
+                "type": "string",
+                "maxLength": 1,
+                "description": "[non valorizzato: presente ma vuoto] CHAR(1) Debit/Credit Indicator"
+              },
+              "CROSSPLANTCONFIGURABLEPRODUCT": {
+                "type": "string",
+                "maxLength": 40,
+                "description": "[non valorizzato: presente ma vuoto] CHAR(40) Cross-plant CM"
+              },
+              "PRODUCTCHARACTERISTIC1": {
+                "type": "string",
+                "maxLength": 18,
+                "description": "[non valorizzato: presente ma vuoto] CHAR(18) Color"
+              },
+              "PRODUCTCHARACTERISTIC2": {
+                "type": "string",
+                "maxLength": 18,
+                "description": "[non valorizzato: presente ma vuoto] CHAR(18) Main Size"
+              },
+              "PRODUCTCHARACTERISTIC3": {
+                "type": "string",
+                "maxLength": 18,
+                "description": "[non valorizzato: presente ma vuoto] CHAR(18) Second Size"
+              },
+              "PRODUCTSEASONYEAR": {
+                "type": "string",
+                "maxLength": 4,
+                "description": "[non valorizzato: presente ma vuoto] CHAR(4) Season Year"
+              },
+              "PRODUCTSEASON": {
+                "type": "string",
+                "maxLength": 10,
+                "description": "[non valorizzato: presente ma vuoto] CHAR(10) Season"
+              },
+              "PRODUCTCOLLECTION": {
+                "type": "string",
+                "maxLength": 10,
+                "description": "[non valorizzato: presente ma vuoto] CHAR(10) Collection"
+              },
+              "PRODUCTTHEME": {
+                "type": "string",
+                "maxLength": 10,
+                "description": "[non valorizzato: presente ma vuoto] CHAR(10) Theme"
+              },
+              "STOCKSEGMENT": {
+                "type": "string",
+                "maxLength": 40,
+                "description": "[non valorizzato: presente ma vuoto] CHAR(40) Stock Segment"
+              },
+              "ISSGORRCVGSTOCKSEGMENT": {
+                "type": "string",
+                "maxLength": 40,
+                "description": "[non valorizzato: presente ma vuoto] CHAR(40) Rec. Stock Segment"
+              }
+            }
+          }
+        }
+      }
+    },
+    "IV_GOODS_MOVEMENT_CODE": {
+      "type": "string",
+      "maxLength": 2,
+      "description": "Codice operazione movimento. 03 = goods issue, vale sia per 261 sia per 551. Valorizzato anche in IS_HEADER.GOODSMOVEMENTCODE, come nel loro esempio."
+    },
+    "IV_TEST_RUN": {
+      "type": "string",
+      "enum": [
+        "X",
+        ""
+      ],
+      "description": "XFELD. \"X\" valida senza registrare: e' il presidio del collaudo."
+    }
+  },
+  "definitions": {
+    "Response": {
+      "title": "Risposta",
+      "type": "object",
+      "description": "ET_RETURN e' una STRUTTURA singola, non una tabella: il nome e' fuorviante ma e' cosi' per scelta. Su un documento di N righe torna un messaggio solo, e ROW dice a quale riga si riferisce.",
+      "required": [
+        "ET_RETURN"
+      ],
+      "properties": {
+        "EV_MATERIAL_DOCUMENT": {
+          "type": "string",
+          "maxLength": 10,
+          "description": "Numero del documento creato"
+        },
+        "EV_MATERIAL_DOC_YEAR": {
+          "type": "string",
+          "maxLength": 4,
+          "description": "Anno del documento creato"
+        },
+        "ET_RETURN": {
+          "type": "object",
+          "description": "TYPE dichiara l'esito: S riuscito, W/I avviso, E/A/X fallito. E' il campo su cui si decide.",
+          "properties": {
+            "TYPE": {
+              "type": "string",
+              "maxLength": 1,
+              "description": "Tipo messaggio: S riuscito, W avviso, E errore, X interruzione (anche I, A)"
+            },
+            "ID": {
+              "type": "string",
+              "maxLength": 20,
+              "description": "Classe messaggio"
+            },
+            "NUMBER": {
+              "type": "string",
+              "maxLength": 3,
+              "description": "Numero messaggio"
+            },
+            "MESSAGE": {
+              "type": "string",
+              "maxLength": 220,
+              "description": "Testo del messaggio"
+            },
+            "LOG_NO": {
+              "type": "string",
+              "maxLength": 20,
+              "description": "Numero di log"
+            },
+            "LOG_MSG_NO": {
+              "type": "string",
+              "maxLength": 6,
+              "description": "Numero messaggio nel log"
+            },
+            "MESSAGE_V1": {
+              "type": "string",
+              "maxLength": 50,
+              "description": "Variabile 1 del messaggio"
+            },
+            "MESSAGE_V2": {
+              "type": "string",
+              "maxLength": 50,
+              "description": "Variabile 2 del messaggio"
+            },
+            "MESSAGE_V3": {
+              "type": "string",
+              "maxLength": 50,
+              "description": "Variabile 3 del messaggio"
+            },
+            "MESSAGE_V4": {
+              "type": "string",
+              "maxLength": 50,
+              "description": "Variabile 4 del messaggio"
+            },
+            "PARAMETER": {
+              "type": "string",
+              "maxLength": 32,
+              "description": "Nome del parametro"
+            },
+            "ROW": {
+              "type": "string",
+              "maxLength": 10,
+              "description": "Riga nel parametro: dice a quale riga di IT_ITEM si riferisce"
+            },
+            "FIELD": {
+              "type": "string",
+              "maxLength": 30,
+              "description": "Campo nel parametro"
+            },
+            "SYSTEM": {
+              "type": "string",
+              "maxLength": 10,
+              "description": "Sistema logico mittente"
+            }
+          }
+        }
+      }
+    }
+  }
+}

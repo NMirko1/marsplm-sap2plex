@@ -1,0 +1,30 @@
+<core:FragmentDefinition
+    xmlns="sap.m"
+    xmlns:core="sap.ui.core">
+
+    <Popover
+        id="linkOperationPopover"
+        title="{i18n>linkToSapOperation}"
+        contentWidth="320px"
+        placement="Auto">
+
+        <content>
+            <List
+                id="linkSapOpsList"
+                items="{linkModel>/sapOperations}"
+                mode="SingleSelectMaster"
+                selectionChange=".onLinkSapOpSelected">
+
+                <StandardListItem
+                    title="{linkModel>text}"
+                    description="{linkModel>description}"
+                    icon="{= ${linkModel>sapOperationId} ? 'sap-icon://workflow-tasks' : 'sap-icon://decline'}"
+                    selected="{linkModel>selected}"
+                    type="Active"/>
+
+            </List>
+        </content>
+
+    </Popover>
+
+</core:FragmentDefinition>

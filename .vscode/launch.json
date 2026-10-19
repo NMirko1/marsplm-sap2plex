@@ -1,0 +1,106 @@
+{
+  // Avvio locale con binding sui servizi GIA' deployati in BTP (profilo "hybrid").
+  //
+  // PREREQUISITI (una tantum, dalla radice del progetto, dopo `cf login` e `npm ci`):
+  //   cds bind --to marsplm-sap2plex-db          --for hybrid   (HANA HDI)
+  //   cds bind --to marsplm-sap2plex-destination --for hybrid   (MARS_SAP_CON, MARS_LICENSE, MARS_MAIL...)
+  //   cds bind --to marsplm-sap2plex-connectivity --for hybrid
+  //   cds bind --to marsplm-sap2plex-auth        --for hybrid   (opzionale: l'auth resta mocked finche' non si imposta xsuaa)
+  //   cds bind --to marsplm-sap2plex-job-scheduler --for hybrid (solo dopo il deploy con il Job Scheduler)
+  // Genera `.cdsrc-private.json` con i segreti: NON va committato.
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "CAP hybrid (srv + tutte le app)",
+      "type": "node",
+      "request": "launch",
+      "program": "${workspaceFolder}/node_modules/@sap/cds-dk/bin/cds.js",
+      "args": ["watch", "--profile", "hybrid", "--livereload", "false"],
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal",
+      "skipFiles": ["<node_internals>/**"],
+      "env": {
+        // Decommentare per non chiamare MARS_LICENSE in locale (utenti mocked senza e-mail non ottengono ruolo):
+        "LICENSE_DISABLED": "true",
+        // "LICENSE_DISABLED_ROLE": "admin"
+      }
+    },
+    {
+      "name": "CAP hybrid -> marsplm-sap2plex (cockpit)",
+      "type": "node",
+      "request": "launch",
+      "program": "${workspaceFolder}/node_modules/@sap/cds-dk/bin/cds.js",
+      "args": ["watch", "--profile", "hybrid", "--livereload", "false", "--open", "avvaleplm.marsplm.sap2plex.marsplmsap2plex/index.html?sap-ui-xx-viewCache=false"],
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal",
+      "skipFiles": ["<node_internals>/**"]
+    },
+    {
+      "name": "CAP hybrid -> adminconfigplant",
+      "type": "node",
+      "request": "launch",
+      "program": "${workspaceFolder}/node_modules/@sap/cds-dk/bin/cds.js",
+      "args": ["watch", "--profile", "hybrid", "--livereload", "false", "--open", "avvaleplm.marsplm.sap2plex.adminconfigplant/index.html?sap-ui-xx-viewCache=false"],
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal",
+      "skipFiles": ["<node_internals>/**"]
+    },
+    {
+      "name": "CAP hybrid -> adminconfiglicense",
+      "type": "node",
+      "request": "launch",
+      "program": "${workspaceFolder}/node_modules/@sap/cds-dk/bin/cds.js",
+      "args": ["watch", "--profile", "hybrid", "--livereload", "false", "--open", "avvaleplm.marsplm.sap2plex.adminconfiglicense/index.html?sap-ui-xx-viewCache=false"],
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal",
+      "skipFiles": ["<node_internals>/**"]
+    },
+    {
+      "name": "CAP hybrid -> adminconfigmatfil",
+      "type": "node",
+      "request": "launch",
+      "program": "${workspaceFolder}/node_modules/@sap/cds-dk/bin/cds.js",
+      "args": ["watch", "--profile", "hybrid", "--livereload", "false", "--open", "avvaleplm.marsplm.sap2plex.adminconfigmatfil/index.html?sap-ui-xx-viewCache=false"],
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal",
+      "skipFiles": ["<node_internals>/**"]
+    },
+    {
+      "name": "CAP hybrid -> adminconfobjgrp",
+      "type": "node",
+      "request": "launch",
+      "program": "${workspaceFolder}/node_modules/@sap/cds-dk/bin/cds.js",
+      "args": ["watch", "--profile", "hybrid", "--livereload", "false", "--open", "avvaleplm.marsplm.sap2plex.adminconfobjgrp/index.html?sap-ui-xx-viewCache=false"],
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal",
+      "skipFiles": ["<node_internals>/**"]
+    },
+    {
+      "name": "CAP hybrid -> adminconfprodtype",
+      "type": "node",
+      "request": "launch",
+      "program": "${workspaceFolder}/node_modules/@sap/cds-dk/bin/cds.js",
+      "args": ["watch", "--profile", "hybrid", "--livereload", "false", "--open", "avvaleplm.marsplm.sap2plex.adminconfprodtype/index.html?sap-ui-xx-viewCache=false"],
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal",
+      "skipFiles": ["<node_internals>/**"]
+    },
+    {
+      // Approuter locale (dopo `npm install` in app/router): instrada verso srv-api = localhost:4004 (default-env.json).
+      "name": "Approuter locale",
+      "type": "node",
+      "request": "launch",
+      "program": "${workspaceFolder}/app/router/node_modules/@sap/approuter/approuter.js",
+      "cwd": "${workspaceFolder}/app/router",
+      "console": "integratedTerminal"
+    },
+    {
+        "name": "Attach to a Cloud Foundry Instance on Port 9229",
+        "port": 9229,
+        "request": "attach",
+        "type": "node",
+        "localRoot": "${workspaceFolder}",
+        "remoteRoot": "/home/vcap/app"
+    }
+  ]
+}

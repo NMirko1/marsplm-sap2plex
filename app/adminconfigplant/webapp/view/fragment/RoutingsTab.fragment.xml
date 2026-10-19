@@ -1,0 +1,214 @@
+<core:FragmentDefinition
+    xmlns="sap.m"
+    xmlns:core="sap.ui.core"
+    xmlns:form="sap.ui.layout.form">
+
+    <!-- ============================================================
+         [ROUTING-FILTER] Regole di visibilita' dei cicli, per plant (feature 0016).
+
+         Questo tab conteneva due Input MOCK — ROUTING_TYPE e TASK_LIST_STATUS_FILTER — che
+         non filtravano nulla. TASK_LIST_STATUS_FILTER era il segnaposto proprio di questa
+         tabella; ROUTING_TYPE era il segnaposto per PLNTY, che NON esiste in nessun punto del
+         modello (l'API cicli espone implicitamente il solo tipo N): tornera' il giorno in cui i
+         cicli a fasi entreranno in perimetro, con un indirizzo che lo esponga.
+         Lasciarli accanto a un filtro reale avrebbe fatto credere che filtrassero qualcosa.
+         ============================================================ -->
+    <VBox class="sapUiSmallMargin">
+
+        <!-- ============================================================
+             [PHANTOM-EXPLODE] L'interruttore dell'esplosione fantasma sui componenti dei CICLI
+             (feature 0019). I parametri del motore stanno nella scheda «Distinta base»: qui c'e'
+             solo la decisione se applicarlo a quest'oggetto, perche' i due innesti hanno rischi
+             diversi (i cicli riscrivono la distinta su Plex, gli ordini toccano un job gia'
+             schedulato) e vanno poter accesi uno alla volta.
+             Il Salva e' quello della riga condivisa: lo dice la MessageStrip.
+             ============================================================ -->
+        <form:SimpleForm
+            editable="true"
+            layout="ResponsiveGridLayout"
+            labelSpanL="4" labelSpanM="4" labelSpanS="12"
+            emptySpanL="3" emptySpanM="3"
+            columnsL="1" columnsM="1"
+            title="{i18n>phxGroupRouting}"
+            class="sapUiSmallMarginBottom">
+            <form:content>
+
+                <MessageStrip
+                    type="Information"
+                    showIcon="true"
+                    class="sapUiSmallMarginBottom"
+                    visible="{= !${phx>/exists} }"
+                    text="{phx>/notConfiguredText}"/>
+
+                <Label text="{i18n>phxLblInRouting}" tooltip="ExplodeInRouting"/>
+                <VBox>
+                    <CheckBox selected="{phx>/inRouting}" select=".onPhantomDirty"/>
+                    <Text text="{i18n>phxHelpInRouting}" class="sapUiTinyMarginTop"/>
+                </VBox>
+
+                <Label text=""/>
+                <HBox class="sapUiTinyMarginTop">
+                    <Button text="{i18n>phxBtnSave}" type="Emphasized" icon="sap-icon://save"
+                            enabled="{phx>/dirty}" press=".onSavePhantomConfig"
+                            class="sapUiTinyMarginEnd"/>
+                    <Button text="{i18n>phxBtnCancel}" type="Transparent" icon="sap-icon://sys-cancel"
+                            enabled="{phx>/dirty}" press=".onCancelPhantomConfig"/>
+                </HBox>
+
+            </form:content>
+        </form:SimpleForm>
+
+        <!-- ============================================================
+             [ROUTING-DEFAULT-OP] SORGENTE DEI COMPONENTI DEL CICLO (feature 0051).
+
+             In SAP e' la component allocation (PLMZ) a dire su quale operazione sta ogni
+             componente. Dove nessuno la compila, l'albero del ciclo resta vuoto — e un albero
+             vuoto si legge come «questo ciclo non ha componenti». Acceso, l'allocazione non si
+             CHIEDE: si dichiara qui, e l'elenco viene dalla distinta base del materiale.
+
+             NON TOCCA IL CICLO PLEX: su quale operazione Plex finisce un componente continua a
+             deciderlo l'auto-assegnazione (scheda «Assegnazione automatica»). Le due cose si
+             somigliano e non sono la stessa: qui si parla dell'albero SAP.
+
+             UN SECONDO form e non due righe in quello sopra, il cui titolo NOMINA l'esplosione dei
+             fantasma: una sorgente componenti infilata la' si leggerebbe come una sua variante. Il
+             Salva e' pero' LO STESSO — la riga di customizing e' una sola — e la striscia lo dice.
+
+             SELECT E NON ComboBox, e non contraddice DEC-81: quel vincolo nasce dove l'elenco e'
+             lungo e si CERCA (le 154 operazioni di un tenant Plex), qui le voci sono DUE e chiuse.
+             E' la deroga gia' presa in ConfPostingTab.fragment.xml. Un <ComboBox> nudo qui farebbe
+             inoltre fallire test/comboBoxContains.test.js, che spazza i fragment.
+
+             Le due voci riusano opFirstOperation / opLastOperation: sono le stesse due parole con
+             cui la scheda «Assegnazione automatica» nomina la prima e l'ultima operazione, e
+             chiamarle diversamente qui farebbe credere che siano un'altra cosa.
+             ============================================================ -->
+        <form:SimpleForm
+            editable="true"
+            layout="ResponsiveGridLayout"
+            labelSpanL="4" labelSpanM="4" labelSpanS="12"
+            emptySpanL="3" emptySpanM="3"
+            columnsL="1" columnsM="1"
+            title="{i18n>phxGroupCompSource}"
+            class="sapUiSmallMarginBottom">
+            <form:content>
+
+                <!-- Si dichiara QUI e non solo nel cockpit: chi accende deve leggere dove accende
+                     che cosa cambia. Warning e non Information — a differenza della striscia «non
+                     configurato» — perche' qui non si dice «come prima», si dice «diverso da SAP». -->
+                <MessageStrip
+                    type="Warning"
+                    showIcon="true"
+                    class="sapUiSmallMarginBottom"
+                    visible="{phx>/compDefaultOp}"
+                    text="{i18n>phxDefaultOpWarn}"/>
+
+                <Label text="{i18n>phxLblCompDefaultOp}" tooltip="RoutingCompDefaultOp"/>
+                <VBox>
+                    <CheckBox selected="{phx>/compDefaultOp}" select=".onPhantomDirty"
+                              text="{i18n>phxCompDefaultOpText}"/>
+                    <Text text="{i18n>phxHelpCompDefaultOp}" class="sapUiTinyMarginTop"/>
+                </VBox>
+
+                <Label text="{i18n>phxLblCompDefaultOpTarget}" tooltip="RoutingCompDefaultOpTarget"/>
+                <VBox>
+                    <!-- `enabled` legato alla spunta: una tendina viva accanto a un interruttore
+                         spento fa credere che decida qualcosa. -->
+                    <Select selectedKey="{phx>/compDefaultOpTarget}"
+                            change=".onPhantomDirty"
+                            enabled="{= ${phx>/compDefaultOp} === true }"
+                            width="100%">
+                        <core:Item key="FIRST_OP" text="{i18n>opFirstOperation}"/>
+                        <core:Item key="LAST_OP"  text="{i18n>opLastOperation}"/>
+                    </Select>
+                    <Text text="{i18n>phxHelpCompDefaultOpTarget}" class="sapUiTinyMarginTop"/>
+                </VBox>
+
+                <Label text=""/>
+                <Text text="{i18n>phxHelpSharedSave}" class="sapUiSmallMarginBottom"/>
+
+                <Label text=""/>
+                <HBox class="sapUiTinyMarginTop">
+                    <Button text="{i18n>phxBtnSave}" type="Emphasized" icon="sap-icon://save"
+                            enabled="{phx>/dirty}" press=".onSavePhantomConfig"
+                            class="sapUiTinyMarginEnd"/>
+                    <Button text="{i18n>phxBtnCancel}" type="Transparent" icon="sap-icon://sys-cancel"
+                            enabled="{phx>/dirty}" press=".onCancelPhantomConfig"/>
+                </HBox>
+
+            </form:content>
+        </form:SimpleForm>
+
+        <MessageStrip
+            text="{i18n>rfTabIntro}"
+            type="Information"
+            showIcon="true"
+            class="sapUiSmallMarginBottom"/>
+
+        <!-- [LIST-COUNT] Il conteggio dichiarato: senza, «Mostra di piu'» compare anche quando non
+             c'e' piu' niente e poi resta a girare. Solo sui binding ASSOLUTI. Vedi GroupsTab e DEC-102. -->
+        <Table
+            id="routingFilterTable"
+            items="{
+                path: 'catalog>/ZRoutingFilterConfig',
+                parameters: { '$$updateGroupId': 'routingFilterChanges', '$count': true },
+                sorter: [{ path: 'BillOfOperationsStatus' }, { path: 'BillOfOperationsUsage' }]
+            }"
+            growing="true"
+            growingThreshold="50"
+            mode="MultiSelect">
+
+            <headerToolbar>
+                <OverflowToolbar>
+                    <Title text="{i18n>rfTableTitle}"/>
+                    <ToolbarSpacer/>
+                    <Button icon="sap-icon://add"        text="{i18n>rfBtnAdd}"    type="Transparent" press=".onAddRoutingFilter"/>
+                    <Button icon="sap-icon://delete"     text="{i18n>rfBtnDelete}" type="Transparent" press=".onDeleteRoutingFilter"/>
+                    <Button icon="sap-icon://save"       text="{i18n>rfBtnSave}"   type="Emphasized"  press=".onSaveRoutingFilter"/>
+                    <Button icon="sap-icon://sys-cancel" text="{i18n>rfBtnCancel}" type="Transparent" press=".onCancelRoutingFilter"/>
+                </OverflowToolbar>
+            </headerToolbar>
+
+            <columns>
+                <Column width="10em">
+                    <Text text="{i18n>rfColStatus}"/>
+                </Column>
+                <Column width="10em">
+                    <Text text="{i18n>rfColUsage}"/>
+                </Column>
+                <Column minScreenWidth="Tablet" demandPopin="true" width="7em" hAlign="Center">
+                    <Text text="{i18n>rfColActive}"/>
+                </Column>
+                <Column minScreenWidth="Tablet" demandPopin="true" width="5em">
+                    <Text text="{i18n>rfColPlant}"/>
+                </Column>
+            </columns>
+
+            <items>
+                <ColumnListItem>
+                    <cells>
+                        <!-- Testo libero di proposito: stato e utilizzo sono customizing SAP del
+                             cliente (T412/T410), quindi un elenco chiuso sarebbe sbagliato per chi
+                             ne ha aggiunti. Un campo lasciato VUOTO significa «qualunque valore».
+                             maxLength allineato a String(3) dello schema: oltre quella lunghezza il
+                             rifiuto arriverebbe da CAP con un messaggio tecnico che non possiamo
+                             riscrivere (DEC-40), quindi la difesa utile e' qui. -->
+                        <Input
+                            value="{catalog>BillOfOperationsStatus}"
+                            maxLength="3"
+                            placeholder="{i18n>rfAnyPlaceholder}"/>
+                        <Input
+                            value="{catalog>BillOfOperationsUsage}"
+                            maxLength="3"
+                            placeholder="{i18n>rfAnyPlaceholder}"/>
+                        <CheckBox selected="{catalog>IsActive}"/>
+                        <Text text="{catalog>Plant}"/>
+                    </cells>
+                </ColumnListItem>
+            </items>
+
+        </Table>
+
+    </VBox>
+
+</core:FragmentDefinition>

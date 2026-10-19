@@ -1,0 +1,86 @@
+<core:FragmentDefinition
+    xmlns="sap.m"
+    xmlns:core="sap.ui.core">
+
+    <!-- [LOG-PAGE] La barra delle pagine dello storico invii, sotto la tabella.
+         Legge dal modello `logPager` (creato da util/LogPager.js con `attach`) ed e' la stessa
+         nelle tre schede di dettaglio: ogni evento va a `.onLogPager` del controller, che
+         ricava la pagina con `LogPager.targetOf` e rilancia il proprio loader.
+         Visibile solo con un totale noto e maggiore di zero: senza `@odata.count` la barra non
+         dice «di 0», sparisce (vuoto non e' ignoto). -->
+    <Toolbar
+        visible="{= ${logPager>/total} > 0 }"
+        class="sapUiTinyMarginTop"
+        core:require="{ formatMessage: 'sap/base/strings/formatMessage' }">
+
+        <Text text="{
+            parts: ['i18n>logPagerRows', 'logPager>/from', 'logPager>/to', 'logPager>/total'],
+            formatter: 'formatMessage'
+        }"/>
+
+        <ToolbarSpacer/>
+
+        <Button
+            icon="sap-icon://close-command-field"
+            type="Transparent"
+            tooltip="{i18n>logPagerFirst}"
+            enabled="{logPager>/hasPrev}"
+            press=".onLogPager">
+            <customData><core:CustomData key="go" value="first"/></customData>
+        </Button>
+        <Button
+            icon="sap-icon://navigation-left-arrow"
+            type="Transparent"
+            tooltip="{i18n>logPagerPrev}"
+            enabled="{logPager>/hasPrev}"
+            press=".onLogPager">
+            <customData><core:CustomData key="go" value="prev"/></customData>
+        </Button>
+
+        <!-- La barra `1 2 3 … N`: la corrente in evidenza, il salto disabilitato. -->
+        <HBox items="{logPager>/items}" alignItems="Center">
+            <Button
+                text="{logPager>label}"
+                type="{= ${logPager>current} ? 'Emphasized' : 'Transparent' }"
+                enabled="{logPager>enabled}"
+                press=".onLogPager"/>
+        </HBox>
+
+        <Button
+            icon="sap-icon://navigation-right-arrow"
+            type="Transparent"
+            tooltip="{i18n>logPagerNext}"
+            enabled="{logPager>/hasNext}"
+            press=".onLogPager">
+            <customData><core:CustomData key="go" value="next"/></customData>
+        </Button>
+        <Button
+            icon="sap-icon://open-command-field"
+            type="Transparent"
+            tooltip="{i18n>logPagerLast}"
+            enabled="{logPager>/hasNext}"
+            press=".onLogPager">
+            <customData><core:CustomData key="go" value="last"/></customData>
+        </Button>
+
+        <ToolbarSeparator/>
+
+        <!-- «Pagina [ 3 ] di 12  Vai»: il numero si scrive, Invio o «Vai» lo applicano. -->
+        <Label text="{i18n>logPagerPage}"/>
+        <Input
+            width="4.5em"
+            textAlign="End"
+            value="{logPager>/input}"
+            submit=".onLogPager"/>
+        <Text text="{
+            parts: ['i18n>logPagerOf', 'logPager>/pageCount'],
+            formatter: 'formatMessage'
+        }"/>
+        <Button
+            text="{i18n>logPagerGo}"
+            type="Transparent"
+            press=".onLogPager">
+            <customData><core:CustomData key="go" value="go"/></customData>
+        </Button>
+    </Toolbar>
+</core:FragmentDefinition>

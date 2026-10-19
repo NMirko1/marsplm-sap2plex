@@ -1,0 +1,6 @@
+<mvc:View
+    controllerName="avvaleplm.marsplm.sap2plex.adminconfigplant.controller.App"
+    xmlns:mvc="sap.ui.core.mvc"
+    xmlns="sap.m">
+    <App id="app"/>
+</mvc:View>

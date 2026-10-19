@@ -1,0 +1,23 @@
+# CAP
+_out
+*.db
+*.sqlite
+connection.properties
+default-*.json
+!app/router/default-env.json
+.cdsrc-private.json
+gen/
+node_modules/
+target/
+dist/
+
+# MTA
+*_mta_build_tmp
+*.mtar
+mta_archives/
+
+# Other
+.DS_Store
+*.orig
+*.log
+.env

@@ -1,0 +1,308 @@
+<core:FragmentDefinition
+    xmlns="sap.m"
+    xmlns:core="sap.ui.core"
+    xmlns:l="sap.ui.layout"
+    xmlns:form="sap.ui.layout.form"
+    xmlns:t="sap.ui.table"
+    xmlns:rowmodes="sap.ui.table.rowmodes">
+
+    <!--
+        Feature 0012 - Split window of a production order (FDD 0012 §3, TDD 0012 §4.3).
+        Four modes, all driven by splitModel>/offeredCommand:
+          SPLIT    -> quantity input, preview, acknowledgement, «Conferma»
+          COMPLETE -> residual case «package to be linked», «Completa»
+          RESTORE  -> residual case «quantity to restore», «Ripristina»
+          NONE     -> read only (order not shared, main job missing, nothing to split, uncertain state)
+    -->
+    <Dialog
+        id="splitJobDialog"
+        title="{i18n>dlgSplitJobTitle}"
+        contentWidth="44rem"
+        draggable="true"
+        resizable="true"
+        busy="{splitModel>/busy}"
+        busyIndicatorDelay="0">
+
+        <content>
+            <l:VerticalLayout width="100%" class="sapUiContentPadding">
+
+                <!-- Residual case / read-only reason: on top and highlighted (M-03, M-09, M-22, M-22a, M-28) -->
+                <MessageStrip
+                    id="splitResidualStrip"
+                    visible="{= !!${splitModel>/residualMessage} }"
+                    text="{splitModel>/residualMessage}"
+                    type="{splitModel>/residualMessageType}"
+                    showIcon="true"
+                    class="sapUiSmallMarginBottom"/>
+
+                <!-- M-29: permanent assumption, visible in every mode of the window (TDD §4.3) -->
+                <MessageStrip
+                    id="splitAssumptionStrip"
+                    text="{i18n>splitAssumptionNoWorkInProgress}"
+                    type="Information"
+                    showIcon="true"
+                    class="sapUiSmallMarginBottom"/>
+
+                <!-- M-15: divergence between SAP order quantity and the sum of the Plex jobs (FR-30) -->
+                <MessageStrip
+                    id="splitMismatchStrip"
+                    visible="{splitModel>/mismatch}"
+                    text="{splitModel>/mismatchText}"
+                    type="Warning"
+                    showIcon="true"
+                    class="sapUiSmallMarginBottom"/>
+
+                <!-- Identification block, read only (FR-06, FR-07) -->
+                <Panel headerText="{i18n>splitBlockOrderTitle}" class="sapUiSmallMarginBottom">
+                    <form:SimpleForm
+                        editable="false"
+                        layout="ResponsiveGridLayout"
+                        columnsL="1"
+                        columnsM="1"
+                        labelSpanL="5"
+                        labelSpanM="5"
+                        labelSpanS="12">
+                        <form:content>
+                            <Label text="{i18n>manufacturingOrder}"/>
+                            <Text text="{splitModel>/manufacturingOrder}"/>
+                            <Label text="{i18n>material}"/>
+                            <Text text="{splitModel>/materialText}"/>
+                            <Label text="{i18n>productionPlant}"/>
+                            <Text text="{splitModel>/plant}"/>
+                            <Label text="{i18n>splitMainDueDate}"/>
+                            <Text text="{path: 'splitModel>/mainDueDate', formatter: '.formatSplitDate'}"/>
+                        </form:content>
+                    </form:SimpleForm>
+                    <Text text="{i18n>splitDueDateInherited}" class="sapUiSmallMarginBegin sapUiTinyMarginBottom"/>
+                </Panel>
+
+                <!-- Quantity block, read only: no «already produced» and no «max splittable» (G3-1) -->
+                <Panel headerText="{i18n>splitBlockQtyTitle}" class="sapUiSmallMarginBottom">
+                    <form:SimpleForm
+                        editable="false"
+                        layout="ResponsiveGridLayout"
+                        columnsL="1"
+                        columnsM="1"
+                        labelSpanL="5"
+                        labelSpanM="5"
+                        labelSpanS="12">
+                        <form:content>
+                            <Label text="{i18n>splitSapOrderQty}"/>
+                            <ObjectNumber
+                                number="{
+                                    path: 'splitModel>/sapOrderQuantity',
+                                    type: 'sap.ui.model.type.Float',
+                                    formatOptions: { decimals: 3 }
+                                }"
+                                unit="{splitModel>/unit}"/>
+                            <Label text="{i18n>splitMainQty}"/>
+                            <ObjectNumber
+                                emphasized="true"
+                                number="{
+                                    path: 'splitModel>/mainQuantity',
+                                    type: 'sap.ui.model.type.Float',
+                                    formatOptions: { decimals: 3 }
+                                }"
+                                unit="{splitModel>/unit}"/>
+                            <Label text="{i18n>splitLotSum}"/>
+                            <ObjectNumber
+                                number="{
+                                    path: 'splitModel>/lotSum',
+                                    type: 'sap.ui.model.type.Float',
+                                    formatOptions: { decimals: 3 }
+                                }"
+                                unit="{splitModel>/unit}"/>
+                        </form:content>
+                    </form:SimpleForm>
+                </Panel>
+
+                <!-- Existing packages (FR-06): anomalous states first, as returned by the server (C-6) -->
+                <Panel headerText="{i18n>splitBlockPackagesTitle}" class="sapUiSmallMarginBottom">
+                    <Text
+                        visible="{= !${splitModel>/hasPackages} }"
+                        text="{i18n>splitNoPackages}"
+                        class="sapUiSmallMarginBegin sapUiTinyMarginBottom"/>
+                    <t:Table
+                        id="splitDialogPackagesTable"
+                        visible="{splitModel>/hasPackages}"
+                        rows="{splitModel>/packages}"
+                        selectionMode="None"
+                        enableColumnReordering="false"
+                        columnHeaderVisible="true">
+                        <t:rowMode>
+                            <rowmodes:Fixed rowCount="4"/>
+                        </t:rowMode>
+                        <t:columns>
+                            <t:Column width="11rem" sortProperty="PackageJobNumber" filterProperty="PackageJobNumber">
+                                <t:label>
+                                    <Label text="{i18n>colSplitPackageCode}"/>
+                                </t:label>
+                                <t:template>
+                                    <Text text="{splitModel>PackageJobNumber}"/>
+                                </t:template>
+                            </t:Column>
+                            <t:Column width="8rem" hAlign="End" sortProperty="Quantity" filterProperty="Quantity">
+                                <t:label>
+                                    <Label text="{i18n>colSplitQuantity}"/>
+                                </t:label>
+                                <t:template>
+                                    <ObjectNumber
+                                        number="{
+                                            path: 'splitModel>Quantity',
+                                            type: 'sap.ui.model.type.Float',
+                                            formatOptions: { decimals: 3 }
+                                        }"
+                                        unit="{splitModel>/unit}"/>
+                                </t:template>
+                            </t:Column>
+                            <t:Column width="12rem" sortProperty="CreatedAt" filterProperty="CreatedAt">
+                                <t:label>
+                                    <Label text="{i18n>colSplitCreatedAt}"/>
+                                </t:label>
+                                <t:template>
+                                    <Text text="{path: 'splitModel>CreatedAt', formatter: '.formatSplitDateTime'}"/>
+                                </t:template>
+                            </t:Column>
+                            <t:Column sortProperty="SplitState" filterProperty="SplitState">
+                                <t:label>
+                                    <Label text="{i18n>colSplitState}"/>
+                                </t:label>
+                                <t:template>
+                                    <ObjectStatus
+                                        text="{path: 'splitModel>SplitState', formatter: '.formatSplitStateText'}"
+                                        state="{path: 'splitModel>SplitState', formatter: '.formatSplitStateState'}"
+                                        icon="{path: 'splitModel>SplitState', formatter: '.formatSplitStateIcon'}"/>
+                                </t:template>
+                            </t:Column>
+                        </t:columns>
+                    </t:Table>
+                </Panel>
+
+                <!-- SPLIT mode: the only editable field (FR-07, FR-12) -->
+                <Panel
+                    id="splitNewPackagePanel"
+                    headerText="{i18n>splitBlockNewPackageTitle}"
+                    visible="{splitModel>/isSplitMode}"
+                    class="sapUiSmallMarginBottom">
+                    <form:SimpleForm
+                        editable="true"
+                        layout="ResponsiveGridLayout"
+                        columnsL="1"
+                        columnsM="1"
+                        labelSpanL="5"
+                        labelSpanM="5"
+                        labelSpanS="12">
+                        <form:content>
+                            <Label text="{i18n>splitNewPackageCode}"/>
+                            <Text text="{splitModel>/nextPackageCode}"/>
+                            <Label text="{i18n>splitNewPackageQty}" required="true" labelFor="splitQtyInput"/>
+                            <HBox alignItems="Center">
+                                <Input
+                                    id="splitQtyInput"
+                                    width="10rem"
+                                    type="Number"
+                                    textAlign="End"
+                                    value="{splitModel>/quantity}"
+                                    enabled="{= !${splitModel>/executing} }"
+                                    liveChange=".onSplitQtyChange"/>
+                                <Text text="{splitModel>/unit}" class="sapUiTinyMarginBegin"/>
+                            </HBox>
+                        </form:content>
+                    </form:SimpleForm>
+                    <!-- Expected effect, refreshed on every valid keystroke (FR-08) -->
+                    <FormattedText
+                        id="splitPreviewText"
+                        visible="{splitModel>/previewVisible}"
+                        htmlText="{splitModel>/previewText}"
+                        class="sapUiSmallMarginBegin sapUiSmallMarginEnd sapUiTinyMarginBottom"/>
+                </Panel>
+
+                <!-- COMPLETE / RESTORE / uncertain: same code and same quantity, not renegotiable (FR-26) -->
+                <Panel
+                    id="splitResidualPackagePanel"
+                    headerText="{i18n>splitBlockResidualPackageTitle}"
+                    visible="{= !!${splitModel>/residualJobNumber} }"
+                    class="sapUiSmallMarginBottom">
+                    <form:SimpleForm
+                        editable="false"
+                        layout="ResponsiveGridLayout"
+                        columnsL="1"
+                        columnsM="1"
+                        labelSpanL="5"
+                        labelSpanM="5"
+                        labelSpanS="12">
+                        <form:content>
+                            <Label text="{i18n>splitResidualPackageCode}"/>
+                            <Text text="{splitModel>/residualJobNumber}"/>
+                            <Label text="{i18n>splitResidualPackageQty}"/>
+                            <ObjectNumber
+                                number="{
+                                    path: 'splitModel>/residualQuantity',
+                                    type: 'sap.ui.model.type.Float',
+                                    formatOptions: { decimals: 3 }
+                                }"
+                                unit="{splitModel>/unit}"/>
+                            <Label text="{i18n>colSplitState}"/>
+                            <ObjectStatus
+                                text="{path: 'splitModel>/residualState', formatter: '.formatSplitStateText'}"
+                                state="{path: 'splitModel>/residualState', formatter: '.formatSplitStateState'}"
+                                icon="{path: 'splitModel>/residualState', formatter: '.formatSplitStateIcon'}"/>
+                        </form:content>
+                    </form:SimpleForm>
+                </Panel>
+
+                <!-- Irreversibility, declared and acknowledged (FR-09, FDD §3.4) -->
+                <MessageStrip
+                    id="splitIrreversibleStrip"
+                    visible="{splitModel>/isSplitMode}"
+                    text="{i18n>splitIrreversibleWarning}"
+                    type="Warning"
+                    showIcon="true"
+                    class="sapUiSmallMarginBottom"/>
+                <CheckBox
+                    id="splitAckCheckBox"
+                    visible="{splitModel>/isSplitMode}"
+                    text="{i18n>splitAckLabel}"
+                    selected="{splitModel>/acknowledged}"
+                    enabled="{= !${splitModel>/executing} }"
+                    select=".onSplitAckChange"/>
+
+            </l:VerticalLayout>
+        </content>
+
+        <buttons>
+            <!-- Enabled only with the four conditions of FDD §3.4 true together -->
+            <Button
+                id="splitConfirmButton"
+                text="{i18n>dlgBtnSplitConfirm}"
+                icon="sap-icon://split"
+                type="Emphasized"
+                visible="{splitModel>/isSplitMode}"
+                enabled="{splitModel>/canConfirm}"
+                press=".onSplitConfirm"/>
+            <Button
+                id="splitCompleteButton"
+                text="{i18n>dlgBtnSplitComplete}"
+                icon="sap-icon://chain-link"
+                type="Emphasized"
+                visible="{= ${splitModel>/offeredCommand} === 'COMPLETE' }"
+                enabled="{= !${splitModel>/executing} }"
+                press=".onSplitComplete"/>
+            <Button
+                id="splitRestoreButton"
+                text="{i18n>dlgBtnSplitRestore}"
+                icon="sap-icon://undo"
+                type="Emphasized"
+                visible="{= ${splitModel>/offeredCommand} === 'RESTORE' }"
+                enabled="{= !${splitModel>/executing} }"
+                press=".onSplitRestore"/>
+            <Button
+                id="splitCancelButton"
+                text="{i18n>dlgBtnCancel}"
+                enabled="{= !${splitModel>/executing} }"
+                press=".onSplitCancel"/>
+        </buttons>
+
+    </Dialog>
+
+</core:FragmentDefinition>

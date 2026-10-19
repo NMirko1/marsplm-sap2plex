@@ -1,0 +1,79 @@
+<core:FragmentDefinition
+    xmlns="sap.m"
+    xmlns:core="sap.ui.core">
+
+    <!-- [TEMPLATE-GROUP] I gruppi oggetti di un'operazione del template.
+         Gemello di WorkcentersPopover, da cui eredita tre scelte gia' pagate:
+
+         `placement="PreferredLeftOrFlip"` e NON `Left`. UI5 scrive un `max-width` INLINE su
+         `.sapMPopoverCont` calcolato dal placement: con `Left`, il tetto e' lo spazio a SINISTRA
+         dell'icona che apre il popover, e nell'editor dei template l'albero e' unico e sta a
+         sinistra — l'icona cade intorno ai 375px e il contenuto resta tappato la'. Il difetto non
+         si vede come una barra di scorrimento: si vede come tre puntini e una banda bianca, che
+         sembrano una scelta grafica. `PreferredLeftOrFlip` resta a sinistra dove ci sta e si
+         ribalta dove non ci sta.
+
+         `growing` ACCESO con soglia alta, e non spento. E' il growing a chiedere al binding una
+         lunghezza ESPLICITA: senza, `ClientListBinding` applica il tetto di `JSONModel.iSizeLimit`,
+         che vale 100, e le voci oltre la centesima spariscono senza errore ne' contatore. Il
+         controller alza anche `setSizeLimit` sul modello, cosi' la difesa non dipende da questo
+         attributo.
+
+         La selezione e' TWO-WAY SUL MODELLO (`selected="{...}"`) e non si legge da
+         `getSelectedItems()`: la lista si filtra con la ricerca, e `getSelectedItems()` rende le
+         sole righe VISIBILI — una selezione fatta prima di digitare sparirebbe alla conferma.
+
+         `description` porta la descrizione del gruppo, oppure — sulle voci in coda, quelle il cui
+         codice non e' piu' fra i gruppi del plant — l'etichetta di «non configurato»: quella riga
+         c'e' perche' senza di lei la conferma la cancellerebbe in silenzio (DEC-132). -->
+    <ResponsivePopover
+        id="objectGroupsPopover"
+        class="marsPlmWcPopover"
+        title="{i18n>popoverObjectGroupsTitle}"
+        contentHeight="400px"
+        placement="PreferredLeftOrFlip">
+
+        <subHeader>
+            <OverflowToolbar>
+                <SearchField
+                    id="ogSearchField"
+                    placeholder="{i18n>popoverSearchObjectGroups}"
+                    liveChange=".onOgSearch"
+                    width="100%"/>
+            </OverflowToolbar>
+        </subHeader>
+
+        <content>
+            <List
+                id="ogList"
+                mode="MultiSelect"
+                items="{ogModel>/groups}"
+                growing="true"
+                growingThreshold="1000"
+                noDataText="{i18n>popoverNoObjectGroups}"
+                busy="{ogModel>/busy}">
+
+                <StandardListItem
+                    title="{ogModel>groupId}"
+                    description="{ogModel>description}"
+                    info="{ogModel>infoText}"
+                    infoState="{ogModel>infoState}"
+                    selected="{ogModel>selected}"/>
+            </List>
+        </content>
+
+        <beginButton>
+            <Button
+                text="{i18n>dlgBtnConfirm}"
+                type="Emphasized"
+                press=".onOgPopoverConfirm"/>
+        </beginButton>
+        <endButton>
+            <Button
+                text="{i18n>dlgBtnCancel}"
+                press=".onOgPopoverCancel"/>
+        </endButton>
+
+    </ResponsivePopover>
+
+</core:FragmentDefinition>

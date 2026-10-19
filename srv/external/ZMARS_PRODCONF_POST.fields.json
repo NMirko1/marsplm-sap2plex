@@ -1,0 +1,957 @@
+{
+  "_comment": "GENERATO da srv/external/generate-prodconf-fields.js a partire da OP_API_PROD_ORDER_CONFIRMATIO_2_SRV_0001.edmx, entity type ProdnOrdConf2Type. NON MODIFICARE A MANO. Inventario dei 107 campi della conferma col loro tipo ABAP: e' cio' da cui srv/lib/prodOrderConfPost.js ricava il nome maiuscolo, la formattazione del valore e il valore iniziale. La codifica vera e propria sta in srv/lib/sapPostEncoding.js.",
+  "_kinds": "char = testo | numc = numerico riempito a zeri | int = numerico senza riempimento | dats = xsd:date | tims = xsd:time | dec = decimale col punto | xfeld = flag \"X\" o \"\"",
+  "_edm": "Tipo dichiarato dall'EDM del servizio, ed e' l'EDM che valida la richiesta. NON e' in corrispondenza biunivoca con `kind`: Edm.String copre char e numc, e Edm.Guid finisce in char perche' per l'XSD e' testo. Il letterale VUOTO della forma entity si decide da qui, non da `kind`: String -> \"\", Boolean -> false, tutto il resto -> null.",
+  "_key": "key: true su ConfirmationGroup e ConfirmationCount — assegnati da SAP. La RICHIESTA (IS_CONFIRMATION) ne ha 105: questi due sono esclusi. La RISPOSTA e' una tabella di righe da 107 campi, le stesse piu' queste due valorizzate. Non c'e' un ET_RETURN: le chiavi SONO l'esito.",
+  "confirmation": [
+    {
+      "name": "ConfirmationGroup",
+      "abap": "CONFIRMATIONGROUP",
+      "kind": "numc",
+      "sent": false,
+      "length": 10,
+      "label": "Confirmation Group",
+      "edm": "String",
+      "key": true
+    },
+    {
+      "name": "ConfirmationCount",
+      "abap": "CONFIRMATIONCOUNT",
+      "kind": "numc",
+      "sent": false,
+      "length": 8,
+      "label": "Order Confirmation",
+      "edm": "String",
+      "key": true
+    },
+    {
+      "name": "OrderID",
+      "abap": "ORDERID",
+      "kind": "char",
+      "sent": true,
+      "length": 12,
+      "label": "Manufacturing Order",
+      "edm": "String"
+    },
+    {
+      "name": "Sequence",
+      "abap": "SEQUENCE",
+      "kind": "char",
+      "sent": true,
+      "length": 6,
+      "label": "Sequence",
+      "edm": "String"
+    },
+    {
+      "name": "OrderOperation",
+      "abap": "ORDEROPERATION",
+      "kind": "char",
+      "sent": true,
+      "length": 4,
+      "label": "Operation",
+      "edm": "String"
+    },
+    {
+      "name": "OrderSuboperation",
+      "abap": "ORDERSUBOPERATION",
+      "kind": "char",
+      "sent": false,
+      "length": 4,
+      "label": "Suboperation",
+      "edm": "String"
+    },
+    {
+      "name": "OrderType",
+      "abap": "ORDERTYPE",
+      "kind": "char",
+      "sent": false,
+      "length": 4,
+      "label": "Order Type",
+      "edm": "String"
+    },
+    {
+      "name": "OrderOperationInternalID",
+      "abap": "ORDEROPERATIONINTERNALID",
+      "kind": "numc",
+      "sent": false,
+      "length": 8,
+      "label": "Operation Internal ID",
+      "edm": "String"
+    },
+    {
+      "name": "ConfirmationText",
+      "abap": "CONFIRMATIONTEXT",
+      "kind": "char",
+      "sent": true,
+      "length": 40,
+      "label": "Confirmation Text",
+      "edm": "String"
+    },
+    {
+      "name": "Language",
+      "abap": "LANGUAGE",
+      "kind": "char",
+      "sent": false,
+      "length": 2,
+      "label": "Language Key",
+      "edm": "String"
+    },
+    {
+      "name": "Material",
+      "abap": "MATERIAL",
+      "kind": "char",
+      "sent": false,
+      "length": 40,
+      "label": "Material",
+      "edm": "String"
+    },
+    {
+      "name": "OrderPlannedTotalQty",
+      "abap": "ORDERPLANNEDTOTALQTY",
+      "kind": "dec",
+      "sent": false,
+      "precision": 13,
+      "scale": 3,
+      "label": "Total Quantity",
+      "edm": "Decimal"
+    },
+    {
+      "name": "ProductionUnit",
+      "abap": "PRODUCTIONUNIT",
+      "kind": "char",
+      "sent": false,
+      "length": 3,
+      "label": "Production Unit",
+      "edm": "String"
+    },
+    {
+      "name": "FinalConfirmationType",
+      "abap": "FINALCONFIRMATIONTYPE",
+      "kind": "char",
+      "sent": false,
+      "length": 1,
+      "label": "Final Confirmation Type",
+      "edm": "String"
+    },
+    {
+      "name": "IsFinalConfirmation",
+      "abap": "ISFINALCONFIRMATION",
+      "kind": "xfeld",
+      "sent": true,
+      "label": "Final Confirmation",
+      "edm": "Boolean"
+    },
+    {
+      "name": "OpenReservationsIsCleared",
+      "abap": "OPENRESERVATIONSISCLEARED",
+      "kind": "xfeld",
+      "sent": true,
+      "label": "Clear Open Reservs.",
+      "edm": "Boolean"
+    },
+    {
+      "name": "IsReversed",
+      "abap": "ISREVERSED",
+      "kind": "xfeld",
+      "sent": false,
+      "label": "Reversed",
+      "edm": "Boolean"
+    },
+    {
+      "name": "IsReversal",
+      "abap": "ISREVERSAL",
+      "kind": "xfeld",
+      "sent": false,
+      "label": "Is a Cancellation",
+      "edm": "Boolean"
+    },
+    {
+      "name": "APIConfHasNoGoodsMovements",
+      "abap": "APICONFHASNOGOODSMOVEMENTS",
+      "kind": "xfeld",
+      "sent": true,
+      "label": "No Goods Movement",
+      "edm": "Boolean"
+    },
+    {
+      "name": "OrderConfirmationRecordType",
+      "abap": "ORDERCONFIRMATIONRECORDTYPE",
+      "kind": "char",
+      "sent": false,
+      "length": 3,
+      "label": "Record Type",
+      "edm": "String"
+    },
+    {
+      "name": "OrderConfirmationType",
+      "abap": "ORDERCONFIRMATIONTYPE",
+      "kind": "char",
+      "sent": false,
+      "length": 1,
+      "label": "Type of Confirmation",
+      "edm": "String"
+    },
+    {
+      "name": "ConfirmationEntryDate",
+      "abap": "CONFIRMATIONENTRYDATE",
+      "kind": "dats",
+      "sent": false,
+      "label": "Entry Date",
+      "edm": "DateTime"
+    },
+    {
+      "name": "ConfirmationEntryTime",
+      "abap": "CONFIRMATIONENTRYTIME",
+      "kind": "tims",
+      "sent": false,
+      "label": "Entry Time",
+      "edm": "Time"
+    },
+    {
+      "name": "EnteredByUser",
+      "abap": "ENTEREDBYUSER",
+      "kind": "char",
+      "sent": false,
+      "length": 12,
+      "label": "Entered by User",
+      "edm": "String"
+    },
+    {
+      "name": "LastChangeDate",
+      "abap": "LASTCHANGEDATE",
+      "kind": "dats",
+      "sent": false,
+      "label": "Last Change",
+      "edm": "DateTime"
+    },
+    {
+      "name": "LastChangedByUser",
+      "abap": "LASTCHANGEDBYUSER",
+      "kind": "char",
+      "sent": false,
+      "length": 12,
+      "label": "Changed By",
+      "edm": "String"
+    },
+    {
+      "name": "ConfirmationExternalEntryDate",
+      "abap": "CONFIRMATIONEXTERNALENTRYDATE",
+      "kind": "dats",
+      "sent": false,
+      "label": "Created on",
+      "edm": "DateTime"
+    },
+    {
+      "name": "ConfirmationExternalEntryTime",
+      "abap": "CONFIRMATIONEXTERNALENTRYTIME",
+      "kind": "tims",
+      "sent": false,
+      "label": "Time",
+      "edm": "Time"
+    },
+    {
+      "name": "EnteredByExternalUser",
+      "abap": "ENTEREDBYEXTERNALUSER",
+      "kind": "char",
+      "sent": false,
+      "length": 12,
+      "label": "Created by",
+      "edm": "String"
+    },
+    {
+      "name": "ExternalSystemConfirmation",
+      "abap": "EXTERNALSYSTEMCONFIRMATION",
+      "kind": "char",
+      "sent": false,
+      "length": 255,
+      "label": "External Key",
+      "edm": "Guid"
+    },
+    {
+      "name": "Plant",
+      "abap": "PLANT",
+      "kind": "char",
+      "sent": true,
+      "length": 4,
+      "label": "Plant",
+      "edm": "String"
+    },
+    {
+      "name": "WorkCenterTypeCode",
+      "abap": "WORKCENTERTYPECODE",
+      "kind": "char",
+      "sent": false,
+      "length": 2,
+      "label": "Resource Object Type",
+      "edm": "String"
+    },
+    {
+      "name": "WorkCenter",
+      "abap": "WORKCENTER",
+      "kind": "char",
+      "sent": true,
+      "length": 8,
+      "label": "Work Center",
+      "edm": "String"
+    },
+    {
+      "name": "CapacityCategoryCode",
+      "abap": "CAPACITYCATEGORYCODE",
+      "kind": "char",
+      "sent": false,
+      "length": 3,
+      "label": "Capacity Category",
+      "edm": "String"
+    },
+    {
+      "name": "CapacityRequirementSplit",
+      "abap": "CAPACITYREQUIREMENTSPLIT",
+      "kind": "int",
+      "sent": false,
+      "label": "Split Number",
+      "edm": "Byte"
+    },
+    {
+      "name": "ShiftGrouping",
+      "abap": "SHIFTGROUPING",
+      "kind": "char",
+      "sent": false,
+      "length": 2,
+      "label": "Shift Grouping",
+      "edm": "String"
+    },
+    {
+      "name": "ShiftDefinition",
+      "abap": "SHIFTDEFINITION",
+      "kind": "char",
+      "sent": false,
+      "length": 4,
+      "label": "Shift Definition",
+      "edm": "String"
+    },
+    {
+      "name": "OriginalBatch",
+      "abap": "ORIGINALBATCH",
+      "kind": "char",
+      "sent": false,
+      "length": 10,
+      "label": "Original Batch",
+      "edm": "String"
+    },
+    {
+      "name": "SenderCostCenter",
+      "abap": "SENDERCOSTCENTER",
+      "kind": "char",
+      "sent": false,
+      "length": 10,
+      "label": "Sender Cost Center",
+      "edm": "String"
+    },
+    {
+      "name": "Personnel",
+      "abap": "PERSONNEL",
+      "kind": "numc",
+      "sent": false,
+      "length": 8,
+      "label": "Personnel",
+      "edm": "String"
+    },
+    {
+      "name": "TimeRecording",
+      "abap": "TIMERECORDING",
+      "kind": "numc",
+      "sent": false,
+      "length": 8,
+      "label": "Time Recording",
+      "edm": "String"
+    },
+    {
+      "name": "EmployeeWageType",
+      "abap": "EMPLOYEEWAGETYPE",
+      "kind": "char",
+      "sent": false,
+      "length": 4,
+      "label": "Employee Wage Type",
+      "edm": "String"
+    },
+    {
+      "name": "EmployeeWageGroup",
+      "abap": "EMPLOYEEWAGEGROUP",
+      "kind": "char",
+      "sent": false,
+      "length": 3,
+      "label": "Employee Wage Group",
+      "edm": "String"
+    },
+    {
+      "name": "BreakDurationUnit",
+      "abap": "BREAKDURATIONUNIT",
+      "kind": "char",
+      "sent": false,
+      "length": 3,
+      "label": "Break Time Unit",
+      "edm": "String"
+    },
+    {
+      "name": "BreakDurationUnitISOCode",
+      "abap": "BREAKDURATIONUNITISOCODE",
+      "kind": "char",
+      "sent": false,
+      "length": 3,
+      "label": "ISO Code",
+      "edm": "String"
+    },
+    {
+      "name": "BreakDurationUnitSAPCode",
+      "abap": "BREAKDURATIONUNITSAPCODE",
+      "kind": "char",
+      "sent": false,
+      "length": 3,
+      "label": "Internal SAP Code",
+      "edm": "String"
+    },
+    {
+      "name": "ConfirmedBreakDuration",
+      "abap": "CONFIRMEDBREAKDURATION",
+      "kind": "dec",
+      "sent": false,
+      "precision": 9,
+      "scale": 3,
+      "label": "Confirmed Break Time",
+      "edm": "Decimal"
+    },
+    {
+      "name": "EmployeeSuitability",
+      "abap": "EMPLOYEESUITABILITY",
+      "kind": "char",
+      "sent": false,
+      "length": 2,
+      "label": "Employee Suitability",
+      "edm": "String"
+    },
+    {
+      "name": "NumberOfEmployees",
+      "abap": "NUMBEROFEMPLOYEES",
+      "kind": "dec",
+      "sent": false,
+      "precision": 5,
+      "scale": 2,
+      "label": "Number of Employees",
+      "edm": "Decimal"
+    },
+    {
+      "name": "PostingDate",
+      "abap": "POSTINGDATE",
+      "kind": "dats",
+      "sent": true,
+      "label": "Posting Date",
+      "edm": "DateTime"
+    },
+    {
+      "name": "ConfirmedExecutionStartDate",
+      "abap": "CONFIRMEDEXECUTIONSTARTDATE",
+      "kind": "dats",
+      "sent": false,
+      "label": "Confirmed Execution Start Date",
+      "edm": "DateTime"
+    },
+    {
+      "name": "ConfirmedExecutionStartTime",
+      "abap": "CONFIRMEDEXECUTIONSTARTTIME",
+      "kind": "tims",
+      "sent": false,
+      "label": "Confirmed Execution Start Time",
+      "edm": "Time"
+    },
+    {
+      "name": "ConfirmedSetupEndDate",
+      "abap": "CONFIRMEDSETUPENDDATE",
+      "kind": "dats",
+      "sent": false,
+      "label": "Confirmed Setup End Date",
+      "edm": "DateTime"
+    },
+    {
+      "name": "ConfirmedSetupEndTime",
+      "abap": "CONFIRMEDSETUPENDTIME",
+      "kind": "tims",
+      "sent": false,
+      "label": "Confirmed Setup End Time",
+      "edm": "Time"
+    },
+    {
+      "name": "ConfirmedProcessingStartDate",
+      "abap": "CONFIRMEDPROCESSINGSTARTDATE",
+      "kind": "dats",
+      "sent": false,
+      "label": "Confirmed Processing Start Date",
+      "edm": "DateTime"
+    },
+    {
+      "name": "ConfirmedProcessingStartTime",
+      "abap": "CONFIRMEDPROCESSINGSTARTTIME",
+      "kind": "tims",
+      "sent": false,
+      "label": "Confirmed Processing Start Time",
+      "edm": "Time"
+    },
+    {
+      "name": "ConfirmedProcessingEndDate",
+      "abap": "CONFIRMEDPROCESSINGENDDATE",
+      "kind": "dats",
+      "sent": false,
+      "label": "Confirmed Processing End Date",
+      "edm": "DateTime"
+    },
+    {
+      "name": "ConfirmedProcessingEndTime",
+      "abap": "CONFIRMEDPROCESSINGENDTIME",
+      "kind": "tims",
+      "sent": false,
+      "label": "Confirmed Processing End Time",
+      "edm": "Time"
+    },
+    {
+      "name": "ConfirmedTeardownStartDate",
+      "abap": "CONFIRMEDTEARDOWNSTARTDATE",
+      "kind": "dats",
+      "sent": false,
+      "label": "Confirmed Teardown Start Date",
+      "edm": "DateTime"
+    },
+    {
+      "name": "ConfirmedTeardownStartTime",
+      "abap": "CONFIRMEDTEARDOWNSTARTTIME",
+      "kind": "tims",
+      "sent": false,
+      "label": "Confirmed Teardown Start Time",
+      "edm": "Time"
+    },
+    {
+      "name": "ConfirmedExecutionEndDate",
+      "abap": "CONFIRMEDEXECUTIONENDDATE",
+      "kind": "dats",
+      "sent": false,
+      "label": "Confirmed Execution End Date",
+      "edm": "DateTime"
+    },
+    {
+      "name": "ConfirmedExecutionEndTime",
+      "abap": "CONFIRMEDEXECUTIONENDTIME",
+      "kind": "tims",
+      "sent": false,
+      "label": "Confirmed Execution End Time",
+      "edm": "Time"
+    },
+    {
+      "name": "ConfirmationUnit",
+      "abap": "CONFIRMATIONUNIT",
+      "kind": "char",
+      "sent": true,
+      "length": 3,
+      "label": "Confirmation Unit",
+      "edm": "String"
+    },
+    {
+      "name": "ConfirmationUnitISOCode",
+      "abap": "CONFIRMATIONUNITISOCODE",
+      "kind": "char",
+      "sent": false,
+      "length": 3,
+      "label": "ISO Code",
+      "edm": "String"
+    },
+    {
+      "name": "ConfirmationUnitSAPCode",
+      "abap": "CONFIRMATIONUNITSAPCODE",
+      "kind": "char",
+      "sent": false,
+      "length": 3,
+      "label": "Internal SAP Code",
+      "edm": "String"
+    },
+    {
+      "name": "ConfirmationYieldQuantity",
+      "abap": "CONFIRMATIONYIELDQUANTITY",
+      "kind": "dec",
+      "sent": true,
+      "precision": 13,
+      "scale": 3,
+      "label": "Yield Quantity",
+      "edm": "Decimal"
+    },
+    {
+      "name": "ConfirmationScrapQuantity",
+      "abap": "CONFIRMATIONSCRAPQUANTITY",
+      "kind": "dec",
+      "sent": false,
+      "precision": 13,
+      "scale": 3,
+      "label": "Scrap Quantity",
+      "edm": "Decimal"
+    },
+    {
+      "name": "ConfirmationReworkQuantity",
+      "abap": "CONFIRMATIONREWORKQUANTITY",
+      "kind": "dec",
+      "sent": false,
+      "precision": 13,
+      "scale": 3,
+      "label": "Rework Quantity",
+      "edm": "Decimal"
+    },
+    {
+      "name": "VarianceReasonCode",
+      "abap": "VARIANCEREASONCODE",
+      "kind": "char",
+      "sent": false,
+      "length": 4,
+      "label": "Variance Reason",
+      "edm": "String"
+    },
+    {
+      "name": "OperationUnit",
+      "abap": "OPERATIONUNIT",
+      "kind": "char",
+      "sent": false,
+      "length": 3,
+      "label": "Operation Unit",
+      "edm": "String"
+    },
+    {
+      "name": "OpPlannedTotalQuantity",
+      "abap": "OPPLANNEDTOTALQUANTITY",
+      "kind": "dec",
+      "sent": false,
+      "precision": 13,
+      "scale": 3,
+      "label": "Operation Quantity",
+      "edm": "Decimal"
+    },
+    {
+      "name": "ConfYieldQtyInProductionUnit",
+      "abap": "CONFYIELDQTYINPRODUCTIONUNIT",
+      "kind": "dec",
+      "sent": false,
+      "precision": 13,
+      "scale": 3,
+      "label": "Confd Yield Quantity",
+      "edm": "Decimal"
+    },
+    {
+      "name": "OpWorkQuantityUnit1",
+      "abap": "OPWORKQUANTITYUNIT1",
+      "kind": "char",
+      "sent": false,
+      "length": 3,
+      "label": "Confirmed Work Quantity Unit 1",
+      "edm": "String"
+    },
+    {
+      "name": "WorkQuantityUnit1ISOCode",
+      "abap": "WORKQUANTITYUNIT1ISOCODE",
+      "kind": "char",
+      "sent": false,
+      "length": 3,
+      "label": "ISO Code",
+      "edm": "String"
+    },
+    {
+      "name": "WorkQuantityUnit1SAPCode",
+      "abap": "WORKQUANTITYUNIT1SAPCODE",
+      "kind": "char",
+      "sent": false,
+      "length": 3,
+      "label": "Internal SAP Code",
+      "edm": "String"
+    },
+    {
+      "name": "OpConfirmedWorkQuantity1",
+      "abap": "OPCONFIRMEDWORKQUANTITY1",
+      "kind": "dec",
+      "sent": false,
+      "precision": 13,
+      "scale": 3,
+      "label": "Confirmed Work Quantity 1",
+      "edm": "Decimal"
+    },
+    {
+      "name": "NoFurtherOpWorkQuantity1IsExpd",
+      "abap": "NOFURTHEROPWORKQUANTITY1ISEXPD",
+      "kind": "xfeld",
+      "sent": false,
+      "label": "No Remaining Work Quantity 1 Expected",
+      "edm": "Boolean"
+    },
+    {
+      "name": "OpWorkQuantityUnit2",
+      "abap": "OPWORKQUANTITYUNIT2",
+      "kind": "char",
+      "sent": false,
+      "length": 3,
+      "label": "Confirmed Work Quantity Unit 2",
+      "edm": "String"
+    },
+    {
+      "name": "WorkQuantityUnit2ISOCode",
+      "abap": "WORKQUANTITYUNIT2ISOCODE",
+      "kind": "char",
+      "sent": false,
+      "length": 3,
+      "label": "ISO Code",
+      "edm": "String"
+    },
+    {
+      "name": "WorkQuantityUnit2SAPCode",
+      "abap": "WORKQUANTITYUNIT2SAPCODE",
+      "kind": "char",
+      "sent": false,
+      "length": 3,
+      "label": "Internal SAP Code",
+      "edm": "String"
+    },
+    {
+      "name": "OpConfirmedWorkQuantity2",
+      "abap": "OPCONFIRMEDWORKQUANTITY2",
+      "kind": "dec",
+      "sent": false,
+      "precision": 13,
+      "scale": 3,
+      "label": "Confirmed Work Quantity 2",
+      "edm": "Decimal"
+    },
+    {
+      "name": "NoFurtherOpWorkQuantity2IsExpd",
+      "abap": "NOFURTHEROPWORKQUANTITY2ISEXPD",
+      "kind": "xfeld",
+      "sent": false,
+      "label": "No Remaining Work Quantity 2 Expected",
+      "edm": "Boolean"
+    },
+    {
+      "name": "OpWorkQuantityUnit3",
+      "abap": "OPWORKQUANTITYUNIT3",
+      "kind": "char",
+      "sent": false,
+      "length": 3,
+      "label": "Confirmed Work Quantity Unit 3",
+      "edm": "String"
+    },
+    {
+      "name": "WorkQuantityUnit3ISOCode",
+      "abap": "WORKQUANTITYUNIT3ISOCODE",
+      "kind": "char",
+      "sent": false,
+      "length": 3,
+      "label": "ISO Code",
+      "edm": "String"
+    },
+    {
+      "name": "WorkQuantityUnit3SAPCode",
+      "abap": "WORKQUANTITYUNIT3SAPCODE",
+      "kind": "char",
+      "sent": false,
+      "length": 3,
+      "label": "Internal SAP Code",
+      "edm": "String"
+    },
+    {
+      "name": "OpConfirmedWorkQuantity3",
+      "abap": "OPCONFIRMEDWORKQUANTITY3",
+      "kind": "dec",
+      "sent": false,
+      "precision": 13,
+      "scale": 3,
+      "label": "Confirmed Work Quantity 3",
+      "edm": "Decimal"
+    },
+    {
+      "name": "NoFurtherOpWorkQuantity3IsExpd",
+      "abap": "NOFURTHEROPWORKQUANTITY3ISEXPD",
+      "kind": "xfeld",
+      "sent": false,
+      "label": "No Remaining Work Quantity 3 Expected",
+      "edm": "Boolean"
+    },
+    {
+      "name": "OpWorkQuantityUnit4",
+      "abap": "OPWORKQUANTITYUNIT4",
+      "kind": "char",
+      "sent": false,
+      "length": 3,
+      "label": "Confirmed Work Quantity Unit 4",
+      "edm": "String"
+    },
+    {
+      "name": "WorkQuantityUnit4ISOCode",
+      "abap": "WORKQUANTITYUNIT4ISOCODE",
+      "kind": "char",
+      "sent": false,
+      "length": 3,
+      "label": "ISO Code",
+      "edm": "String"
+    },
+    {
+      "name": "WorkQuantityUnit4SAPCode",
+      "abap": "WORKQUANTITYUNIT4SAPCODE",
+      "kind": "char",
+      "sent": false,
+      "length": 3,
+      "label": "Internal SAP Code",
+      "edm": "String"
+    },
+    {
+      "name": "OpConfirmedWorkQuantity4",
+      "abap": "OPCONFIRMEDWORKQUANTITY4",
+      "kind": "dec",
+      "sent": false,
+      "precision": 13,
+      "scale": 3,
+      "label": "Confirmed Work Quantity 4",
+      "edm": "Decimal"
+    },
+    {
+      "name": "NoFurtherOpWorkQuantity4IsExpd",
+      "abap": "NOFURTHEROPWORKQUANTITY4ISEXPD",
+      "kind": "xfeld",
+      "sent": false,
+      "label": "No Remaining Work Quantity 4 Expected",
+      "edm": "Boolean"
+    },
+    {
+      "name": "OpWorkQuantityUnit5",
+      "abap": "OPWORKQUANTITYUNIT5",
+      "kind": "char",
+      "sent": false,
+      "length": 3,
+      "label": "Confirmed Work Quantity Unit 5",
+      "edm": "String"
+    },
+    {
+      "name": "WorkQuantityUnit5ISOCode",
+      "abap": "WORKQUANTITYUNIT5ISOCODE",
+      "kind": "char",
+      "sent": false,
+      "length": 3,
+      "label": "ISO Code",
+      "edm": "String"
+    },
+    {
+      "name": "WorkQuantityUnit5SAPCode",
+      "abap": "WORKQUANTITYUNIT5SAPCODE",
+      "kind": "char",
+      "sent": false,
+      "length": 3,
+      "label": "Internal SAP Code",
+      "edm": "String"
+    },
+    {
+      "name": "OpConfirmedWorkQuantity5",
+      "abap": "OPCONFIRMEDWORKQUANTITY5",
+      "kind": "dec",
+      "sent": false,
+      "precision": 13,
+      "scale": 3,
+      "label": "Confirmed Work Quantity 5",
+      "edm": "Decimal"
+    },
+    {
+      "name": "NoFurtherOpWorkQuantity5IsExpd",
+      "abap": "NOFURTHEROPWORKQUANTITY5ISEXPD",
+      "kind": "xfeld",
+      "sent": false,
+      "label": "No Remaining Work Quantity 5 Expected",
+      "edm": "Boolean"
+    },
+    {
+      "name": "OpWorkQuantityUnit6",
+      "abap": "OPWORKQUANTITYUNIT6",
+      "kind": "char",
+      "sent": false,
+      "length": 3,
+      "label": "Confirmed Work Quantity Unit 6",
+      "edm": "String"
+    },
+    {
+      "name": "WorkQuantityUnit6ISOCode",
+      "abap": "WORKQUANTITYUNIT6ISOCODE",
+      "kind": "char",
+      "sent": false,
+      "length": 3,
+      "label": "ISO Code",
+      "edm": "String"
+    },
+    {
+      "name": "WorkQuantityUnit6SAPCode",
+      "abap": "WORKQUANTITYUNIT6SAPCODE",
+      "kind": "char",
+      "sent": false,
+      "length": 3,
+      "label": "Internal SAP Code",
+      "edm": "String"
+    },
+    {
+      "name": "OpConfirmedWorkQuantity6",
+      "abap": "OPCONFIRMEDWORKQUANTITY6",
+      "kind": "dec",
+      "sent": false,
+      "precision": 13,
+      "scale": 3,
+      "label": "Confirmed Work Quantity 6",
+      "edm": "Decimal"
+    },
+    {
+      "name": "NoFurtherOpWorkQuantity6IsExpd",
+      "abap": "NOFURTHEROPWORKQUANTITY6ISEXPD",
+      "kind": "xfeld",
+      "sent": false,
+      "label": "No Remaining Work Quantity 6 Expected",
+      "edm": "Boolean"
+    },
+    {
+      "name": "BusinessProcessEntryUnit",
+      "abap": "BUSINESSPROCESSENTRYUNIT",
+      "kind": "char",
+      "sent": false,
+      "length": 3,
+      "label": "Process Unit",
+      "edm": "String"
+    },
+    {
+      "name": "BusProcessEntrUnitISOCode",
+      "abap": "BUSPROCESSENTRUNITISOCODE",
+      "kind": "char",
+      "sent": false,
+      "length": 3,
+      "label": "ISO Code",
+      "edm": "String"
+    },
+    {
+      "name": "BusProcessEntryUnitSAPCode",
+      "abap": "BUSPROCESSENTRYUNITSAPCODE",
+      "kind": "char",
+      "sent": false,
+      "length": 3,
+      "label": "Internal SAP Code",
+      "edm": "String"
+    },
+    {
+      "name": "BusinessProcessConfirmedQty",
+      "abap": "BUSINESSPROCESSCONFIRMEDQTY",
+      "kind": "dec",
+      "sent": false,
+      "precision": 13,
+      "scale": 3,
+      "label": "Process Quantity",
+      "edm": "Decimal"
+    },
+    {
+      "name": "NoFurtherBusinessProcQtyIsExpd",
+      "abap": "NOFURTHERBUSINESSPROCQTYISEXPD",
+      "kind": "xfeld",
+      "sent": false,
+      "label": "No Remaining Act.",
+      "edm": "Boolean"
+    }
+  ]
+}

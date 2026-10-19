@@ -1,0 +1,205 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  [MATDOC-POST] CONTRATTO - Registrazione movimento merci, forma OData V2 con DEEP INSERT.
+
+  GENERATO da srv/external/generate-matdoc-contract.js a partire da OP_API_MATERIAL_DOCUMENT_SRV.edmx.
+  NON MODIFICARE A MANO.
+
+  A COSA SERVE. Proposta di contratto per l'endpoint che il team Integration deve realizzare. Non e'
+  un servizio esposto ne' consumato da questa applicazione: srv/external/ non e' caricata da CAP.
+
+  COS'E'. Un servizio OData V2 CUSTOM e MINIMALE - solo il documento materiale, nient'altro - al posto
+  del servizio SAP standard API_MATERIAL_DOCUMENT_SRV. La registrazione avviene con
+      POST <service root>/MatDocHeader
+  e le righe annidate nella navigazione to_Item: e' un DEEP INSERT.
+
+  QUANDO SERVE, E PERCHE' PROBABILMENTE NO. Questo EDMX va modellato nel sender adapter OData V2 di
+  Cloud Integration - non passiamo dal Gateway, quindi non c'e' altro posto dove ospitarlo. Ma e'
+  proprio quell'adapter ad aver rifiutato il deep insert: la forma B serve solo se il limite fosse
+  per-servizio e non dell'adapter. Se e' dell'adapter, non c'e' alternativa tipizzata in OData V2 -
+  le collection non sono ammesse come tipo di Property (arrivano in OData V3) e i parametri di
+  FunctionImport devono essere EDMSimpleType - e la strada e' JSON su HTTPS sender
+  (ZMARS_MATDOC_POST.schema.json), oppure V4 se CPI ha un sender V4 (ZMARS_MATDOC_POST_SRV.edmx).
+
+  NOTA SUI VALORI. In OData V2 JSON: Edm.DateTime si scrive /Date(millisecondi)/ e NON in ISO;
+  Edm.Decimal si scrive come stringa ("3.000"). Il letterale sbagliato produce EdmSimpleTypeException.
+
+  Confronto delle tre forme: ZMARS_MATDOC_POST_CONTRACT.md
+-->
+<edmx:Edmx Version="1.0"
+           xmlns:edmx="http://schemas.microsoft.com/ado/2007/06/edmx"
+           xmlns:m="http://schemas.microsoft.com/ado/2007/08/dataservices/metadata"
+           xmlns:sap="http://www.sap.com/Protocols/SAPData">
+  <edmx:DataServices m:DataServiceVersion="2.0">
+    <Schema Namespace="ZMARS_MATDOC_POST_SRV" xml:lang="en" sap:schema-version="1"
+            xmlns="http://schemas.microsoft.com/ado/2008/09/edm">
+
+      <!-- Testata. Le chiavi sono assegnate da SAP: si inviano vuote e tornano valorizzate. -->
+      <EntityType Name="MatDocHeaderType" sap:label="Material Document Header" sap:content-version="1">
+        <Key>
+          <PropertyRef Name="MaterialDocumentYear"/>
+          <PropertyRef Name="MaterialDocument"/>
+        </Key>
+        <Property Name="MaterialDocumentYear" Type="Edm.String" Nullable="false" MaxLength="4" sap:display-format="NonNegative" sap:label="Material Document Year"/>
+        <Property Name="MaterialDocument" Type="Edm.String" Nullable="false" MaxLength="10" sap:display-format="UpperCase" sap:label="Material Document" sap:quickinfo="Number of Material Document"/>
+        <Property Name="InventoryTransactionType" Type="Edm.String" MaxLength="2" sap:display-format="UpperCase" sap:label="Transaction/Event Type"/>
+        <Property Name="DocumentDate" Type="Edm.DateTime" Precision="0" sap:display-format="Date" sap:label="Document Date" sap:quickinfo="Document Date in Document"/>
+        <Property Name="PostingDate" Type="Edm.DateTime" Precision="0" sap:display-format="Date" sap:label="Posting Date" sap:quickinfo="Posting Date in the Document"/>
+        <Property Name="CreationDate" Type="Edm.DateTime" Precision="0" sap:display-format="Date" sap:label="Entry Date" sap:quickinfo="Day On Which Accounting Document Was Entered"/>
+        <Property Name="CreationTime" Type="Edm.Time" Precision="0" sap:label="Time of Entry"/>
+        <Property Name="CreatedByUser" Type="Edm.String" MaxLength="12" sap:display-format="UpperCase" sap:label="User Name"/>
+        <Property Name="MaterialDocumentHeaderText" Type="Edm.String" MaxLength="25" sap:label="Document Header Text"/>
+        <Property Name="ReferenceDocument" Type="Edm.String" MaxLength="16" sap:display-format="UpperCase" sap:label="Reference" sap:quickinfo="Reference Document Number"/>
+        <Property Name="VersionForPrintingSlip" Type="Edm.String" MaxLength="1" sap:display-format="UpperCase" sap:label="Print Version" sap:quickinfo="Version for Printing GR/GI Slip"/>
+        <Property Name="ManualPrintIsTriggered" Type="Edm.String" MaxLength="1" sap:display-format="UpperCase" sap:label="Print Active" sap:quickinfo="Print via Output Control"/>
+        <Property Name="CtrlPostgForExtWhseMgmtSyst" Type="Edm.String" MaxLength="1" sap:display-format="UpperCase" sap:label="External WMS Control" sap:quickinfo="Control Posting for External WMS"/>
+        <Property Name="GoodsMovementCode" Type="Edm.String" MaxLength="2" sap:display-format="UpperCase" sap:label="Goods Movement Code"/>
+        <!-- L'aggancio delle righe. La cardinalita' 1 -> * NON sta qui ma sull'Association. -->
+        <NavigationProperty Name="to_Item"
+                            Relationship="ZMARS_MATDOC_POST_SRV.Assoc_MatDocHeader_Item"
+                            FromRole="FromRole_Assoc_MatDocHeader_Item"
+                            ToRole="ToRole_Assoc_MatDocHeader_Item"/>
+      </EntityType>
+
+      <!-- Riga. GoodsMovementType (261 / 551 / ...) vive qui: righe di tipo diverso possono
+           convivere nello stesso documento. -->
+      <EntityType Name="MatDocItemType" sap:label="Material Document Item" sap:content-version="1">
+        <Key>
+          <PropertyRef Name="MaterialDocumentYear"/>
+          <PropertyRef Name="MaterialDocument"/>
+          <PropertyRef Name="MaterialDocumentItem"/>
+        </Key>
+        <Property Name="MaterialDocumentYear" Type="Edm.String" Nullable="false" MaxLength="4" sap:display-format="NonNegative" sap:label="Material Document Year"/>
+        <Property Name="MaterialDocument" Type="Edm.String" Nullable="false" MaxLength="10" sap:display-format="UpperCase" sap:label="Material Document" sap:quickinfo="Number of Material Document"/>
+        <Property Name="MaterialDocumentItem" Type="Edm.String" Nullable="false" MaxLength="4" sap:display-format="NonNegative" sap:label="Material Document Item"/>
+        <Property Name="Material" Type="Edm.String" MaxLength="40" sap:display-format="UpperCase" sap:label="Material" sap:quickinfo="Material Number"/>
+        <Property Name="Plant" Type="Edm.String" MaxLength="4" sap:display-format="UpperCase" sap:label="Plant"/>
+        <Property Name="StorageLocation" Type="Edm.String" MaxLength="4" sap:display-format="UpperCase" sap:label="Storage Location"/>
+        <Property Name="Batch" Type="Edm.String" MaxLength="10" sap:display-format="UpperCase" sap:label="Batch" sap:quickinfo="Batch Number"/>
+        <Property Name="BatchBySupplier" Type="Edm.String" MaxLength="15" sap:display-format="UpperCase" sap:label="Supplier Batch" sap:quickinfo="Supplier Batch Number"/>
+        <Property Name="GoodsMovementType" Type="Edm.String" MaxLength="3" sap:display-format="UpperCase" sap:label="Movement Type" sap:quickinfo="Movement Type (Inventory Management)"/>
+        <Property Name="InventoryStockType" Type="Edm.String" MaxLength="2" sap:display-format="UpperCase" sap:label="Stock Type" sap:quickinfo="Stock Type of Goods Movement (Stock Identifier)"/>
+        <Property Name="InventoryValuationType" Type="Edm.String" MaxLength="10" sap:display-format="UpperCase" sap:label="Valuation Type"/>
+        <Property Name="InventorySpecialStockType" Type="Edm.String" MaxLength="1" sap:display-format="UpperCase" sap:label="Special Stock Type"/>
+        <Property Name="Supplier" Type="Edm.String" MaxLength="10" sap:display-format="UpperCase" sap:label="Supplier" sap:quickinfo="Supplier's Account Number"/>
+        <Property Name="Customer" Type="Edm.String" MaxLength="10" sap:display-format="UpperCase" sap:label="Customer" sap:quickinfo="Account Number of Customer"/>
+        <Property Name="SalesOrder" Type="Edm.String" MaxLength="10" sap:display-format="UpperCase" sap:label="Sales Order" sap:quickinfo="Sales Order Number"/>
+        <Property Name="SalesOrderItem" Type="Edm.String" MaxLength="6" sap:display-format="NonNegative" sap:label="Sales Order Item"/>
+        <Property Name="SalesOrderScheduleLine" Type="Edm.String" MaxLength="4" sap:display-format="NonNegative" sap:label="Sales Order Schedule"/>
+        <Property Name="PurchaseOrder" Type="Edm.String" MaxLength="10" sap:display-format="UpperCase" sap:label="Purchase Order" sap:quickinfo="Purchase Order Number"/>
+        <Property Name="PurchaseOrderItem" Type="Edm.String" MaxLength="5" sap:display-format="NonNegative" sap:label="Purchase Order Item" sap:quickinfo="Item Number of Purchasing Document"/>
+        <Property Name="WBSElement" Type="Edm.String" MaxLength="24" sap:display-format="UpperCase" sap:label="WBS Element" sap:quickinfo="Work Breakdown Structure Element (WBS Element)"/>
+        <Property Name="ManufacturingOrder" Type="Edm.String" MaxLength="12" sap:display-format="UpperCase" sap:label="Manufacturing Order"/>
+        <Property Name="ManufacturingOrderItem" Type="Edm.String" MaxLength="4" sap:display-format="NonNegative" sap:label="Manufacturing Order Item"/>
+        <Property Name="GoodsMovementRefDocType" Type="Edm.String" MaxLength="1" sap:display-format="UpperCase" sap:label="Reference Document Type" sap:quickinfo="Goods Movement Reference Document Type"/>
+        <Property Name="GoodsMovementReasonCode" Type="Edm.String" MaxLength="4" sap:display-format="NonNegative" sap:label="Reason for Movement"/>
+        <Property Name="Delivery" Type="Edm.String" MaxLength="10" sap:display-format="UpperCase" sap:label="Delivery"/>
+        <Property Name="DeliveryItem" Type="Edm.String" MaxLength="6" sap:display-format="NonNegative" sap:label="Delivery Item"/>
+        <Property Name="AccountAssignmentCategory" Type="Edm.String" MaxLength="1" sap:display-format="UpperCase" sap:label="Account Assignment Category"/>
+        <Property Name="CostCenter" Type="Edm.String" MaxLength="10" sap:display-format="UpperCase" sap:label="Cost Center"/>
+        <Property Name="ControllingArea" Type="Edm.String" MaxLength="4" sap:display-format="UpperCase" sap:label="Controlling Area"/>
+        <Property Name="CostObject" Type="Edm.String" MaxLength="12" sap:display-format="UpperCase" sap:label="Cost Object"/>
+        <Property Name="GLAccount" Type="Edm.String" MaxLength="10" sap:display-format="UpperCase" sap:label="G/L Account" sap:quickinfo="G/L Account Number"/>
+        <Property Name="FunctionalArea" Type="Edm.String" MaxLength="16" sap:display-format="UpperCase" sap:label="Functional Area"/>
+        <Property Name="ProfitabilitySegment" Type="Edm.String" MaxLength="10" sap:display-format="UpperCase" sap:label="Profitability Segment"/>
+        <Property Name="ProfitCenter" Type="Edm.String" MaxLength="10" sap:display-format="UpperCase" sap:label="Profit Center"/>
+        <Property Name="MasterFixedAsset" Type="Edm.String" MaxLength="12" sap:display-format="UpperCase" sap:label="Asset" sap:quickinfo="Main Asset Number"/>
+        <Property Name="FixedAsset" Type="Edm.String" MaxLength="4" sap:display-format="UpperCase" sap:label="Asset Subnumber"/>
+        <Property Name="MaterialBaseUnit" Type="Edm.String" MaxLength="3" sap:label="Base Unit of Measure" sap:semantics="unit-of-measure"/>
+        <Property Name="QuantityInBaseUnit" Type="Edm.Decimal" Precision="13" Scale="3" sap:label="Quantity" sap:unit="MaterialBaseUnit"/>
+        <Property Name="EntryUnit" Type="Edm.String" MaxLength="3" sap:label="Unit of Entry" sap:semantics="unit-of-measure"/>
+        <Property Name="QuantityInEntryUnit" Type="Edm.Decimal" Precision="13" Scale="3" sap:label="Quantity in Entry Unit" sap:quickinfo="Quantity in Unit of Entry" sap:unit="EntryUnit"/>
+        <Property Name="CompanyCodeCurrency" Type="Edm.String" MaxLength="5" sap:display-format="UpperCase" sap:label="Company Code Currency" sap:semantics="currency-code"/>
+        <Property Name="GdsMvtExtAmtInCoCodeCrcy" Type="Edm.Decimal" Precision="14" Scale="3" sap:label="External Amount in LC" sap:quickinfo="Externally Entered Posting Amount in Local Currency" sap:unit="CompanyCodeCurrency"/>
+        <Property Name="SlsPrcAmtInclVATInCoCodeCrcy" Type="Edm.Decimal" Precision="14" Scale="3" sap:label="Sales Value Including VAT" sap:quickinfo="Sales Value Including Value-Added Tax" sap:unit="CompanyCodeCurrency"/>
+        <Property Name="FiscalYear" Type="Edm.String" MaxLength="4" sap:display-format="NonNegative" sap:label="Fiscal Year"/>
+        <Property Name="FiscalYearPeriod" Type="Edm.String" MaxLength="7" sap:display-format="NonNegative" sap:label="Fiscal Year &amp;amp; Period from Posting date" sap:quickinfo="Period Year"/>
+        <Property Name="FiscalYearVariant" Type="Edm.String" MaxLength="2" sap:display-format="UpperCase" sap:label="Fiscal Year Variant"/>
+        <Property Name="IssgOrRcvgMaterial" Type="Edm.String" MaxLength="40" sap:display-format="UpperCase" sap:label="Transfer Material"/>
+        <Property Name="IssgOrRcvgBatch" Type="Edm.String" MaxLength="10" sap:display-format="UpperCase" sap:label="Transfer Batch"/>
+        <Property Name="IssuingOrReceivingPlant" Type="Edm.String" MaxLength="4" sap:display-format="UpperCase" sap:label="Rec/Iss Plant" sap:quickinfo="Receiving/Issuing Plant"/>
+        <Property Name="IssuingOrReceivingStorageLoc" Type="Edm.String" MaxLength="4" sap:display-format="UpperCase" sap:label="Storage Location" sap:quickinfo="Receiving/Issuing Storage Location"/>
+        <Property Name="IssuingOrReceivingStockType" Type="Edm.String" MaxLength="2" sap:display-format="UpperCase" sap:label="Transfer Stock Type"/>
+        <Property Name="IssgOrRcvgSpclStockInd" Type="Edm.String" MaxLength="1" sap:display-format="UpperCase" sap:label="Transfer Special Stock Type"/>
+        <Property Name="IssuingOrReceivingValType" Type="Edm.String" MaxLength="10" sap:display-format="UpperCase" sap:label="Transfer Batch (Valuation Type)"/>
+        <Property Name="IsCompletelyDelivered" Type="Edm.Boolean" sap:label="Delivery Completed" sap:quickinfo="&amp;quot;Delivery Completed&amp;quot; Indicator"/>
+        <Property Name="MaterialDocumentItemText" Type="Edm.String" MaxLength="50" sap:label="Text" sap:quickinfo="Item Text"/>
+        <Property Name="GoodsRecipientName" Type="Edm.String" MaxLength="12" sap:label="Goods Recipient"/>
+        <Property Name="UnloadingPointName" Type="Edm.String" MaxLength="25" sap:label="Unloading Point"/>
+        <Property Name="ShelfLifeExpirationDate" Type="Edm.DateTime" Precision="0" sap:display-format="Date" sap:label="SLED/BBD" sap:quickinfo="Shelf Life Expiration or Best-Before Date"/>
+        <Property Name="ManufactureDate" Type="Edm.DateTime" Precision="0" sap:display-format="Date" sap:label="Date of Manufacture"/>
+        <Property Name="SerialNumbersAreCreatedAutomly" Type="Edm.Boolean" sap:label="Create Serial Number Automatically"/>
+        <Property Name="Reservation" Type="Edm.String" MaxLength="10" sap:display-format="NonNegative" sap:label="Reservation" sap:quickinfo="Number of Reservation/Dependent Requirements"/>
+        <Property Name="ReservationItem" Type="Edm.String" MaxLength="4" sap:display-format="NonNegative" sap:label="Reservation Item" sap:quickinfo="Item Number of Reservation / Dependent Requirements"/>
+        <Property Name="ReservationItemRecordType" Type="Edm.String" MaxLength="1" sap:display-format="UpperCase" sap:label="Reservation Record Type"/>
+        <Property Name="ReservationIsFinallyIssued" Type="Edm.Boolean" sap:label="Final-Issue Reservation" sap:quickinfo="Final Issue for Reservation"/>
+        <Property Name="SpecialStockIdfgSalesOrder" Type="Edm.String" MaxLength="10" sap:display-format="UpperCase" sap:label="Sales Order" sap:quickinfo="Sales Order Number of Valuated Sales Order Stock"/>
+        <Property Name="SpecialStockIdfgSalesOrderItem" Type="Edm.String" MaxLength="6" sap:display-format="NonNegative" sap:label="Sales Order Item" sap:quickinfo="Sales Order Item of Valuated Sales Order Stock"/>
+        <Property Name="SpecialStockIdfgWBSElement" Type="Edm.String" MaxLength="24" sap:display-format="UpperCase" sap:label="WBS Element" sap:quickinfo="Work Breakdown Structure Element (WBS Element)"/>
+        <Property Name="IsAutomaticallyCreated" Type="Edm.String" MaxLength="1" sap:display-format="UpperCase" sap:label="Automatically Created" sap:quickinfo="Item Automatically Created Indicator"/>
+        <Property Name="MaterialDocumentLine" Type="Edm.String" MaxLength="6" sap:display-format="NonNegative" sap:label="Line ID" sap:quickinfo="Unique Identification of Document Line"/>
+        <Property Name="MaterialDocumentParentLine" Type="Edm.String" MaxLength="6" sap:display-format="NonNegative" sap:label="Parent line ID" sap:quickinfo="Identifier of immediately superior line"/>
+        <Property Name="HierarchyNodeLevel" Type="Edm.String" MaxLength="2" sap:display-format="NonNegative" sap:label="Hierarchy Level" sap:quickinfo="Hierarchy Level of Line in Document"/>
+        <Property Name="GoodsMovementIsCancelled" Type="Edm.Boolean" sap:label="Is Item Cancelled" sap:quickinfo="Item has been Cancelled"/>
+        <Property Name="ReversedMaterialDocumentYear" Type="Edm.String" MaxLength="4" sap:display-format="NonNegative" sap:label="Reversed Document Year" sap:quickinfo="Reversed Material Document Year"/>
+        <Property Name="ReversedMaterialDocument" Type="Edm.String" MaxLength="10" sap:display-format="UpperCase" sap:label="Reversed Material Document"/>
+        <Property Name="ReversedMaterialDocumentItem" Type="Edm.String" MaxLength="4" sap:display-format="NonNegative" sap:label="Reversed Document Item" sap:quickinfo="Reversed Material Document Item"/>
+        <Property Name="ReferenceDocumentFiscalYear" Type="Edm.String" MaxLength="4" sap:display-format="NonNegative" sap:label="Fiscal Year (Reference Document)" sap:quickinfo="Fiscal Year of a Reference Document"/>
+        <Property Name="InvtryMgmtRefDocumentItem" Type="Edm.String" MaxLength="4" sap:display-format="NonNegative" sap:label="Reference Document Item" sap:quickinfo="Item of a Reference Document"/>
+        <Property Name="InvtryMgmtReferenceDocument" Type="Edm.String" MaxLength="10" sap:display-format="UpperCase" sap:label="Reference Document" sap:quickinfo="Document No. of a Reference Document"/>
+        <Property Name="MaterialDocumentPostingType" Type="Edm.String" MaxLength="1" sap:display-format="UpperCase" sap:label="Type of Posting" sap:quickinfo="Reversal, Return Delivery or Transfer Posting"/>
+        <Property Name="InventoryUsabilityCode" Type="Edm.String" MaxLength="1" sap:display-format="UpperCase" sap:label="Posting Control Stock Type"/>
+        <Property Name="EWMWarehouse" Type="Edm.String" MaxLength="4" sap:display-format="UpperCase" sap:label="Warehouse Number" sap:quickinfo="Warehouse Number/Warehouse Complex"/>
+        <Property Name="EWMStorageBin" Type="Edm.String" MaxLength="18" sap:display-format="UpperCase" sap:label="Storage Bin"/>
+        <Property Name="HandlingUnitExternalID" Type="Edm.String" MaxLength="20" sap:display-format="UpperCase" sap:label="Handling Unit" sap:quickinfo="External Handling Unit Identification"/>
+        <Property Name="DebitCreditCode" Type="Edm.String" MaxLength="1" sap:display-format="UpperCase" sap:label="Debit/Credit Indicator"/>
+        <Property Name="CrossPlantConfigurableProduct" Type="Edm.String" MaxLength="40" sap:display-format="UpperCase" sap:label="Cross-plant CM" sap:quickinfo="Cross-Plant Configurable Material"/>
+        <Property Name="ProductCharacteristic1" Type="Edm.String" MaxLength="18" sap:label="Color" sap:quickinfo="Characteristic Value for Colors of Variants"/>
+        <Property Name="ProductCharacteristic2" Type="Edm.String" MaxLength="18" sap:label="Main Size" sap:quickinfo="Characteristic Value for Main Sizes of Variants"/>
+        <Property Name="ProductCharacteristic3" Type="Edm.String" MaxLength="18" sap:label="Second Size" sap:quickinfo="Characteristic Value for Second Size for Variants"/>
+        <Property Name="ProductSeasonYear" Type="Edm.String" MaxLength="4" sap:display-format="UpperCase" sap:label="Season Year"/>
+        <Property Name="ProductSeason" Type="Edm.String" MaxLength="10" sap:display-format="UpperCase" sap:label="Season"/>
+        <Property Name="ProductCollection" Type="Edm.String" MaxLength="10" sap:display-format="UpperCase" sap:label="Collection" sap:quickinfo="Fashion Collection"/>
+        <Property Name="ProductTheme" Type="Edm.String" MaxLength="10" sap:display-format="UpperCase" sap:label="Theme" sap:quickinfo="Fashion Theme"/>
+        <Property Name="StockSegment" Type="Edm.String" MaxLength="40" sap:display-format="UpperCase" sap:label="Stock Segment"/>
+        <Property Name="IssgOrRcvgStockSegment" Type="Edm.String" MaxLength="40" sap:display-format="UpperCase" sap:label="Rec. Stock Segment" sap:quickinfo="Receiving/Issuing Stock Segment"/>
+      </EntityType>
+
+      <!-- E' QUI che si dichiara il to-many, con Multiplicity="*" sul secondo End. -->
+      <Association Name="Assoc_MatDocHeader_Item" sap:content-version="1">
+        <End Type="ZMARS_MATDOC_POST_SRV.MatDocHeaderType" Multiplicity="1" Role="FromRole_Assoc_MatDocHeader_Item"/>
+        <End Type="ZMARS_MATDOC_POST_SRV.MatDocItemType" Multiplicity="*" Role="ToRole_Assoc_MatDocHeader_Item"/>
+        <ReferentialConstraint>
+          <Principal Role="FromRole_Assoc_MatDocHeader_Item">
+            <PropertyRef Name="MaterialDocument"/>
+            <PropertyRef Name="MaterialDocumentYear"/>
+          </Principal>
+          <Dependent Role="ToRole_Assoc_MatDocHeader_Item">
+            <PropertyRef Name="MaterialDocument"/>
+            <PropertyRef Name="MaterialDocumentYear"/>
+          </Dependent>
+        </ReferentialConstraint>
+      </Association>
+
+      <EntityContainer Name="ZMARS_MATDOC_POST_SRV_Entities" m:IsDefaultEntityContainer="true"
+                       sap:message-scope-supported="true" sap:supported-formats="json">
+        <!-- La testata e' l'UNICO entity set creabile: e' l'endpoint della registrazione. -->
+        <EntitySet Name="MatDocHeader" EntityType="ZMARS_MATDOC_POST_SRV.MatDocHeaderType"
+                   sap:creatable="true" sap:updatable="false" sap:deletable="false"
+                   sap:pageable="false" sap:content-version="1"/>
+        <!-- sap:creatable="false" come nello standard: le righe NON sono creabili da sole,
+             esistono solo come figlie della testata. E' cio' che rende il deep insert obbligatorio. -->
+        <EntitySet Name="MatDocItem" EntityType="ZMARS_MATDOC_POST_SRV.MatDocItemType"
+                   sap:creatable="false" sap:updatable="false" sap:deletable="false"
+                   sap:pageable="false" sap:content-version="1"/>
+        <AssociationSet Name="Assoc_MatDocHeader_ItemSet" Association="ZMARS_MATDOC_POST_SRV.Assoc_MatDocHeader_Item"
+                        sap:creatable="false" sap:updatable="false" sap:deletable="false"
+                        sap:content-version="1">
+          <End EntitySet="MatDocHeader" Role="FromRole_Assoc_MatDocHeader_Item"/>
+          <End EntitySet="MatDocItem" Role="ToRole_Assoc_MatDocHeader_Item"/>
+        </AssociationSet>
+      </EntityContainer>
+
+    </Schema>
+  </edmx:DataServices>
+</edmx:Edmx>

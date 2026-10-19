@@ -1,0 +1,130 @@
+<core:FragmentDefinition
+    xmlns="sap.m"
+    xmlns:core="sap.ui.core"
+    xmlns:l="sap.ui.layout">
+
+    <!-- [MASS-IMPORT] Applica un template a N bersagli in un colpo.
+         IL BERSAGLIO E' (ciclo, materiale) E NON IL MATERIALE. Un ciclo Plex salvato e'
+         identificato da (gruppo, contatore, materiale), e lo stesso materiale puo' stare su piu'
+         cicli SAP alternativi (DEC-66): scegliere un materiale lascerebbe indeterminato quale dei
+         suoi cicli riscrivere. Si scelgono quindi righe della lista cicli, che sono gia' la terna. -->
+    <Dialog
+        id="massImportDialog"
+        title="{i18n>dlgMassImportTitle}"
+        contentWidth="42rem"
+        draggable="true"
+        resizable="true">
+
+        <content>
+            <l:VerticalLayout width="100%" class="sapUiContentPadding">
+                <MessageStrip
+                    text="{i18n>dlgMassImportWarning}"
+                    type="Warning"
+                    showIcon="true"
+                    class="sapUiSmallMarginBottom"/>
+
+                <Label text="{i18n>dlgTemplateSelect}" required="true" labelFor="massImportTemplateBox"/>
+                <!-- [MASS-IMPORT] RAGGRUPPATA PER PLANT E ORDINATA, e il raggruppamento lo fa il
+                     `Sorter` con `group: true`: in UI5 non esiste un raggruppamento senza un
+                     ordinamento, e senza il sorter le intestazioni di gruppo semplicemente non
+                     compaiono. Il secondo sorter ordina dentro il gruppo per codice.
+                     I template dei plant su cui l'utente non puo' configurare non entrano: il
+                     filtro lo applica il controller sul binding, perche' l'elenco dei plant
+                     abilitati si sa solo dopo `usablePlants()`.
+
+                     IL `$select` E' ESPLICITO PERCHE' `Plant` NON LO LEGA NESSUN CONTROLLO.
+                     `autoExpandSelect` costruisce il `$select` dalle proprieta' che un controllo
+                     lega — qui `ID`, `TemplateCode` e `Description` del `core:Item`, e basta.
+                     `Plant` serve a due cose che binding di controllo non sono: il sorter che
+                     RAGGRUPPA (legge il valore nel browser) e il controller, che da quel contesto
+                     ricava il plant del template scelto. Senza dichiararlo, `Plant` parte come
+                     `$orderby` e `$filter` ma non torna nella risposta: il raggruppamento stampa un
+                     `Failed to drill-down` per riga e il controller legge `undefined`, quindi
+                     «Aggiungi» apre un elenco di cicli VUOTO — che si legge «questo plant non ha
+                     cicli». Nessuno dei due e' un errore a schermo. Stessa regola di DEC-132
+                     (PlantConfig.controller.js, `_loadObjectGroupVH`). Non sostituisce il `$select`
+                     dedotto: le opzioni del binding SEMINANO l'aggregazione e quelle dei figli vi
+                     si aggiungono. -->
+                <ComboBox
+                    id="massImportTemplateBox"
+                    width="100%"
+                    placeholder="{i18n>dlgTemplateSelectPlaceholder}"
+                    selectionChange=".onMassImportTemplateChange"
+                    items="{
+                        path: 'templateModel>/RoutingTemplates',
+                        parameters: { '$select': 'Plant' },
+                        sorter: [
+                            { path: 'Plant', group: true },
+                            { path: 'TemplateCode' }
+                        ]
+                    }">
+                    <core:Item key="{templateModel>ID}" text="{templateModel>TemplateCode} - {templateModel>Description}"/>
+                </ComboBox>
+
+                <!-- [MASS-IMPORT] I bersagli scelti. La spunta e' un DATO del modello
+                     (`selected="{...}"`) e chi rimuove legge l'array, non `getSelectedItems()`:
+                     `ListBase` ricorda la selezione per INDICE del path, quindi con un filtro
+                     attivo restituirebbe le righe sbagliate (vedi PlexOperationsDialog).
+                     `growing` acceso con soglia alta: e' il growing a chiedere al binding una
+                     lunghezza esplicita, o scatta il tetto di `JSONModel.iSizeLimit` (100 righe)
+                     e le altre spariscono senza errore. Il controller alza anche `setSizeLimit`. -->
+                <Table
+                    id="massImportTargetsTable"
+                    mode="MultiSelect"
+                    items="{massImport>/targets}"
+                    growing="true"
+                    growingThreshold="1000"
+                    noDataText="{i18n>dlgMassImportNoTargets}"
+                    class="sapUiSmallMarginTop">
+
+                    <headerToolbar>
+                        <OverflowToolbar>
+                            <Title text="{i18n>dlgMassImportTargetsTitle}"/>
+                            <ToolbarSpacer/>
+                            <Button
+                                icon="sap-icon://add"
+                                text="{i18n>dlgMassImportAdd}"
+                                type="Transparent"
+                                enabled="{massImport>/templateSelected}"
+                                press=".onMassImportAddTargets"/>
+                            <Button
+                                icon="sap-icon://delete"
+                                text="{i18n>dlgMassImportRemove}"
+                                type="Transparent"
+                                press=".onMassImportRemoveTargets"/>
+                        </OverflowToolbar>
+                    </headerToolbar>
+
+                    <columns>
+                        <Column width="30%"><Text text="{i18n>dlgMassImportColCycle}"/></Column>
+                        <Column><Text text="{i18n>dlgMassImportColDescription}"/></Column>
+                        <Column width="30%"><Text text="{i18n>dlgMassImportColMaterial}"/></Column>
+                    </columns>
+
+                    <items>
+                        <ColumnListItem selected="{massImport>selected}">
+                            <cells>
+                                <ObjectIdentifier title="{massImport>ProductionRoutingGroup}/{massImport>ProductionRouting}"/>
+                                <Text text="{massImport>BillOfOperationsDesc}" wrapping="false"/>
+                                <Text text="{massImport>Material}"/>
+                            </cells>
+                        </ColumnListItem>
+                    </items>
+                </Table>
+            </l:VerticalLayout>
+        </content>
+
+        <buttons>
+            <Button
+                text="{i18n>dlgBtnOk}"
+                type="Emphasized"
+                enabled="{massImport>/canApply}"
+                press=".onMassImportConfirm"/>
+            <Button
+                text="{i18n>dlgBtnCancel}"
+                press=".onMassImportCancel"/>
+        </buttons>
+
+    </Dialog>
+
+</core:FragmentDefinition>

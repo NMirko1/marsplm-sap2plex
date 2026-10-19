@@ -1,0 +1,446 @@
+<core:FragmentDefinition
+    xmlns="sap.m"
+    xmlns:core="sap.ui.core">
+
+    <!--
+      Destinatari del recap mail di fine job, una SEZIONE per job.
+
+      Perche' un Panel per job e non una IconTabBar annidata: la IconTabBar esterna ha
+      stretchContentHeight="true", quindi una barra annidata creerebbe due aree di scroll
+      indipendenti e catene di height:100% annidate; aggiungerebbe una seconda strip sotto un
+      header Inline che ha gia' 12 filtri in overflow; e non porterebbe alcun lazy loading,
+      perche' il contenuto degli IconTabFilter viene istanziato comunque.
+
+      Perche' UN $$updateGroupId PER SEZIONE e non uno condiviso: submitBatch,
+      hasPendingChanges e resetChanges sono group-scoped e MODEL-WIDE, senza alcuna nozione di
+      "quale tabella". Con un group condiviso un Save su una sezione invierebbe anche le righe
+      delle altre quattro nello stesso changeset atomico (una riga rifiutata rollerebbe back anche
+      quella buona) e un Cancel ne scarterebbe le modifiche non salvate.
+
+      Perche' suspended="true": i binding si risolvono all'istanziazione della view, mentre il
+      filtro per plant/job viene applicato solo dopo la risposta di getUserRole. Senza
+      suspended la prima GET partirebbe SENZA filtro, caricando nel browser gli indirizzi
+      e-mail di TUTTI i plant. Il resume() lo fa _applyJobNotifyFilters().
+    -->
+    <VBox class="sapUiSmallMargin">
+
+        <VBox class="sapUiSmallMarginBottom">
+            <Text text="{i18n>jnTabIntro}"/>
+        </VBox>
+
+        <!-- ============ SEZIONE: SINCRONIZZAZIONE MATERIALI ============ -->
+        <Panel headerText="{i18n>jnSectionMAT_SYNC}" expandable="true" expanded="true" class="sapUiSmallMarginTop">
+            <!-- [LIST-COUNT] Il conteggio dichiarato: senza, «Mostra di piu'» compare anche quando non
+                 c'e' piu' niente e poi resta a girare. Solo sui binding ASSOLUTI. Vedi GroupsTab e DEC-102. -->
+            <Table
+                id="jobNotifyTableMAT_SYNC"
+                items="{
+                    path: 'catalog>/ZJobNotifyRecipient',
+                    parameters: { '$$updateGroupId': 'notifyMatSyncChanges', '$count': true },
+                    sorter: { path: 'Email' },
+                    suspended: true
+                }"
+                growing="true"
+                growingThreshold="50"
+                mode="MultiSelect">
+
+                <!-- jobCode/updateGroup nei CustomData: un solo set di handler serve tutte le
+                     sezioni, e i bottoni non devono risalire i parent (OverflowToolbar
+                     ri-parenta i bottoni in overflow dentro il proprio popover). -->
+                <customData>
+                    <core:CustomData key="jobCode" value="MAT_SYNC"/>
+                    <core:CustomData key="updateGroup" value="notifyMatSyncChanges"/>
+                </customData>
+
+                <headerToolbar>
+                    <OverflowToolbar>
+                        <Title text="{i18n>jnTableTitle}"/>
+                        <ToolbarSpacer/>
+                        <Button icon="sap-icon://add" text="{i18n>jnBtnAdd}" type="Transparent" press=".onAddJobNotify"/>
+                        <Button icon="sap-icon://delete" text="{i18n>jnBtnDelete}" type="Transparent" press=".onDeleteJobNotify"/>
+                        <Button icon="sap-icon://save" text="{i18n>jnBtnSave}" type="Emphasized" press=".onSaveJobNotify"/>
+                        <Button icon="sap-icon://sys-cancel" text="{i18n>jnBtnCancel}" type="Transparent" press=".onCancelJobNotify"/>
+                    </OverflowToolbar>
+                </headerToolbar>
+
+                <columns>
+                    <Column width="55%"><Text text="{i18n>jnColEmail}"/></Column>
+                    <Column width="30%"><Text text="{i18n>jnColNotifyMode}"/></Column>
+                    <Column width="15%" hAlign="Center"><Text text="{i18n>jnColActive}"/></Column>
+                </columns>
+
+                <items>
+                    <ColumnListItem>
+                        <cells>
+                            <!-- Plant e JobCode NON sono celle: sono impliciti nella sezione e
+                                 preimpostati da onAddJobNotify. Un JobCode editabile farebbe
+                                 "teletrasportare" la riga in un'altra sezione al primo refresh. -->
+                            <Input value="{catalog>Email}" type="Email" change=".onJobNotifyEmailChange" placeholder="{i18n>jnEmailPlaceholder}"/>
+                            <Select selectedKey="{catalog>NotifyMode}" width="100%">
+                                <core:Item key="ALWAYS" text="{i18n>jnModeAlways}"/>
+                                <core:Item key="ON_ERROR" text="{i18n>jnModeOnError}"/>
+                                <core:Item key="ON_FAILURE" text="{i18n>jnModeOnFailure}"/>
+                            </Select>
+                            <CheckBox selected="{catalog>IsActive}"/>
+                        </cells>
+                    </ColumnListItem>
+                </items>
+            </Table>
+        </Panel>
+
+        <!-- ============ SEZIONE: SINCRONIZZAZIONE CICLI ============ -->
+        <Panel headerText="{i18n>jnSectionROUTING_SYNC}" expandable="true" expanded="false" class="sapUiSmallMarginTop">
+            <!-- [LIST-COUNT] Il conteggio dichiarato: senza, «Mostra di piu'» compare anche quando non
+                 c'e' piu' niente e poi resta a girare. Solo sui binding ASSOLUTI. Vedi GroupsTab e DEC-102. -->
+            <Table
+                id="jobNotifyTableROUTING_SYNC"
+                items="{
+                    path: 'catalog>/ZJobNotifyRecipient',
+                    parameters: { '$$updateGroupId': 'notifyRoutingSyncChanges', '$count': true },
+                    sorter: { path: 'Email' },
+                    suspended: true
+                }"
+                growing="true"
+                growingThreshold="50"
+                mode="MultiSelect">
+
+                <customData>
+                    <core:CustomData key="jobCode" value="ROUTING_SYNC"/>
+                    <core:CustomData key="updateGroup" value="notifyRoutingSyncChanges"/>
+                </customData>
+
+                <headerToolbar>
+                    <OverflowToolbar>
+                        <Title text="{i18n>jnTableTitle}"/>
+                        <ToolbarSpacer/>
+                        <Button icon="sap-icon://add" text="{i18n>jnBtnAdd}" type="Transparent" press=".onAddJobNotify"/>
+                        <Button icon="sap-icon://delete" text="{i18n>jnBtnDelete}" type="Transparent" press=".onDeleteJobNotify"/>
+                        <Button icon="sap-icon://save" text="{i18n>jnBtnSave}" type="Emphasized" press=".onSaveJobNotify"/>
+                        <Button icon="sap-icon://sys-cancel" text="{i18n>jnBtnCancel}" type="Transparent" press=".onCancelJobNotify"/>
+                    </OverflowToolbar>
+                </headerToolbar>
+
+                <columns>
+                    <Column width="55%"><Text text="{i18n>jnColEmail}"/></Column>
+                    <Column width="30%"><Text text="{i18n>jnColNotifyMode}"/></Column>
+                    <Column width="15%" hAlign="Center"><Text text="{i18n>jnColActive}"/></Column>
+                </columns>
+
+                <items>
+                    <ColumnListItem>
+                        <cells>
+                            <Input value="{catalog>Email}" type="Email" change=".onJobNotifyEmailChange" placeholder="{i18n>jnEmailPlaceholder}"/>
+                            <Select selectedKey="{catalog>NotifyMode}" width="100%">
+                                <core:Item key="ALWAYS" text="{i18n>jnModeAlways}"/>
+                                <core:Item key="ON_ERROR" text="{i18n>jnModeOnError}"/>
+                                <core:Item key="ON_FAILURE" text="{i18n>jnModeOnFailure}"/>
+                            </Select>
+                            <CheckBox selected="{catalog>IsActive}"/>
+                        </cells>
+                    </ColumnListItem>
+                </items>
+            </Table>
+        </Panel>
+
+        <!-- ============ SEZIONE: CREAZIONE JOB DI PRODUZIONE SU PLEX ============ -->
+        <Panel headerText="{i18n>jnSectionPROD_ORDER}" expandable="true" expanded="false" class="sapUiSmallMarginTop">
+            <!-- [LIST-COUNT] Il conteggio dichiarato: senza, «Mostra di piu'» compare anche quando non
+                 c'e' piu' niente e poi resta a girare. Solo sui binding ASSOLUTI. Vedi GroupsTab e DEC-102. -->
+            <Table
+                id="jobNotifyTablePROD_ORDER"
+                items="{
+                    path: 'catalog>/ZJobNotifyRecipient',
+                    parameters: { '$$updateGroupId': 'notifyProdOrderChanges', '$count': true },
+                    sorter: { path: 'Email' },
+                    suspended: true
+                }"
+                growing="true"
+                growingThreshold="50"
+                mode="MultiSelect">
+
+                <customData>
+                    <core:CustomData key="jobCode" value="PROD_ORDER"/>
+                    <core:CustomData key="updateGroup" value="notifyProdOrderChanges"/>
+                </customData>
+
+                <headerToolbar>
+                    <OverflowToolbar>
+                        <Title text="{i18n>jnTableTitle}"/>
+                        <ToolbarSpacer/>
+                        <Button icon="sap-icon://add" text="{i18n>jnBtnAdd}" type="Transparent" press=".onAddJobNotify"/>
+                        <Button icon="sap-icon://delete" text="{i18n>jnBtnDelete}" type="Transparent" press=".onDeleteJobNotify"/>
+                        <Button icon="sap-icon://save" text="{i18n>jnBtnSave}" type="Emphasized" press=".onSaveJobNotify"/>
+                        <Button icon="sap-icon://sys-cancel" text="{i18n>jnBtnCancel}" type="Transparent" press=".onCancelJobNotify"/>
+                    </OverflowToolbar>
+                </headerToolbar>
+
+                <columns>
+                    <Column width="55%"><Text text="{i18n>jnColEmail}"/></Column>
+                    <Column width="30%"><Text text="{i18n>jnColNotifyMode}"/></Column>
+                    <Column width="15%" hAlign="Center"><Text text="{i18n>jnColActive}"/></Column>
+                </columns>
+
+                <items>
+                    <ColumnListItem>
+                        <cells>
+                            <Input value="{catalog>Email}" type="Email" change=".onJobNotifyEmailChange" placeholder="{i18n>jnEmailPlaceholder}"/>
+                            <Select selectedKey="{catalog>NotifyMode}" width="100%">
+                                <core:Item key="ALWAYS" text="{i18n>jnModeAlways}"/>
+                                <core:Item key="ON_ERROR" text="{i18n>jnModeOnError}"/>
+                                <core:Item key="ON_FAILURE" text="{i18n>jnModeOnFailure}"/>
+                            </Select>
+                            <CheckBox selected="{catalog>IsActive}"/>
+                        </cells>
+                    </ColumnListItem>
+                </items>
+            </Table>
+        </Panel>
+
+        <!-- ============ SEZIONE: CONSUNTIVAZIONE ORDINI DI PRODUZIONE ============ -->
+        <Panel headerText="{i18n>jnSectionPROD_CONF}" expandable="true" expanded="false" class="sapUiSmallMarginTop">
+            <!-- [LIST-COUNT] Il conteggio dichiarato: senza, «Mostra di piu'» compare anche quando non
+                 c'e' piu' niente e poi resta a girare. Solo sui binding ASSOLUTI. Vedi GroupsTab e DEC-102. -->
+            <Table
+                id="jobNotifyTablePROD_CONF"
+                items="{
+                    path: 'catalog>/ZJobNotifyRecipient',
+                    parameters: { '$$updateGroupId': 'notifyProdConfChanges', '$count': true },
+                    sorter: { path: 'Email' },
+                    suspended: true
+                }"
+                growing="true"
+                growingThreshold="50"
+                mode="MultiSelect">
+
+                <customData>
+                    <core:CustomData key="jobCode" value="PROD_CONF"/>
+                    <core:CustomData key="updateGroup" value="notifyProdConfChanges"/>
+                </customData>
+
+                <headerToolbar>
+                    <OverflowToolbar>
+                        <Title text="{i18n>jnTableTitle}"/>
+                        <ToolbarSpacer/>
+                        <Button icon="sap-icon://add" text="{i18n>jnBtnAdd}" type="Transparent" press=".onAddJobNotify"/>
+                        <Button icon="sap-icon://delete" text="{i18n>jnBtnDelete}" type="Transparent" press=".onDeleteJobNotify"/>
+                        <Button icon="sap-icon://save" text="{i18n>jnBtnSave}" type="Emphasized" press=".onSaveJobNotify"/>
+                        <Button icon="sap-icon://sys-cancel" text="{i18n>jnBtnCancel}" type="Transparent" press=".onCancelJobNotify"/>
+                    </OverflowToolbar>
+                </headerToolbar>
+
+                <columns>
+                    <Column width="55%"><Text text="{i18n>jnColEmail}"/></Column>
+                    <Column width="30%"><Text text="{i18n>jnColNotifyMode}"/></Column>
+                    <Column width="15%" hAlign="Center"><Text text="{i18n>jnColActive}"/></Column>
+                </columns>
+
+                <items>
+                    <ColumnListItem>
+                        <cells>
+                            <Input value="{catalog>Email}" type="Email" change=".onJobNotifyEmailChange" placeholder="{i18n>jnEmailPlaceholder}"/>
+                            <Select selectedKey="{catalog>NotifyMode}" width="100%">
+                                <core:Item key="ALWAYS" text="{i18n>jnModeAlways}"/>
+                                <core:Item key="ON_ERROR" text="{i18n>jnModeOnError}"/>
+                                <core:Item key="ON_FAILURE" text="{i18n>jnModeOnFailure}"/>
+                            </Select>
+                            <CheckBox selected="{catalog>IsActive}"/>
+                        </cells>
+                    </ColumnListItem>
+                </items>
+            </Table>
+        </Panel>
+
+        <!-- ============ SEZIONE: CHIUSURA TECNICA ORDINI SU PLEX ============
+             [ORDER-TECO] Quinta sezione, aggiunta con la feature 0023: il job PROD_TECO gira
+             schedulato come gli altri quattro, quindi la mail di recap e' l'unico segnale
+             automatico che si e' fermato. Senza questa sezione i suoi destinatari erano
+             inseribili solo via OData.
+
+             La struttura e' identica alle altre — un update group PROPRIO, CustomData con
+             jobCode e updateGroup, binding suspended — e non serve alcuna modifica al
+             controller: _getJobNotifyTables() scopre le tabelle dai CustomData.
+             ============ -->
+        <Panel headerText="{i18n>jnSectionPROD_TECO}" expandable="true" expanded="false" class="sapUiSmallMarginTop">
+            <!-- [LIST-COUNT] Il conteggio dichiarato: senza, «Mostra di piu'» compare anche quando non
+                 c'e' piu' niente e poi resta a girare. Solo sui binding ASSOLUTI. Vedi GroupsTab e DEC-102. -->
+            <Table
+                id="jobNotifyTablePROD_TECO"
+                items="{
+                    path: 'catalog>/ZJobNotifyRecipient',
+                    parameters: { '$$updateGroupId': 'notifyProdTecoChanges', '$count': true },
+                    sorter: { path: 'Email' },
+                    suspended: true
+                }"
+                growing="true"
+                growingThreshold="50"
+                mode="MultiSelect">
+
+                <customData>
+                    <core:CustomData key="jobCode" value="PROD_TECO"/>
+                    <core:CustomData key="updateGroup" value="notifyProdTecoChanges"/>
+                </customData>
+
+                <headerToolbar>
+                    <OverflowToolbar>
+                        <Title text="{i18n>jnTableTitle}"/>
+                        <ToolbarSpacer/>
+                        <Button icon="sap-icon://add" text="{i18n>jnBtnAdd}" type="Transparent" press=".onAddJobNotify"/>
+                        <Button icon="sap-icon://delete" text="{i18n>jnBtnDelete}" type="Transparent" press=".onDeleteJobNotify"/>
+                        <Button icon="sap-icon://save" text="{i18n>jnBtnSave}" type="Emphasized" press=".onSaveJobNotify"/>
+                        <Button icon="sap-icon://sys-cancel" text="{i18n>jnBtnCancel}" type="Transparent" press=".onCancelJobNotify"/>
+                    </OverflowToolbar>
+                </headerToolbar>
+
+                <columns>
+                    <Column width="55%"><Text text="{i18n>jnColEmail}"/></Column>
+                    <Column width="30%"><Text text="{i18n>jnColNotifyMode}"/></Column>
+                    <Column width="15%" hAlign="Center"><Text text="{i18n>jnColActive}"/></Column>
+                </columns>
+
+                <items>
+                    <ColumnListItem>
+                        <cells>
+                            <Input value="{catalog>Email}" type="Email" change=".onJobNotifyEmailChange" placeholder="{i18n>jnEmailPlaceholder}"/>
+                            <Select selectedKey="{catalog>NotifyMode}" width="100%">
+                                <core:Item key="ALWAYS" text="{i18n>jnModeAlways}"/>
+                                <core:Item key="ON_ERROR" text="{i18n>jnModeOnError}"/>
+                                <core:Item key="ON_FAILURE" text="{i18n>jnModeOnFailure}"/>
+                            </Select>
+                            <CheckBox selected="{catalog>IsActive}"/>
+                        </cells>
+                    </ColumnListItem>
+                </items>
+            </Table>
+        </Panel>
+
+        <!-- ============ SEZIONE: ORDINI COMPLETATI SU PLEX -> STATO UTENTE IN SAP ============
+             [ORDER-COMPLETE] Sesta sezione, aggiunta con la feature 0045: il job ORDER_COMPLETE
+             gira schedulato come gli altri sei, quindi la mail di recap e' l'unico segnale
+             automatico che si e' fermato — e su questo flusso conta piu' che sugli altri, perche'
+             il suo recap e' anche il posto dove si leggono gli STATI PLEX VISTI: e' da la' che si
+             capisce se il criterio configurato aggancia quello che il tenant usa davvero.
+
+             La struttura e' identica alle altre — un update group PROPRIO, CustomData con
+             jobCode e updateGroup, binding suspended — e non serve alcuna modifica al
+             controller: _getJobNotifyTables() scopre le tabelle dai CustomData.
+             ============ -->
+        <Panel headerText="{i18n>jnSectionORDER_COMPLETE}" expandable="true" expanded="false" class="sapUiSmallMarginTop">
+            <!-- [LIST-COUNT] Il conteggio dichiarato: senza, «Mostra di piu'» compare anche quando non
+                 c'e' piu' niente e poi resta a girare. Solo sui binding ASSOLUTI. Vedi GroupsTab e DEC-102. -->
+            <Table
+                id="jobNotifyTableORDER_COMPLETE"
+                items="{
+                    path: 'catalog>/ZJobNotifyRecipient',
+                    parameters: { '$$updateGroupId': 'notifyOrderCompleteChanges', '$count': true },
+                    sorter: { path: 'Email' },
+                    suspended: true
+                }"
+                growing="true"
+                growingThreshold="50"
+                mode="MultiSelect">
+
+                <customData>
+                    <core:CustomData key="jobCode" value="ORDER_COMPLETE"/>
+                    <core:CustomData key="updateGroup" value="notifyOrderCompleteChanges"/>
+                </customData>
+
+                <headerToolbar>
+                    <OverflowToolbar>
+                        <Title text="{i18n>jnTableTitle}"/>
+                        <ToolbarSpacer/>
+                        <Button icon="sap-icon://add" text="{i18n>jnBtnAdd}" type="Transparent" press=".onAddJobNotify"/>
+                        <Button icon="sap-icon://delete" text="{i18n>jnBtnDelete}" type="Transparent" press=".onDeleteJobNotify"/>
+                        <Button icon="sap-icon://save" text="{i18n>jnBtnSave}" type="Emphasized" press=".onSaveJobNotify"/>
+                        <Button icon="sap-icon://sys-cancel" text="{i18n>jnBtnCancel}" type="Transparent" press=".onCancelJobNotify"/>
+                    </OverflowToolbar>
+                </headerToolbar>
+
+                <columns>
+                    <Column width="55%"><Text text="{i18n>jnColEmail}"/></Column>
+                    <Column width="30%"><Text text="{i18n>jnColNotifyMode}"/></Column>
+                    <Column width="15%" hAlign="Center"><Text text="{i18n>jnColActive}"/></Column>
+                </columns>
+
+                <items>
+                    <ColumnListItem>
+                        <cells>
+                            <Input value="{catalog>Email}" type="Email" change=".onJobNotifyEmailChange" placeholder="{i18n>jnEmailPlaceholder}"/>
+                            <Select selectedKey="{catalog>NotifyMode}" width="100%">
+                                <core:Item key="ALWAYS" text="{i18n>jnModeAlways}"/>
+                                <core:Item key="ON_ERROR" text="{i18n>jnModeOnError}"/>
+                                <core:Item key="ON_FAILURE" text="{i18n>jnModeOnFailure}"/>
+                            </Select>
+                            <CheckBox selected="{catalog>IsActive}"/>
+                        </cells>
+                    </ColumnListItem>
+                </items>
+            </Table>
+        </Panel>
+
+        <!-- ============ SEZIONE: ORDINI PIANIFICATI SU PLEX -> STATO UTENTE IN SAP ============
+             [ORDER-SCHEDULED] Settima sezione, aggiunta con la feature 0046: il job ORDER_SCHEDULED
+             gira schedulato come gli altri sei, quindi la mail di recap e' l'unico segnale
+             automatico che si e' fermato — e su questo flusso conta piu' che sugli altri, perche'
+             il suo recap e' anche il posto dove si leggono gli STATI PLEX VISTI: e' da la' che si
+             capisce se il criterio configurato aggancia quello che il tenant usa davvero.
+
+             La struttura e' identica alle altre — un update group PROPRIO, CustomData con
+             jobCode e updateGroup, binding suspended — e non serve alcuna modifica al
+             controller: _getJobNotifyTables() scopre le tabelle dai CustomData.
+             ============ -->
+        <Panel headerText="{i18n>jnSectionORDER_SCHEDULED}" expandable="true" expanded="false" class="sapUiSmallMarginTop">
+            <!-- [LIST-COUNT] Il conteggio dichiarato: senza, «Mostra di piu'» compare anche quando non
+                 c'e' piu' niente e poi resta a girare. Solo sui binding ASSOLUTI. Vedi GroupsTab e DEC-102. -->
+            <Table
+                id="jobNotifyTableORDER_SCHEDULED"
+                items="{
+                    path: 'catalog>/ZJobNotifyRecipient',
+                    parameters: { '$$updateGroupId': 'notifyOrderScheduledChanges', '$count': true },
+                    sorter: { path: 'Email' },
+                    suspended: true
+                }"
+                growing="true"
+                growingThreshold="50"
+                mode="MultiSelect">
+
+                <customData>
+                    <core:CustomData key="jobCode" value="ORDER_SCHEDULED"/>
+                    <core:CustomData key="updateGroup" value="notifyOrderScheduledChanges"/>
+                </customData>
+
+                <headerToolbar>
+                    <OverflowToolbar>
+                        <Title text="{i18n>jnTableTitle}"/>
+                        <ToolbarSpacer/>
+                        <Button icon="sap-icon://add" text="{i18n>jnBtnAdd}" type="Transparent" press=".onAddJobNotify"/>
+                        <Button icon="sap-icon://delete" text="{i18n>jnBtnDelete}" type="Transparent" press=".onDeleteJobNotify"/>
+                        <Button icon="sap-icon://save" text="{i18n>jnBtnSave}" type="Emphasized" press=".onSaveJobNotify"/>
+                        <Button icon="sap-icon://sys-cancel" text="{i18n>jnBtnCancel}" type="Transparent" press=".onCancelJobNotify"/>
+                    </OverflowToolbar>
+                </headerToolbar>
+
+                <columns>
+                    <Column width="55%"><Text text="{i18n>jnColEmail}"/></Column>
+                    <Column width="30%"><Text text="{i18n>jnColNotifyMode}"/></Column>
+                    <Column width="15%" hAlign="Center"><Text text="{i18n>jnColActive}"/></Column>
+                </columns>
+
+                <items>
+                    <ColumnListItem>
+                        <cells>
+                            <Input value="{catalog>Email}" type="Email" change=".onJobNotifyEmailChange" placeholder="{i18n>jnEmailPlaceholder}"/>
+                            <Select selectedKey="{catalog>NotifyMode}" width="100%">
+                                <core:Item key="ALWAYS" text="{i18n>jnModeAlways}"/>
+                                <core:Item key="ON_ERROR" text="{i18n>jnModeOnError}"/>
+                                <core:Item key="ON_FAILURE" text="{i18n>jnModeOnFailure}"/>
+                            </Select>
+                            <CheckBox selected="{catalog>IsActive}"/>
+                        </cells>
+                    </ColumnListItem>
+                </items>
+            </Table>
+        </Panel>
+
+    </VBox>
+
+</core:FragmentDefinition>

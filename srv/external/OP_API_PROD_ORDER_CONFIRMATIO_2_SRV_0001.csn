@@ -1,0 +1,2127 @@
+{
+  "definitions": {
+    "API_PROD_ORDER_CONFIRMATION_2_SRV": {
+      "kind": "service",
+      "@cds.external": true,
+      "@m.IsDefaultEntityContainer": "true",
+      "@sap.message.scope.supported": "true",
+      "@sap.supported.formats": "atom json xlsx"
+    },
+    "API_PROD_ORDER_CONFIRMATION_2_SRV.ProdnOrdConfMatlDocItm": {
+      "kind": "entity",
+      "@cds.external": true,
+      "@cds.persistence.skip": true,
+      "@sap.creatable": "false",
+      "@sap.updatable": "false",
+      "@sap.deletable": "false",
+      "@sap.content.version": "1",
+      "@sap.label": "Material Movements for Confirmation",
+      "elements": {
+        "ConfirmationGroup": {
+          "@sap.display.format": "NonNegative",
+          "@sap.label": "Confirmation Group",
+          "@sap.quickinfo": "Collective ID of Order Confirmations",
+          "@sap.creatable": "false",
+          "@sap.updatable": "false",
+          "key": true,
+          "type": "cds.String",
+          "length": 10,
+          "notNull": true
+        },
+        "ConfirmationCount": {
+          "@sap.display.format": "NonNegative",
+          "@sap.label": "Order Confirmation",
+          "@sap.quickinfo": "Identifier of Single Order Confirmation",
+          "@sap.creatable": "false",
+          "@sap.updatable": "false",
+          "key": true,
+          "type": "cds.String",
+          "length": 8,
+          "notNull": true
+        },
+        "MaterialDocument": {
+          "@sap.display.format": "UpperCase",
+          "@sap.label": "Material Document",
+          "@sap.quickinfo": "Number of Material Document",
+          "@sap.creatable": "false",
+          "@sap.updatable": "false",
+          "key": true,
+          "type": "cds.String",
+          "length": 10,
+          "notNull": true
+        },
+        "MaterialDocumentItem": {
+          "@sap.display.format": "NonNegative",
+          "@sap.label": "Material Document Item",
+          "@sap.creatable": "false",
+          "@sap.updatable": "false",
+          "key": true,
+          "type": "cds.String",
+          "length": 4,
+          "notNull": true
+        },
+        "MaterialDocumentYear": {
+          "@sap.display.format": "NonNegative",
+          "@sap.label": "Material Document Year",
+          "@sap.creatable": "false",
+          "@sap.updatable": "false",
+          "key": true,
+          "type": "cds.String",
+          "length": 4,
+          "notNull": true
+        },
+        "OrderType": {
+          "@sap.display.format": "UpperCase",
+          "@sap.label": "Order Type",
+          "@sap.quickinfo": "Manufacturing Order Type",
+          "type": "cds.String",
+          "length": 4
+        },
+        "OrderID": {
+          "@sap.display.format": "UpperCase",
+          "@sap.label": "Manufacturing Order",
+          "@sap.quickinfo": "Manufacturing Order ID",
+          "type": "cds.String",
+          "length": 12
+        },
+        "OrderItem": {
+          "@sap.display.format": "NonNegative",
+          "@sap.label": "Order Item",
+          "type": "cds.String",
+          "length": 4
+        },
+        "ManufacturingOrderCategory": {
+          "@sap.display.format": "NonNegative",
+          "@sap.label": "Order Category",
+          "@sap.quickinfo": "Manufacturing Order Category",
+          "type": "cds.String",
+          "length": 2
+        },
+        "Material": {
+          "@sap.display.format": "UpperCase",
+          "@sap.label": "Material",
+          "@sap.quickinfo": "Material Number for Order",
+          "type": "cds.String",
+          "length": 40
+        },
+        "Plant": {
+          "@sap.display.format": "UpperCase",
+          "@sap.label": "Plant",
+          "type": "cds.String",
+          "length": 4
+        },
+        "Reservation": {
+          "@sap.display.format": "NonNegative",
+          "@sap.label": "Reservation",
+          "@sap.quickinfo": "Number of Reservation/Dependent Requirements",
+          "type": "cds.String",
+          "length": 10
+        },
+        "ReservationItem": {
+          "@sap.display.format": "NonNegative",
+          "@sap.label": "Reservation Item",
+          "@sap.quickinfo": "Item Number of Reservation / Dependent Requirements",
+          "type": "cds.String",
+          "length": 4
+        },
+        "StorageLocation": {
+          "@sap.display.format": "UpperCase",
+          "@sap.label": "Storage Location",
+          "type": "cds.String",
+          "length": 4
+        },
+        "ProductionSupplyArea": {
+          "@sap.display.format": "UpperCase",
+          "@sap.label": "Prodn Supply Area",
+          "@sap.quickinfo": "Production Supply Area",
+          "type": "cds.String",
+          "length": 10
+        },
+        "Batch": {
+          "@sap.display.format": "UpperCase",
+          "@sap.label": "Batch",
+          "@sap.quickinfo": "Batch Number",
+          "type": "cds.String",
+          "length": 10
+        },
+        "InventoryValuationType": {
+          "@sap.display.format": "UpperCase",
+          "@sap.label": "Valuation Type",
+          "@sap.quickinfo": "Inventory Valuation Type",
+          "type": "cds.String",
+          "length": 10
+        },
+        "GoodsMovementType": {
+          "@sap.display.format": "UpperCase",
+          "@sap.label": "Goods Movement Type",
+          "type": "cds.String",
+          "length": 3
+        },
+        "GoodsMovementReasonCode": {
+          "@sap.display.format": "NonNegative",
+          "@sap.label": "Reason for Movement",
+          "type": "cds.String",
+          "length": 4
+        },
+        "GoodsMovementRefDocType": {
+          "@sap.display.format": "UpperCase",
+          "@sap.label": "Reference Document Type",
+          "@sap.quickinfo": "Goods Movement Reference Document Type",
+          "type": "cds.String",
+          "length": 1
+        },
+        "InventoryUsabilityCode": {
+          "@sap.display.format": "UpperCase",
+          "@sap.label": "Inventory Usability",
+          "@sap.quickinfo": "Inventory Usability Code",
+          "type": "cds.String",
+          "length": 1
+        },
+        "InventorySpecialStockType": {
+          "@sap.display.format": "UpperCase",
+          "@sap.label": "Special Stock Type",
+          "@sap.quickinfo": "Inventory Special Stock Type",
+          "type": "cds.String",
+          "length": 1
+        },
+        "SalesOrder": {
+          "@sap.display.format": "UpperCase",
+          "@sap.label": "Sales Order",
+          "type": "cds.String",
+          "length": 10
+        },
+        "SalesOrderItem": {
+          "@sap.display.format": "NonNegative",
+          "@sap.label": "Sales Order Item",
+          "type": "cds.String",
+          "length": 6
+        },
+        "WBSElementExternalID": {
+          "@sap.display.format": "UpperCase",
+          "@sap.label": "WBS Element",
+          "@sap.quickinfo": "Work Breakdown Structure Element (WBS Element) Edited",
+          "type": "cds.String",
+          "length": 24
+        },
+        "Supplier": {
+          "@sap.display.format": "UpperCase",
+          "@sap.label": "Supplier",
+          "@sap.quickinfo": "Supplier's Account Number",
+          "type": "cds.String",
+          "length": 10
+        },
+        "Customer": {
+          "@sap.display.format": "UpperCase",
+          "@sap.label": "Customer",
+          "@sap.quickinfo": "Account Number of Customer",
+          "type": "cds.String",
+          "length": 10
+        },
+        "ReservationIsFinallyIssued": {
+          "@sap.label": "Final-Issue Reservation",
+          "@sap.quickinfo": "Final Issue for Reservation",
+          "type": "cds.Boolean"
+        },
+        "IsCompletelyDelivered": {
+          "@sap.label": "Delivery Completed",
+          "@sap.quickinfo": "&quot;Delivery Completed&quot; Indicator",
+          "type": "cds.Boolean"
+        },
+        "ShelfLifeExpirationDate": {
+          "@sap.display.format": "Date",
+          "@sap.label": "SLED/BBD",
+          "@sap.quickinfo": "Shelf Life Expiration or Best-Before Date",
+          "type": "cds.Date"
+        },
+        "ManufactureDate": {
+          "@sap.display.format": "Date",
+          "@sap.label": "Date of Manufacture",
+          "type": "cds.Date"
+        },
+        "StorageType": {
+          "@sap.display.format": "UpperCase",
+          "@sap.label": "Storage Type",
+          "type": "cds.String",
+          "length": 3
+        },
+        "StorageBin": {
+          "@sap.display.format": "UpperCase",
+          "@sap.label": "Storage Bin",
+          "type": "cds.String",
+          "length": 10
+        },
+        "EWMWarehouse": {
+          "@sap.display.format": "UpperCase",
+          "@sap.label": "Warehouse Number",
+          "@sap.quickinfo": "Warehouse Number/Warehouse Complex",
+          "type": "cds.String",
+          "length": 4
+        },
+        "EWMStorageBin": {
+          "@sap.display.format": "UpperCase",
+          "@sap.label": "Storage Bin",
+          "type": "cds.String",
+          "length": 18
+        },
+        "HandlingUnitExternalID": {
+          "@sap.display.format": "UpperCase",
+          "@sap.label": "Handling Unit",
+          "@sap.quickinfo": "External Handling Unit Identification",
+          "type": "cds.String",
+          "length": 20
+        },
+        "MaterialDocumentItemText": {
+          "@sap.label": "Text",
+          "@sap.quickinfo": "Item Text",
+          "type": "cds.String",
+          "length": 50
+        },
+        "EntryUnit": {
+          "@sap.label": "Unit of Entry",
+          "@sap.semantics": "unit-of-measure",
+          "type": "cds.String",
+          "length": 3
+        },
+        "EntryUnitISOCode": {
+          "@sap.display.format": "UpperCase",
+          "@sap.label": "ISO Code",
+          "@sap.quickinfo": "ISO Code for Unit of Measurement",
+          "type": "cds.String",
+          "length": 3
+        },
+        "EntryUnitSAPCode": {
+          "@sap.label": "Internal SAP Code",
+          "@sap.quickinfo": "Unit of Measurement, Internal SAP Code (No Conversion)",
+          "type": "cds.String",
+          "length": 3
+        },
+        "QuantityInEntryUnit": {
+          "@sap.unit": "EntryUnit",
+          "@sap.label": "Quantity in Unit of Entry",
+          "type": "cds.Decimal",
+          "precision": 13,
+          "scale": 3
+        },
+        "to_ProdnOrderConfBatchCharc": {
+          "type": "cds.Composition",
+          "cardinality": {
+            "max": "*"
+          },
+          "target": "API_PROD_ORDER_CONFIRMATION_2_SRV.ProdnOrderConfBatchCharc",
+          "keys": []
+        }
+      }
+    },
+    "API_PROD_ORDER_CONFIRMATION_2_SRV.ProdnOrderConfBatchCharc": {
+      "kind": "entity",
+      "@cds.external": true,
+      "@cds.persistence.skip": true,
+      "@sap.creatable": "false",
+      "@sap.updatable": "false",
+      "@sap.deletable": "false",
+      "@sap.content.version": "1",
+      "@sap.label": "Batch Characteristics for Material Movements",
+      "elements": {
+        "ConfirmationGroup": {
+          "@sap.display.format": "NonNegative",
+          "@sap.label": "Confirmation Group",
+          "@sap.quickinfo": "Collective ID of Order Confirmations",
+          "@sap.creatable": "false",
+          "@sap.updatable": "false",
+          "key": true,
+          "type": "cds.String",
+          "length": 10,
+          "notNull": true
+        },
+        "ConfirmationCount": {
+          "@sap.display.format": "NonNegative",
+          "@sap.label": "Order Confirmation",
+          "@sap.quickinfo": "Identifier of Single Order Confirmation",
+          "@sap.creatable": "false",
+          "@sap.updatable": "false",
+          "key": true,
+          "type": "cds.String",
+          "length": 8,
+          "notNull": true
+        },
+        "MaterialDocument": {
+          "@sap.display.format": "UpperCase",
+          "@sap.label": "Material Document",
+          "@sap.quickinfo": "Number of Material Document",
+          "@sap.creatable": "false",
+          "@sap.updatable": "false",
+          "key": true,
+          "type": "cds.String",
+          "length": 10,
+          "notNull": true
+        },
+        "MaterialDocumentItem": {
+          "@sap.display.format": "NonNegative",
+          "@sap.label": "Material Document Item",
+          "@sap.creatable": "false",
+          "@sap.updatable": "false",
+          "key": true,
+          "type": "cds.String",
+          "length": 4,
+          "notNull": true
+        },
+        "MaterialDocumentYear": {
+          "@sap.display.format": "NonNegative",
+          "@sap.label": "Material Document Year",
+          "@sap.creatable": "false",
+          "@sap.updatable": "false",
+          "key": true,
+          "type": "cds.String",
+          "length": 4,
+          "notNull": true
+        },
+        "Plant": {
+          "@sap.display.format": "UpperCase",
+          "@sap.label": "Batch Plant",
+          "@sap.quickinfo": "Plant of a Batch",
+          "@sap.creatable": "false",
+          "@sap.updatable": "false",
+          "key": true,
+          "type": "cds.String",
+          "length": 4,
+          "notNull": true
+        },
+        "Material": {
+          "@sap.display.format": "UpperCase",
+          "@sap.label": "Material",
+          "@sap.quickinfo": "Material Number",
+          "@sap.creatable": "false",
+          "@sap.updatable": "false",
+          "key": true,
+          "type": "cds.String",
+          "length": 40,
+          "notNull": true
+        },
+        "Batch": {
+          "@sap.display.format": "UpperCase",
+          "@sap.label": "Batch",
+          "@sap.quickinfo": "Batch Number",
+          "@sap.creatable": "false",
+          "@sap.updatable": "false",
+          "key": true,
+          "type": "cds.String",
+          "length": 10,
+          "notNull": true
+        },
+        "CharcInternalID": {
+          "@sap.display.format": "NonNegative",
+          "@sap.label": "Characteristic Internal ID",
+          "@sap.creatable": "false",
+          "@sap.updatable": "false",
+          "key": true,
+          "type": "cds.String",
+          "length": 10,
+          "notNull": true
+        },
+        "Characteristic": {
+          "@sap.display.format": "UpperCase",
+          "@sap.label": "Characteristic Name",
+          "type": "cds.String",
+          "length": 30
+        },
+        "CharcValue": {
+          "@sap.label": "Characteristic Value",
+          "type": "cds.String",
+          "length": 70
+        }
+      }
+    },
+    "API_PROD_ORDER_CONFIRMATION_2_SRV.ProdnOrdConf2": {
+      "kind": "entity",
+      "@cds.external": true,
+      "@cds.persistence.skip": true,
+      "@sap.updatable": "false",
+      "@sap.deletable": "false",
+      "@sap.content.version": "1",
+      "@sap.label": "Production Order Confirmation",
+      "elements": {
+        "ConfirmationGroup": {
+          "@sap.display.format": "NonNegative",
+          "@sap.label": "Confirmation Group",
+          "@sap.quickinfo": "Collective ID of Order Confirmations",
+          "@sap.creatable": "false",
+          "@sap.updatable": "false",
+          "key": true,
+          "type": "cds.String",
+          "length": 10,
+          "notNull": true
+        },
+        "ConfirmationCount": {
+          "@sap.display.format": "NonNegative",
+          "@sap.label": "Order Confirmation",
+          "@sap.quickinfo": "Identifier of Single Order Confirmation",
+          "@sap.creatable": "false",
+          "@sap.updatable": "false",
+          "key": true,
+          "type": "cds.String",
+          "length": 8,
+          "notNull": true
+        },
+        "OrderID": {
+          "@sap.display.format": "UpperCase",
+          "@sap.label": "Manufacturing Order",
+          "@sap.quickinfo": "Manufacturing Order ID",
+          "type": "cds.String",
+          "length": 12
+        },
+        "Sequence": {
+          "@sap.display.format": "UpperCase",
+          "@sap.label": "Sequence",
+          "@sap.quickinfo": "Manufacturing Order Sequence",
+          "type": "cds.String",
+          "length": 6
+        },
+        "OrderOperation": {
+          "@sap.display.format": "UpperCase",
+          "@sap.label": "Operation",
+          "@sap.quickinfo": "Manufacturing Order Operation",
+          "type": "cds.String",
+          "length": 4
+        },
+        "OrderSuboperation": {
+          "@sap.display.format": "UpperCase",
+          "@sap.label": "Suboperation",
+          "@sap.quickinfo": "Manufacturing Order Suboperation",
+          "type": "cds.String",
+          "length": 4
+        },
+        "OrderType": {
+          "@sap.display.format": "UpperCase",
+          "@sap.label": "Order Type",
+          "@sap.quickinfo": "Manufacturing Order Type",
+          "type": "cds.String",
+          "length": 4
+        },
+        "OrderOperationInternalID": {
+          "@sap.display.format": "NonNegative",
+          "@sap.label": "Operation Internal ID",
+          "@sap.quickinfo": "Internal Identifier of an Operation or Activity",
+          "type": "cds.String",
+          "length": 8
+        },
+        "ConfirmationText": {
+          "@sap.label": "Confirmation Text",
+          "type": "cds.String",
+          "length": 40
+        },
+        "Language": {
+          "@sap.label": "Language Key",
+          "type": "cds.String",
+          "length": 2
+        },
+        "Material": {
+          "@sap.display.format": "UpperCase",
+          "@sap.label": "Material",
+          "@sap.quickinfo": "Material Number for Order",
+          "type": "cds.String",
+          "length": 40
+        },
+        "OrderPlannedTotalQty": {
+          "@sap.unit": "ProductionUnit",
+          "@sap.label": "Total Quantity",
+          "@sap.quickinfo": "Manufacturing Order Planned Total Quantity",
+          "type": "cds.Decimal",
+          "precision": 13,
+          "scale": 3
+        },
+        "ProductionUnit": {
+          "@sap.label": "Production Unit",
+          "@sap.quickinfo": "Production Unit of Measure",
+          "@sap.semantics": "unit-of-measure",
+          "type": "cds.String",
+          "length": 3
+        },
+        "FinalConfirmationType": {
+          "@sap.display.format": "UpperCase",
+          "@sap.label": "Final Confirmation Type",
+          "type": "cds.String",
+          "length": 1
+        },
+        "IsFinalConfirmation": {
+          "@sap.label": "Final Confirmation",
+          "@sap.quickinfo": "Activation of Final Confirmation",
+          "type": "cds.Boolean"
+        },
+        "OpenReservationsIsCleared": {
+          "@sap.label": "Clear Open Reservs.",
+          "@sap.quickinfo": "Clear Open Reservations",
+          "type": "cds.Boolean"
+        },
+        "IsReversed": {
+          "@sap.label": "Reversed",
+          "@sap.quickinfo": "Indicator: Document was reversed",
+          "type": "cds.Boolean"
+        },
+        "IsReversal": {
+          "@sap.label": "Is a Cancellation",
+          "@sap.quickinfo": "Confirmation record is a Cancellation",
+          "type": "cds.Boolean"
+        },
+        "APIConfHasNoGoodsMovements": {
+          "@sap.label": "No Goods Movement",
+          "@sap.quickinfo": "Confirmation: No Goods Movement via API",
+          "type": "cds.Boolean"
+        },
+        "OrderConfirmationRecordType": {
+          "@sap.display.format": "UpperCase",
+          "@sap.label": "Record Type",
+          "@sap.quickinfo": "Record Type for Confirmation",
+          "type": "cds.String",
+          "length": 3
+        },
+        "OrderConfirmationType": {
+          "@sap.display.format": "UpperCase",
+          "@sap.label": "Type of Confirmation",
+          "@sap.quickinfo": "Indicator for Type of Confirmation",
+          "type": "cds.String",
+          "length": 1
+        },
+        "ConfirmationEntryDate": {
+          "@sap.display.format": "Date",
+          "@sap.label": "Entry Date",
+          "@sap.quickinfo": "Entry Date of Confirmation",
+          "type": "cds.Date"
+        },
+        "ConfirmationEntryTime": {
+          "@sap.label": "Entry Time",
+          "@sap.quickinfo": "Confirmation Entry Time",
+          "type": "cds.Time"
+        },
+        "EnteredByUser": {
+          "@sap.display.format": "UpperCase",
+          "@sap.label": "Entered by User",
+          "@sap.quickinfo": "User who Entered the Confirmation",
+          "type": "cds.String",
+          "length": 12
+        },
+        "LastChangeDate": {
+          "@sap.display.format": "Date",
+          "@sap.label": "Last Change",
+          "@sap.quickinfo": "Date of Last Change",
+          "type": "cds.Date"
+        },
+        "LastChangedByUser": {
+          "@sap.display.format": "UpperCase",
+          "@sap.label": "Changed By",
+          "@sap.quickinfo": "Name of Person Who Changed Object",
+          "type": "cds.String",
+          "length": 12
+        },
+        "ConfirmationExternalEntryDate": {
+          "@sap.display.format": "Date",
+          "@sap.label": "Created on",
+          "@sap.quickinfo": "External date of entry for confirmation",
+          "type": "cds.Date"
+        },
+        "ConfirmationExternalEntryTime": {
+          "@sap.label": "Time",
+          "@sap.quickinfo": "External time of entry for confirmation",
+          "type": "cds.Time"
+        },
+        "EnteredByExternalUser": {
+          "@sap.display.format": "UpperCase",
+          "@sap.label": "Created by",
+          "@sap.quickinfo": "External creator of confirmation",
+          "type": "cds.String",
+          "length": 12
+        },
+        "ExternalSystemConfirmation": {
+          "@sap.label": "External Key",
+          "@sap.quickinfo": "External Key for Confirmation (for example, from PDC System)",
+          "type": "cds.UUID"
+        },
+        "Plant": {
+          "@sap.display.format": "UpperCase",
+          "@sap.label": "Plant",
+          "type": "cds.String",
+          "length": 4
+        },
+        "WorkCenterTypeCode": {
+          "@sap.display.format": "UpperCase",
+          "@sap.label": "Resource Object Type",
+          "@sap.quickinfo": "Object Type of the Resource",
+          "type": "cds.String",
+          "length": 2
+        },
+        "WorkCenter": {
+          "@sap.display.format": "UpperCase",
+          "@sap.label": "Work Center",
+          "type": "cds.String",
+          "length": 8
+        },
+        "CapacityCategoryCode": {
+          "@sap.display.format": "UpperCase",
+          "@sap.label": "Capacity Category",
+          "type": "cds.String",
+          "length": 3
+        },
+        "CapacityRequirementSplit": {
+          "@odata.Type": "Edm.Byte",
+          "@sap.label": "Split Number",
+          "@sap.quickinfo": "Capacity Split Number",
+          "type": "cds.Integer"
+        },
+        "ShiftGrouping": {
+          "@sap.display.format": "UpperCase",
+          "@sap.label": "Shift Grouping",
+          "@sap.quickinfo": "Grouping for Shift Definitions and Shift Sequences",
+          "type": "cds.String",
+          "length": 2
+        },
+        "ShiftDefinition": {
+          "@sap.display.format": "UpperCase",
+          "@sap.label": "Shift Definition",
+          "type": "cds.String",
+          "length": 4
+        },
+        "OriginalBatch": {
+          "@sap.display.format": "UpperCase",
+          "@sap.label": "Original Batch",
+          "type": "cds.String",
+          "length": 10
+        },
+        "SenderCostCenter": {
+          "@sap.display.format": "UpperCase",
+          "@sap.label": "Sender Cost Center",
+          "type": "cds.String",
+          "length": 10
+        },
+        "Personnel": {
+          "@sap.display.format": "NonNegative",
+          "@sap.label": "Personnel",
+          "@sap.quickinfo": "Personnel Number",
+          "type": "cds.String",
+          "length": 8
+        },
+        "TimeRecording": {
+          "@sap.display.format": "NonNegative",
+          "@sap.label": "Time Recording",
+          "@sap.quickinfo": "Time Recording ID",
+          "type": "cds.String",
+          "length": 8
+        },
+        "EmployeeWageType": {
+          "@sap.display.format": "UpperCase",
+          "@sap.label": "Employee Wage Type",
+          "type": "cds.String",
+          "length": 4
+        },
+        "EmployeeWageGroup": {
+          "@sap.display.format": "UpperCase",
+          "@sap.label": "Employee Wage Group",
+          "type": "cds.String",
+          "length": 3
+        },
+        "BreakDurationUnit": {
+          "@sap.label": "Break Time Unit",
+          "@sap.quickinfo": "Unit for a Break Time",
+          "@sap.semantics": "unit-of-measure",
+          "type": "cds.String",
+          "length": 3
+        },
+        "BreakDurationUnitISOCode": {
+          "@sap.display.format": "UpperCase",
+          "@sap.label": "ISO Code",
+          "@sap.quickinfo": "ISO Code for Unit of Measurement",
+          "type": "cds.String",
+          "length": 3
+        },
+        "BreakDurationUnitSAPCode": {
+          "@sap.label": "Internal SAP Code",
+          "@sap.quickinfo": "Unit of Measurement, Internal SAP Code (No Conversion)",
+          "type": "cds.String",
+          "length": 3
+        },
+        "ConfirmedBreakDuration": {
+          "@sap.unit": "BusinessProcessEntryUnit",
+          "@sap.label": "Confirmed Break Time",
+          "type": "cds.Decimal",
+          "precision": 9,
+          "scale": 3
+        },
+        "EmployeeSuitability": {
+          "@sap.display.format": "UpperCase",
+          "@sap.label": "Employee Suitability",
+          "type": "cds.String",
+          "length": 2
+        },
+        "NumberOfEmployees": {
+          "@sap.label": "Number of Employees",
+          "type": "cds.Decimal",
+          "precision": 5,
+          "scale": 2
+        },
+        "PostingDate": {
+          "@sap.display.format": "Date",
+          "@sap.label": "Posting Date",
+          "type": "cds.Date"
+        },
+        "ConfirmedExecutionStartDate": {
+          "@sap.display.format": "Date",
+          "@sap.label": "Confirmed Execution Start Date",
+          "@sap.quickinfo": "Confirmed Start Date of Execution",
+          "type": "cds.Date"
+        },
+        "ConfirmedExecutionStartTime": {
+          "@sap.label": "Confirmed Execution Start Time",
+          "@sap.quickinfo": "Confirmed Start Time of Execution",
+          "type": "cds.Time"
+        },
+        "ConfirmedSetupEndDate": {
+          "@sap.display.format": "Date",
+          "@sap.label": "Confirmed Setup End Date",
+          "@sap.quickinfo": "Confirmed End Date of Setup",
+          "type": "cds.Date"
+        },
+        "ConfirmedSetupEndTime": {
+          "@sap.label": "Confirmed Setup End Time",
+          "@sap.quickinfo": "Confirmed End Time of Setup",
+          "type": "cds.Time"
+        },
+        "ConfirmedProcessingStartDate": {
+          "@sap.display.format": "Date",
+          "@sap.label": "Confirmed Processing Start Date",
+          "@sap.quickinfo": "Confirmed Start Date of Processing",
+          "type": "cds.Date"
+        },
+        "ConfirmedProcessingStartTime": {
+          "@sap.label": "Confirmed Processing Start Time",
+          "@sap.quickinfo": "Confirmed Start Time of Processing",
+          "type": "cds.Time"
+        },
+        "ConfirmedProcessingEndDate": {
+          "@sap.display.format": "Date",
+          "@sap.label": "Confirmed Processing End Date",
+          "@sap.quickinfo": "Confirmed End Date of Processing",
+          "type": "cds.Date"
+        },
+        "ConfirmedProcessingEndTime": {
+          "@sap.label": "Confirmed Processing End Time",
+          "@sap.quickinfo": "Confirmed End Time of Processing",
+          "type": "cds.Time"
+        },
+        "ConfirmedTeardownStartDate": {
+          "@sap.display.format": "Date",
+          "@sap.label": "Confirmed Teardown Start Date",
+          "@sap.quickinfo": "Confirmed Start Date of Teardown",
+          "type": "cds.Date"
+        },
+        "ConfirmedTeardownStartTime": {
+          "@sap.label": "Confirmed Teardown Start Time",
+          "@sap.quickinfo": "Confirmed Start Time of Teardown",
+          "type": "cds.Time"
+        },
+        "ConfirmedExecutionEndDate": {
+          "@sap.display.format": "Date",
+          "@sap.label": "Confirmed Execution End Date",
+          "@sap.quickinfo": "Confirmed End Date of Execution",
+          "type": "cds.Date"
+        },
+        "ConfirmedExecutionEndTime": {
+          "@sap.label": "Confirmed Execution End Time",
+          "@sap.quickinfo": "Confirmed End Time of Execution",
+          "type": "cds.Time"
+        },
+        "ConfirmationUnit": {
+          "@sap.label": "Confirmation Unit",
+          "@sap.quickinfo": "Confirmation Unit of Measure",
+          "@sap.semantics": "unit-of-measure",
+          "type": "cds.String",
+          "length": 3
+        },
+        "ConfirmationUnitISOCode": {
+          "@sap.display.format": "UpperCase",
+          "@sap.label": "ISO Code",
+          "@sap.quickinfo": "ISO Code for Unit of Measurement",
+          "type": "cds.String",
+          "length": 3
+        },
+        "ConfirmationUnitSAPCode": {
+          "@sap.label": "Internal SAP Code",
+          "@sap.quickinfo": "Unit of Measurement, Internal SAP Code (No Conversion)",
+          "type": "cds.String",
+          "length": 3
+        },
+        "ConfirmationYieldQuantity": {
+          "@sap.unit": "ConfirmationUnit",
+          "@sap.label": "Yield Quantity",
+          "@sap.quickinfo": "Yield to be Confirmed",
+          "type": "cds.Decimal",
+          "precision": 13,
+          "scale": 3
+        },
+        "ConfirmationScrapQuantity": {
+          "@sap.unit": "ConfirmationUnit",
+          "@sap.label": "Scrap Quantity",
+          "@sap.quickinfo": "Scrap to Be Confirmed",
+          "type": "cds.Decimal",
+          "precision": 13,
+          "scale": 3
+        },
+        "ConfirmationReworkQuantity": {
+          "@sap.unit": "ConfirmationUnit",
+          "@sap.label": "Rework Quantity",
+          "@sap.quickinfo": "Current Confirmation Rework Quantity",
+          "type": "cds.Decimal",
+          "precision": 13,
+          "scale": 3
+        },
+        "VarianceReasonCode": {
+          "@sap.display.format": "UpperCase",
+          "@sap.label": "Variance Reason",
+          "@sap.quickinfo": "Reason for Variance",
+          "type": "cds.String",
+          "length": 4
+        },
+        "OperationUnit": {
+          "@sap.label": "Operation Unit",
+          "@sap.quickinfo": "Operation Unit of Measure",
+          "@sap.semantics": "unit-of-measure",
+          "type": "cds.String",
+          "length": 3
+        },
+        "OpPlannedTotalQuantity": {
+          "@sap.unit": "OperationUnit",
+          "@sap.label": "Operation Quantity",
+          "@sap.quickinfo": "Operation Total Quantity",
+          "type": "cds.Decimal",
+          "precision": 13,
+          "scale": 3
+        },
+        "ConfYieldQtyInProductionUnit": {
+          "@sap.unit": "ProductionUnit",
+          "@sap.label": "Confd Yield Quantity",
+          "@sap.quickinfo": "Confirmed yield quantity in order unit of measure",
+          "type": "cds.Decimal",
+          "precision": 13,
+          "scale": 3
+        },
+        "OpWorkQuantityUnit1": {
+          "@sap.label": "Confirmed Work Quantity Unit 1",
+          "@sap.quickinfo": "Unit of Measure for Confirmed Work Quantity 1",
+          "@sap.semantics": "unit-of-measure",
+          "type": "cds.String",
+          "length": 3
+        },
+        "WorkQuantityUnit1ISOCode": {
+          "@sap.display.format": "UpperCase",
+          "@sap.label": "ISO Code",
+          "@sap.quickinfo": "ISO Code for Unit of Measurement",
+          "type": "cds.String",
+          "length": 3
+        },
+        "WorkQuantityUnit1SAPCode": {
+          "@sap.label": "Internal SAP Code",
+          "@sap.quickinfo": "Unit of Measurement, Internal SAP Code (No Conversion)",
+          "type": "cds.String",
+          "length": 3
+        },
+        "OpConfirmedWorkQuantity1": {
+          "@sap.unit": "OpWorkQuantityUnit1",
+          "@sap.label": "Confirmed Work Quantity 1",
+          "@sap.quickinfo": "Already Confirmed Work Quantity (Activity) 1",
+          "type": "cds.Decimal",
+          "precision": 13,
+          "scale": 3
+        },
+        "NoFurtherOpWorkQuantity1IsExpd": {
+          "@sap.label": "No Remaining Work Quantity 1 Expected",
+          "@sap.quickinfo": "Indicator: No Remaining Work Quantity 1 is Expected",
+          "type": "cds.Boolean"
+        },
+        "OpWorkQuantityUnit2": {
+          "@sap.label": "Confirmed Work Quantity Unit 2",
+          "@sap.quickinfo": "Unit of Measure for Confirmed Work Quantity 2",
+          "@sap.semantics": "unit-of-measure",
+          "type": "cds.String",
+          "length": 3
+        },
+        "WorkQuantityUnit2ISOCode": {
+          "@sap.display.format": "UpperCase",
+          "@sap.label": "ISO Code",
+          "@sap.quickinfo": "ISO Code for Unit of Measurement",
+          "type": "cds.String",
+          "length": 3
+        },
+        "WorkQuantityUnit2SAPCode": {
+          "@sap.label": "Internal SAP Code",
+          "@sap.quickinfo": "Unit of Measurement, Internal SAP Code (No Conversion)",
+          "type": "cds.String",
+          "length": 3
+        },
+        "OpConfirmedWorkQuantity2": {
+          "@sap.unit": "OpWorkQuantityUnit2",
+          "@sap.label": "Confirmed Work Quantity 2",
+          "@sap.quickinfo": "Already Confirmed Work Quantity (Activity) 2",
+          "type": "cds.Decimal",
+          "precision": 13,
+          "scale": 3
+        },
+        "NoFurtherOpWorkQuantity2IsExpd": {
+          "@sap.label": "No Remaining Work Quantity 2 Expected",
+          "@sap.quickinfo": "Indicator: No Remaining Work Quantity 2 is Expected",
+          "type": "cds.Boolean"
+        },
+        "OpWorkQuantityUnit3": {
+          "@sap.label": "Confirmed Work Quantity Unit 3",
+          "@sap.quickinfo": "Unit of Measure for Confirmed Work Quantity 3",
+          "@sap.semantics": "unit-of-measure",
+          "type": "cds.String",
+          "length": 3
+        },
+        "WorkQuantityUnit3ISOCode": {
+          "@sap.display.format": "UpperCase",
+          "@sap.label": "ISO Code",
+          "@sap.quickinfo": "ISO Code for Unit of Measurement",
+          "type": "cds.String",
+          "length": 3
+        },
+        "WorkQuantityUnit3SAPCode": {
+          "@sap.label": "Internal SAP Code",
+          "@sap.quickinfo": "Unit of Measurement, Internal SAP Code (No Conversion)",
+          "type": "cds.String",
+          "length": 3
+        },
+        "OpConfirmedWorkQuantity3": {
+          "@sap.unit": "OpWorkQuantityUnit3",
+          "@sap.label": "Confirmed Work Quantity 3",
+          "@sap.quickinfo": "Already Confirmed Work Quantity (Activity) 3",
+          "type": "cds.Decimal",
+          "precision": 13,
+          "scale": 3
+        },
+        "NoFurtherOpWorkQuantity3IsExpd": {
+          "@sap.label": "No Remaining Work Quantity 3 Expected",
+          "@sap.quickinfo": "Indicator: No Remaining Work Quantity 3 is Expected",
+          "type": "cds.Boolean"
+        },
+        "OpWorkQuantityUnit4": {
+          "@sap.label": "Confirmed Work Quantity Unit 4",
+          "@sap.quickinfo": "Unit of Measure for Confirmed Work Quantity 4",
+          "@sap.semantics": "unit-of-measure",
+          "type": "cds.String",
+          "length": 3
+        },
+        "WorkQuantityUnit4ISOCode": {
+          "@sap.display.format": "UpperCase",
+          "@sap.label": "ISO Code",
+          "@sap.quickinfo": "ISO Code for Unit of Measurement",
+          "type": "cds.String",
+          "length": 3
+        },
+        "WorkQuantityUnit4SAPCode": {
+          "@sap.label": "Internal SAP Code",
+          "@sap.quickinfo": "Unit of Measurement, Internal SAP Code (No Conversion)",
+          "type": "cds.String",
+          "length": 3
+        },
+        "OpConfirmedWorkQuantity4": {
+          "@sap.unit": "OpWorkQuantityUnit4",
+          "@sap.label": "Confirmed Work Quantity 4",
+          "@sap.quickinfo": "Already Confirmed Work Quantity (Activity) 4",
+          "type": "cds.Decimal",
+          "precision": 13,
+          "scale": 3
+        },
+        "NoFurtherOpWorkQuantity4IsExpd": {
+          "@sap.label": "No Remaining Work Quantity 4 Expected",
+          "@sap.quickinfo": "Indicator: No Remaining Work Quantity 4 is Expected",
+          "type": "cds.Boolean"
+        },
+        "OpWorkQuantityUnit5": {
+          "@sap.label": "Confirmed Work Quantity Unit 5",
+          "@sap.quickinfo": "Unit of Measure for Confirmed Work Quantity 5",
+          "@sap.semantics": "unit-of-measure",
+          "type": "cds.String",
+          "length": 3
+        },
+        "WorkQuantityUnit5ISOCode": {
+          "@sap.display.format": "UpperCase",
+          "@sap.label": "ISO Code",
+          "@sap.quickinfo": "ISO Code for Unit of Measurement",
+          "type": "cds.String",
+          "length": 3
+        },
+        "WorkQuantityUnit5SAPCode": {
+          "@sap.label": "Internal SAP Code",
+          "@sap.quickinfo": "Unit of Measurement, Internal SAP Code (No Conversion)",
+          "type": "cds.String",
+          "length": 3
+        },
+        "OpConfirmedWorkQuantity5": {
+          "@sap.unit": "OpWorkQuantityUnit5",
+          "@sap.label": "Confirmed Work Quantity 5",
+          "@sap.quickinfo": "Already Confirmed Work Quantity (Activity) 5",
+          "type": "cds.Decimal",
+          "precision": 13,
+          "scale": 3
+        },
+        "NoFurtherOpWorkQuantity5IsExpd": {
+          "@sap.label": "No Remaining Work Quantity 5 Expected",
+          "@sap.quickinfo": "Indicator: No Remaining Work Quantity 5 is Expected",
+          "type": "cds.Boolean"
+        },
+        "OpWorkQuantityUnit6": {
+          "@sap.label": "Confirmed Work Quantity Unit 6",
+          "@sap.quickinfo": "Unit of Measure for Confirmed Work Quantity 6",
+          "@sap.semantics": "unit-of-measure",
+          "type": "cds.String",
+          "length": 3
+        },
+        "WorkQuantityUnit6ISOCode": {
+          "@sap.display.format": "UpperCase",
+          "@sap.label": "ISO Code",
+          "@sap.quickinfo": "ISO Code for Unit of Measurement",
+          "type": "cds.String",
+          "length": 3
+        },
+        "WorkQuantityUnit6SAPCode": {
+          "@sap.label": "Internal SAP Code",
+          "@sap.quickinfo": "Unit of Measurement, Internal SAP Code (No Conversion)",
+          "type": "cds.String",
+          "length": 3
+        },
+        "OpConfirmedWorkQuantity6": {
+          "@sap.unit": "OpWorkQuantityUnit6",
+          "@sap.label": "Confirmed Work Quantity 6",
+          "@sap.quickinfo": "Already Confirmed Work Quantity (Activity) 6",
+          "type": "cds.Decimal",
+          "precision": 13,
+          "scale": 3
+        },
+        "NoFurtherOpWorkQuantity6IsExpd": {
+          "@sap.label": "No Remaining Work Quantity 6 Expected",
+          "@sap.quickinfo": "Indicator: No Remaining Work Quantity 6 is Expected",
+          "type": "cds.Boolean"
+        },
+        "BusinessProcessEntryUnit": {
+          "@sap.label": "Process Unit",
+          "@sap.quickinfo": "Unit of Measure for Business Process Quantity",
+          "@sap.semantics": "unit-of-measure",
+          "type": "cds.String",
+          "length": 3
+        },
+        "BusProcessEntrUnitISOCode": {
+          "@sap.display.format": "UpperCase",
+          "@sap.label": "ISO Code",
+          "@sap.quickinfo": "ISO Code for Unit of Measurement",
+          "type": "cds.String",
+          "length": 3
+        },
+        "BusProcessEntryUnitSAPCode": {
+          "@sap.label": "Internal SAP Code",
+          "@sap.quickinfo": "Unit of Measurement, Internal SAP Code (No Conversion)",
+          "type": "cds.String",
+          "length": 3
+        },
+        "BusinessProcessConfirmedQty": {
+          "@sap.unit": "BusinessProcessEntryUnit",
+          "@sap.label": "Process Quantity",
+          "@sap.quickinfo": "Current Quantity for Business Process",
+          "type": "cds.Decimal",
+          "precision": 13,
+          "scale": 3
+        },
+        "NoFurtherBusinessProcQtyIsExpd": {
+          "@sap.label": "No Remaining Act.",
+          "@sap.quickinfo": "No Remaining Quantity Expected for Business Process",
+          "type": "cds.Boolean"
+        },
+        "to_ProdnOrdConfMatlDocItm": {
+          "type": "cds.Composition",
+          "cardinality": {
+            "max": "*"
+          },
+          "target": "API_PROD_ORDER_CONFIRMATION_2_SRV.ProdnOrdConfMatlDocItm",
+          "keys": []
+        }
+      },
+      "actions": {
+        "CancelProdnOrdConf": {
+          "kind": "action",
+          "params": {
+            "PostingDate": {
+              "@sap.label": "Posting Date",
+              "@sap.display.format": "Date",
+              "type": "cds.Date"
+            },
+            "ConfirmationText": {
+              "@sap.label": "Confirmation Text",
+              "type": "cds.String",
+              "length": 40
+            },
+            "ExternalSystemConfirmation": {
+              "@sap.label": "External Key",
+              "type": "cds.UUID"
+            }
+          },
+          "returns": {
+            "type": "API_PROD_ORDER_CONFIRMATION_2_SRV.ProdnOrdConf2"
+          }
+        }
+      }
+    },
+    "API_PROD_ORDER_CONFIRMATION_2_SRV.AProductionorderconf2": {
+      "kind": "type",
+      "@cds.external": true,
+      "elements": {
+        "APIConfHasNoGoodsMovements": {
+          "@sap.label": "No Goods Movement",
+          "type": "cds.Boolean"
+        },
+        "BreakDurationUnit": {
+          "@sap.label": "Break Time Unit",
+          "@sap.semantics": "unit-of-measure",
+          "type": "cds.String",
+          "length": 3
+        },
+        "BreakDurationUnitISOCode": {
+          "@sap.label": "ISO Code",
+          "type": "cds.String",
+          "length": 3
+        },
+        "BreakDurationUnitSAPCode": {
+          "@sap.label": "Internal SAP Code",
+          "type": "cds.String",
+          "length": 3
+        },
+        "BusinessProcessConfirmedQty": {
+          "@sap.unit": "BusinessProcessEntryUnit",
+          "@sap.label": "Process Quantity",
+          "type": "cds.Decimal",
+          "precision": 13,
+          "scale": 3
+        },
+        "BusinessProcessEntryUnit": {
+          "@sap.label": "Process Unit",
+          "@sap.semantics": "unit-of-measure",
+          "type": "cds.String",
+          "length": 3
+        },
+        "BusProcessEntrUnitISOCode": {
+          "@sap.label": "ISO Code",
+          "type": "cds.String",
+          "length": 3
+        },
+        "BusProcessEntryUnitSAPCode": {
+          "@sap.label": "Internal SAP Code",
+          "type": "cds.String",
+          "length": 3
+        },
+        "CapacityCategoryCode": {
+          "@sap.label": "Capacity Category",
+          "type": "cds.String",
+          "length": 3
+        },
+        "CapacityRequirementSplit": {
+          "@odata.Type": "Edm.Byte",
+          "@sap.label": "Split Number",
+          "type": "cds.Integer"
+        },
+        "ConfirmationCount": {
+          "@sap.label": "Order Confirmation",
+          "type": "cds.String",
+          "length": 8
+        },
+        "ConfirmationEntryDate": {
+          "@sap.display.format": "Date",
+          "@sap.label": "Entry Date",
+          "type": "cds.Date"
+        },
+        "ConfirmationEntryTime": {
+          "@sap.label": "Entry Time",
+          "type": "cds.Time"
+        },
+        "ConfirmationExternalEntryDate": {
+          "@sap.display.format": "Date",
+          "@sap.label": "Created on",
+          "type": "cds.Date"
+        },
+        "ConfirmationExternalEntryTime": {
+          "@sap.label": "Time",
+          "type": "cds.Time"
+        },
+        "ConfirmationGroup": {
+          "@sap.label": "Confirmation Group",
+          "type": "cds.String",
+          "length": 10
+        },
+        "ConfirmationReworkQuantity": {
+          "@sap.unit": "ConfirmationUnit",
+          "@sap.label": "Rework Quantity",
+          "type": "cds.Decimal",
+          "precision": 13,
+          "scale": 3
+        },
+        "ConfirmationScrapQuantity": {
+          "@sap.unit": "ConfirmationUnit",
+          "@sap.label": "Scrap Quantity",
+          "type": "cds.Decimal",
+          "precision": 13,
+          "scale": 3
+        },
+        "ConfirmationText": {
+          "@sap.label": "Confirmation Text",
+          "type": "cds.String",
+          "length": 40
+        },
+        "ConfirmationUnit": {
+          "@sap.label": "Confirmation Unit",
+          "@sap.semantics": "unit-of-measure",
+          "type": "cds.String",
+          "length": 3
+        },
+        "ConfirmationUnitISOCode": {
+          "@sap.label": "ISO Code",
+          "type": "cds.String",
+          "length": 3
+        },
+        "ConfirmationUnitSAPCode": {
+          "@sap.label": "Internal SAP Code",
+          "type": "cds.String",
+          "length": 3
+        },
+        "ConfirmationYieldQuantity": {
+          "@sap.unit": "ConfirmationUnit",
+          "@sap.label": "Yield Quantity",
+          "type": "cds.Decimal",
+          "precision": 13,
+          "scale": 3
+        },
+        "ConfirmedBreakDuration": {
+          "@sap.unit": "BusinessProcessEntryUnit",
+          "@sap.label": "Confirmed Break Time",
+          "type": "cds.Decimal",
+          "precision": 9,
+          "scale": 3
+        },
+        "ConfirmedExecutionEndDate": {
+          "@sap.display.format": "Date",
+          "@sap.label": "Confirmed Execution End Date",
+          "type": "cds.Date"
+        },
+        "ConfirmedExecutionEndTime": {
+          "@sap.label": "Confirmed Execution End Time",
+          "type": "cds.Time"
+        },
+        "ConfirmedExecutionStartDate": {
+          "@sap.display.format": "Date",
+          "@sap.label": "Confirmed Execution Start Date",
+          "type": "cds.Date"
+        },
+        "ConfirmedExecutionStartTime": {
+          "@sap.label": "Confirmed Execution Start Time",
+          "type": "cds.Time"
+        },
+        "ConfirmedProcessingEndDate": {
+          "@sap.display.format": "Date",
+          "@sap.label": "Confirmed Processing End Date",
+          "type": "cds.Date"
+        },
+        "ConfirmedProcessingEndTime": {
+          "@sap.label": "Confirmed Processing End Time",
+          "type": "cds.Time"
+        },
+        "ConfirmedProcessingStartDate": {
+          "@sap.display.format": "Date",
+          "@sap.label": "Confirmed Processing Start Date",
+          "type": "cds.Date"
+        },
+        "ConfirmedProcessingStartTime": {
+          "@sap.label": "Confirmed Processing Start Time",
+          "type": "cds.Time"
+        },
+        "ConfirmedSetupEndDate": {
+          "@sap.display.format": "Date",
+          "@sap.label": "Confirmed Setup End Date",
+          "type": "cds.Date"
+        },
+        "ConfirmedSetupEndTime": {
+          "@sap.label": "Confirmed Setup End Time",
+          "type": "cds.Time"
+        },
+        "ConfirmedTeardownStartDate": {
+          "@sap.display.format": "Date",
+          "@sap.label": "Confirmed Teardown Start Date",
+          "type": "cds.Date"
+        },
+        "ConfirmedTeardownStartTime": {
+          "@sap.label": "Confirmed Teardown Start Time",
+          "type": "cds.Time"
+        },
+        "ConfYieldQtyInProductionUnit": {
+          "@sap.unit": "ProductionUnit",
+          "@sap.label": "Confd Yield Quantity",
+          "type": "cds.Decimal",
+          "precision": 13,
+          "scale": 3
+        },
+        "EmployeeSuitability": {
+          "@sap.label": "Employee Suitability",
+          "type": "cds.String",
+          "length": 2
+        },
+        "EmployeeWageGroup": {
+          "@sap.label": "Employee Wage Group",
+          "type": "cds.String",
+          "length": 3
+        },
+        "EmployeeWageType": {
+          "@sap.label": "Employee Wage Type",
+          "type": "cds.String",
+          "length": 4
+        },
+        "EnteredByExternalUser": {
+          "@sap.label": "Created by",
+          "type": "cds.String",
+          "length": 12
+        },
+        "EnteredByUser": {
+          "@sap.label": "Entered by User",
+          "type": "cds.String",
+          "length": 12
+        },
+        "ExternalSystemConfirmation": {
+          "@sap.label": "External Key",
+          "type": "cds.UUID"
+        },
+        "FinalConfirmationType": {
+          "@sap.label": "Final Confirmation Type",
+          "type": "cds.String",
+          "length": 1
+        },
+        "IsFinalConfirmation": {
+          "@sap.label": "Final Confirmation",
+          "type": "cds.Boolean"
+        },
+        "IsReversal": {
+          "@sap.label": "Is a Cancellation",
+          "type": "cds.Boolean"
+        },
+        "IsReversed": {
+          "@sap.label": "Reversed",
+          "type": "cds.Boolean"
+        },
+        "Language": {
+          "@sap.label": "Language Key",
+          "type": "cds.String",
+          "length": 2
+        },
+        "LastChangeDate": {
+          "@sap.display.format": "Date",
+          "@sap.label": "Last Change",
+          "type": "cds.Date"
+        },
+        "LastChangedByUser": {
+          "@sap.label": "Changed By",
+          "type": "cds.String",
+          "length": 12
+        },
+        "Material": {
+          "@sap.label": "Material",
+          "type": "cds.String",
+          "length": 40
+        },
+        "NoFurtherBusinessProcQtyIsExpd": {
+          "@sap.label": "No Remaining Act.",
+          "type": "cds.Boolean"
+        },
+        "NoFurtherOpWorkQuantity1IsExpd": {
+          "@sap.label": "No Remaining Work Quantity 1 Expected",
+          "type": "cds.Boolean"
+        },
+        "NoFurtherOpWorkQuantity2IsExpd": {
+          "@sap.label": "No Remaining Work Quantity 2 Expected",
+          "type": "cds.Boolean"
+        },
+        "NoFurtherOpWorkQuantity3IsExpd": {
+          "@sap.label": "No Remaining Work Quantity 3 Expected",
+          "type": "cds.Boolean"
+        },
+        "NoFurtherOpWorkQuantity4IsExpd": {
+          "@sap.label": "No Remaining Work Quantity 4 Expected",
+          "type": "cds.Boolean"
+        },
+        "NoFurtherOpWorkQuantity5IsExpd": {
+          "@sap.label": "No Remaining Work Quantity 5 Expected",
+          "type": "cds.Boolean"
+        },
+        "NoFurtherOpWorkQuantity6IsExpd": {
+          "@sap.label": "No Remaining Work Quantity 6 Expected",
+          "type": "cds.Boolean"
+        },
+        "NumberOfEmployees": {
+          "@sap.label": "Number of Employees",
+          "type": "cds.Decimal",
+          "precision": 5,
+          "scale": 2
+        },
+        "OpConfirmedWorkQuantity1": {
+          "@sap.unit": "OpWorkQuantityUnit1",
+          "@sap.label": "Confirmed Work Quantity 1",
+          "type": "cds.Decimal",
+          "precision": 13,
+          "scale": 3
+        },
+        "OpConfirmedWorkQuantity2": {
+          "@sap.unit": "OpWorkQuantityUnit2",
+          "@sap.label": "Confirmed Work Quantity 2",
+          "type": "cds.Decimal",
+          "precision": 13,
+          "scale": 3
+        },
+        "OpConfirmedWorkQuantity3": {
+          "@sap.unit": "OpWorkQuantityUnit3",
+          "@sap.label": "Confirmed Work Quantity 3",
+          "type": "cds.Decimal",
+          "precision": 13,
+          "scale": 3
+        },
+        "OpConfirmedWorkQuantity4": {
+          "@sap.unit": "OpWorkQuantityUnit4",
+          "@sap.label": "Confirmed Work Quantity 4",
+          "type": "cds.Decimal",
+          "precision": 13,
+          "scale": 3
+        },
+        "OpConfirmedWorkQuantity5": {
+          "@sap.unit": "OpWorkQuantityUnit5",
+          "@sap.label": "Confirmed Work Quantity 5",
+          "type": "cds.Decimal",
+          "precision": 13,
+          "scale": 3
+        },
+        "OpConfirmedWorkQuantity6": {
+          "@sap.unit": "OpWorkQuantityUnit6",
+          "@sap.label": "Confirmed Work Quantity 6",
+          "type": "cds.Decimal",
+          "precision": 13,
+          "scale": 3
+        },
+        "OpenReservationsIsCleared": {
+          "@sap.label": "Clear Open Reservs.",
+          "type": "cds.Boolean"
+        },
+        "OperationUnit": {
+          "@sap.label": "Operation Unit",
+          "@sap.semantics": "unit-of-measure",
+          "type": "cds.String",
+          "length": 3
+        },
+        "OpPlannedTotalQuantity": {
+          "@sap.unit": "OperationUnit",
+          "@sap.label": "Operation Quantity",
+          "type": "cds.Decimal",
+          "precision": 13,
+          "scale": 3
+        },
+        "OpWorkQuantityUnit1": {
+          "@sap.label": "Confirmed Work Quantity Unit 1",
+          "@sap.semantics": "unit-of-measure",
+          "type": "cds.String",
+          "length": 3
+        },
+        "OpWorkQuantityUnit2": {
+          "@sap.label": "Confirmed Work Quantity Unit 2",
+          "@sap.semantics": "unit-of-measure",
+          "type": "cds.String",
+          "length": 3
+        },
+        "OpWorkQuantityUnit3": {
+          "@sap.label": "Confirmed Work Quantity Unit 3",
+          "@sap.semantics": "unit-of-measure",
+          "type": "cds.String",
+          "length": 3
+        },
+        "OpWorkQuantityUnit4": {
+          "@sap.label": "Confirmed Work Quantity Unit 4",
+          "@sap.semantics": "unit-of-measure",
+          "type": "cds.String",
+          "length": 3
+        },
+        "OpWorkQuantityUnit5": {
+          "@sap.label": "Confirmed Work Quantity Unit 5",
+          "@sap.semantics": "unit-of-measure",
+          "type": "cds.String",
+          "length": 3
+        },
+        "OpWorkQuantityUnit6": {
+          "@sap.label": "Confirmed Work Quantity Unit 6",
+          "@sap.semantics": "unit-of-measure",
+          "type": "cds.String",
+          "length": 3
+        },
+        "OrderConfirmationRecordType": {
+          "@sap.label": "Record Type",
+          "type": "cds.String",
+          "length": 3
+        },
+        "OrderConfirmationType": {
+          "@sap.label": "Type of Confirmation",
+          "type": "cds.String",
+          "length": 1
+        },
+        "OrderID": {
+          "@sap.label": "Manufacturing Order",
+          "type": "cds.String",
+          "length": 12
+        },
+        "OrderOperation": {
+          "@sap.label": "Operation",
+          "type": "cds.String",
+          "length": 4
+        },
+        "OrderOperationInternalID": {
+          "@sap.label": "Operation Internal ID",
+          "type": "cds.String",
+          "length": 8
+        },
+        "OrderPlannedTotalQty": {
+          "@sap.unit": "ProductionUnit",
+          "@sap.label": "Total Quantity",
+          "type": "cds.Decimal",
+          "precision": 13,
+          "scale": 3
+        },
+        "OrderSuboperation": {
+          "@sap.label": "Suboperation",
+          "type": "cds.String",
+          "length": 4
+        },
+        "OrderType": {
+          "@sap.label": "Order Type",
+          "type": "cds.String",
+          "length": 4
+        },
+        "OriginalBatch": {
+          "@sap.label": "Original Batch",
+          "type": "cds.String",
+          "length": 10
+        },
+        "Personnel": {
+          "@sap.label": "Personnel",
+          "type": "cds.String",
+          "length": 8
+        },
+        "Plant": {
+          "@sap.label": "Plant",
+          "type": "cds.String",
+          "length": 4
+        },
+        "PostingDate": {
+          "@sap.display.format": "Date",
+          "@sap.label": "Posting Date",
+          "type": "cds.Date"
+        },
+        "ProductionUnit": {
+          "@sap.label": "Production Unit",
+          "@sap.semantics": "unit-of-measure",
+          "type": "cds.String",
+          "length": 3
+        },
+        "SenderCostCenter": {
+          "@sap.label": "Sender Cost Center",
+          "type": "cds.String",
+          "length": 10
+        },
+        "Sequence": {
+          "@sap.label": "Sequence",
+          "type": "cds.String",
+          "length": 6
+        },
+        "ShiftDefinition": {
+          "@sap.label": "Shift Definition",
+          "type": "cds.String",
+          "length": 4
+        },
+        "ShiftGrouping": {
+          "@sap.label": "Shift Grouping",
+          "type": "cds.String",
+          "length": 2
+        },
+        "TimeRecording": {
+          "@sap.label": "Time Recording",
+          "type": "cds.String",
+          "length": 8
+        },
+        "VarianceReasonCode": {
+          "@sap.label": "Variance Reason",
+          "type": "cds.String",
+          "length": 4
+        },
+        "WorkCenter": {
+          "@sap.label": "Work Center",
+          "type": "cds.String",
+          "length": 8
+        },
+        "WorkCenterTypeCode": {
+          "@sap.label": "Resource Object Type",
+          "type": "cds.String",
+          "length": 2
+        },
+        "WorkQuantityUnit1ISOCode": {
+          "@sap.label": "ISO Code",
+          "type": "cds.String",
+          "length": 3
+        },
+        "WorkQuantityUnit1SAPCode": {
+          "@sap.label": "Internal SAP Code",
+          "type": "cds.String",
+          "length": 3
+        },
+        "WorkQuantityUnit2ISOCode": {
+          "@sap.label": "ISO Code",
+          "type": "cds.String",
+          "length": 3
+        },
+        "WorkQuantityUnit2SAPCode": {
+          "@sap.label": "Internal SAP Code",
+          "type": "cds.String",
+          "length": 3
+        },
+        "WorkQuantityUnit3ISOCode": {
+          "@sap.label": "ISO Code",
+          "type": "cds.String",
+          "length": 3
+        },
+        "WorkQuantityUnit3SAPCode": {
+          "@sap.label": "Internal SAP Code",
+          "type": "cds.String",
+          "length": 3
+        },
+        "WorkQuantityUnit4ISOCode": {
+          "@sap.label": "ISO Code",
+          "type": "cds.String",
+          "length": 3
+        },
+        "WorkQuantityUnit4SAPCode": {
+          "@sap.label": "Internal SAP Code",
+          "type": "cds.String",
+          "length": 3
+        },
+        "WorkQuantityUnit5ISOCode": {
+          "@sap.label": "ISO Code",
+          "type": "cds.String",
+          "length": 3
+        },
+        "WorkQuantityUnit5SAPCode": {
+          "@sap.label": "Internal SAP Code",
+          "type": "cds.String",
+          "length": 3
+        },
+        "WorkQuantityUnit6ISOCode": {
+          "@sap.label": "ISO Code",
+          "type": "cds.String",
+          "length": 3
+        },
+        "WorkQuantityUnit6SAPCode": {
+          "@sap.label": "Internal SAP Code",
+          "type": "cds.String",
+          "length": 3
+        }
+      }
+    },
+    "API_PROD_ORDER_CONFIRMATION_2_SRV.AProdnordconfmatldocitem": {
+      "kind": "type",
+      "@cds.external": true,
+      "elements": {
+        "Batch": {
+          "@sap.label": "Batch",
+          "type": "cds.String",
+          "length": 10
+        },
+        "ConfirmationCount": {
+          "@sap.label": "Order Confirmation",
+          "type": "cds.String",
+          "length": 8
+        },
+        "ConfirmationGroup": {
+          "@sap.label": "Confirmation Group",
+          "type": "cds.String",
+          "length": 10
+        },
+        "Customer": {
+          "@sap.label": "Customer",
+          "type": "cds.String",
+          "length": 10
+        },
+        "EntryUnit": {
+          "@sap.label": "Unit of Entry",
+          "@sap.semantics": "unit-of-measure",
+          "type": "cds.String",
+          "length": 3
+        },
+        "EntryUnitISOCode": {
+          "@sap.label": "ISO Code",
+          "type": "cds.String",
+          "length": 3
+        },
+        "EntryUnitSAPCode": {
+          "@sap.label": "Internal SAP Code",
+          "type": "cds.String",
+          "length": 3
+        },
+        "EWMStorageBin": {
+          "@sap.label": "Storage Bin",
+          "type": "cds.String",
+          "length": 18
+        },
+        "EWMWarehouse": {
+          "@sap.label": "Warehouse Number",
+          "type": "cds.String",
+          "length": 4
+        },
+        "GoodsMovementReasonCode": {
+          "@sap.label": "Reason for Movement",
+          "type": "cds.String",
+          "length": 4
+        },
+        "GoodsMovementRefDocType": {
+          "@sap.label": "Reference Document Type",
+          "type": "cds.String",
+          "length": 1
+        },
+        "GoodsMovementType": {
+          "@sap.label": "Goods Movement Type",
+          "type": "cds.String",
+          "length": 3
+        },
+        "HandlingUnitExternalID": {
+          "@sap.label": "Handling Unit",
+          "type": "cds.String",
+          "length": 20
+        },
+        "InventorySpecialStockType": {
+          "@sap.label": "Special Stock Type",
+          "type": "cds.String",
+          "length": 1
+        },
+        "InventoryUsabilityCode": {
+          "@sap.label": "Inventory Usability",
+          "type": "cds.String",
+          "length": 1
+        },
+        "InventoryValuationType": {
+          "@sap.label": "Valuation Type",
+          "type": "cds.String",
+          "length": 10
+        },
+        "IsCompletelyDelivered": {
+          "@sap.label": "Delivery Completed",
+          "type": "cds.Boolean"
+        },
+        "ManufactureDate": {
+          "@sap.display.format": "Date",
+          "@sap.label": "Date of Manufacture",
+          "type": "cds.Date"
+        },
+        "ManufacturingOrderCategory": {
+          "@sap.label": "Order Category",
+          "type": "cds.String",
+          "length": 2
+        },
+        "Material": {
+          "@sap.label": "Material",
+          "type": "cds.String",
+          "length": 40
+        },
+        "MaterialDocument": {
+          "@sap.label": "Material Document",
+          "type": "cds.String",
+          "length": 10
+        },
+        "MaterialDocumentItem": {
+          "@sap.label": "Material Document Item",
+          "type": "cds.String",
+          "length": 4
+        },
+        "MaterialDocumentItemText": {
+          "@sap.label": "Text",
+          "type": "cds.String",
+          "length": 50
+        },
+        "MaterialDocumentYear": {
+          "@sap.label": "Material Document Year",
+          "type": "cds.String",
+          "length": 4
+        },
+        "OrderID": {
+          "@sap.label": "Manufacturing Order",
+          "type": "cds.String",
+          "length": 12
+        },
+        "OrderItem": {
+          "@sap.label": "Order Item",
+          "type": "cds.String",
+          "length": 4
+        },
+        "OrderType": {
+          "@sap.label": "Order Type",
+          "type": "cds.String",
+          "length": 4
+        },
+        "Plant": {
+          "@sap.label": "Plant",
+          "type": "cds.String",
+          "length": 4
+        },
+        "ProductionSupplyArea": {
+          "@sap.label": "Prodn Supply Area",
+          "type": "cds.String",
+          "length": 10
+        },
+        "QuantityInEntryUnit": {
+          "@sap.unit": "EntryUnit",
+          "@sap.label": "Quantity in Unit of Entry",
+          "type": "cds.Decimal",
+          "precision": 13,
+          "scale": 3
+        },
+        "Reservation": {
+          "@sap.label": "Reservation",
+          "type": "cds.String",
+          "length": 10
+        },
+        "ReservationIsFinallyIssued": {
+          "@sap.label": "Final-Issue Reservation",
+          "type": "cds.Boolean"
+        },
+        "ReservationItem": {
+          "@sap.label": "Reservation Item",
+          "type": "cds.String",
+          "length": 4
+        },
+        "SalesOrder": {
+          "@sap.label": "Sales Order",
+          "type": "cds.String",
+          "length": 10
+        },
+        "SalesOrderItem": {
+          "@sap.label": "Sales Order Item",
+          "type": "cds.String",
+          "length": 6
+        },
+        "ShelfLifeExpirationDate": {
+          "@sap.display.format": "Date",
+          "@sap.label": "SLED/BBD",
+          "type": "cds.Date"
+        },
+        "StorageBin": {
+          "@sap.label": "Storage Bin",
+          "type": "cds.String",
+          "length": 10
+        },
+        "StorageLocation": {
+          "@sap.label": "Storage Location",
+          "type": "cds.String",
+          "length": 4
+        },
+        "StorageType": {
+          "@sap.label": "Storage Type",
+          "type": "cds.String",
+          "length": 3
+        },
+        "Supplier": {
+          "@sap.label": "Supplier",
+          "type": "cds.String",
+          "length": 10
+        },
+        "WBSElementExternalID": {
+          "@sap.label": "WBS Element",
+          "type": "cds.String",
+          "length": 24
+        }
+      }
+    },
+    "API_PROD_ORDER_CONFIRMATION_2_SRV.GetConfProposal": {
+      "kind": "action",
+      "@cds.external": true,
+      "params": {
+        "ConfirmationGroup": {
+          "@sap.label": "Confirmation Group",
+          "type": "cds.String",
+          "length": 10
+        },
+        "OrderID": {
+          "@sap.label": "Manufacturing Order",
+          "type": "cds.String",
+          "length": 12
+        },
+        "OrderOperation": {
+          "@sap.label": "Operation or Phase",
+          "type": "cds.String",
+          "length": 4
+        },
+        "Sequence": {
+          "@sap.label": "Sequence",
+          "type": "cds.String",
+          "length": 6
+        },
+        "OrderSuboperation": {
+          "@sap.label": "Suboperation or Secondary Resource",
+          "type": "cds.String",
+          "length": 4
+        },
+        "OrderConfirmationRecordType": {
+          "@sap.label": "Record Type",
+          "type": "cds.String",
+          "length": 3
+        },
+        "ConfirmationUnit": {
+          "@sap.label": "Display Unit/Measure",
+          "type": "cds.String",
+          "length": 3
+        },
+        "ConfirmationUnitISOCode": {
+          "@sap.label": "ISO Code",
+          "type": "cds.String",
+          "length": 3
+        },
+        "ConfirmationUnitSAPCode": {
+          "@sap.label": "Internal SAP Code",
+          "type": "cds.String",
+          "length": 3
+        },
+        "ConfirmationYieldQuantity": {
+          "@sap.label": "Yield Quantity",
+          "@sap.unit": "ConfirmationUnit",
+          "type": "cds.Decimal",
+          "precision": 13,
+          "scale": 3
+        },
+        "ConfirmationScrapQuantity": {
+          "@sap.label": "Scrap Quantity",
+          "@sap.unit": "ConfirmationUnit",
+          "type": "cds.Decimal",
+          "precision": 13,
+          "scale": 3
+        },
+        "ConfirmationReworkQuantity": {
+          "@sap.label": "Rework Quantity",
+          "@sap.unit": "ConfirmationUnit",
+          "type": "cds.Decimal",
+          "precision": 13,
+          "scale": 3
+        },
+        "QuantityIsToBeProposed": {
+          "@sap.label": "Propose Quantities",
+          "type": "cds.Boolean"
+        },
+        "ActivityIsToBeProposed": {
+          "@sap.label": "Propose Activities",
+          "type": "cds.Boolean"
+        },
+        "DateAndTimeIsToBeProposed": {
+          "@sap.label": "Propose Dates",
+          "type": "cds.Boolean"
+        },
+        "PersonnelIsToBeProposed": {
+          "@sap.label": "Propose Personnel",
+          "type": "cds.Boolean"
+        }
+      },
+      "returns": {
+        "type": "API_PROD_ORDER_CONFIRMATION_2_SRV.AProductionorderconf2"
+      }
+    },
+    "API_PROD_ORDER_CONFIRMATION_2_SRV.GetGdsMvtProposal": {
+      "kind": "action",
+      "@cds.external": true,
+      "params": {
+        "ConfirmationGroup": {
+          "@sap.label": "Confirmation Group",
+          "type": "cds.String",
+          "length": 10
+        },
+        "OrderID": {
+          "@sap.label": "Manufacturing Order",
+          "type": "cds.String",
+          "length": 12
+        },
+        "OrderOperation": {
+          "@sap.label": "Operation or Phase",
+          "type": "cds.String",
+          "length": 4
+        },
+        "Sequence": {
+          "@sap.label": "Sequence",
+          "type": "cds.String",
+          "length": 6
+        },
+        "OrderSuboperation": {
+          "@sap.label": "Suboperation or Secondary Resource",
+          "type": "cds.String",
+          "length": 4
+        },
+        "OrderConfirmationRecordType": {
+          "@sap.label": "Record Type",
+          "type": "cds.String",
+          "length": 3
+        },
+        "ConfirmationUnit": {
+          "@sap.label": "Display Unit/Measure",
+          "type": "cds.String",
+          "length": 3
+        },
+        "ConfirmationUnitISOCode": {
+          "@sap.label": "ISO Code",
+          "type": "cds.String",
+          "length": 3
+        },
+        "ConfirmationUnitSAPCode": {
+          "@sap.label": "Internal SAP Code",
+          "type": "cds.String",
+          "length": 3
+        },
+        "ConfirmationYieldQuantity": {
+          "@sap.label": "Yield Quantity",
+          "@sap.unit": "ConfirmationUnit",
+          "type": "cds.Decimal",
+          "precision": 13,
+          "scale": 3
+        },
+        "ConfirmationScrapQuantity": {
+          "@sap.label": "Scrap Quantity",
+          "@sap.unit": "ConfirmationUnit",
+          "type": "cds.Decimal",
+          "precision": 13,
+          "scale": 3
+        },
+        "ConfirmationReworkQuantity": {
+          "@sap.label": "Rework Quantity",
+          "@sap.unit": "ConfirmationUnit",
+          "type": "cds.Decimal",
+          "precision": 13,
+          "scale": 3
+        },
+        "QuantityIsToBeProposed": {
+          "@sap.label": "Propose Quantities",
+          "type": "cds.Boolean"
+        },
+        "ActivityIsToBeProposed": {
+          "@sap.label": "Propose Activities",
+          "type": "cds.Boolean"
+        },
+        "DateAndTimeIsToBeProposed": {
+          "@sap.label": "Propose Dates",
+          "type": "cds.Boolean"
+        },
+        "PersonnelIsToBeProposed": {
+          "@sap.label": "Propose Personnel",
+          "type": "cds.Boolean"
+        }
+      },
+      "returns": {
+        "items": {
+          "type": "API_PROD_ORDER_CONFIRMATION_2_SRV.AProdnordconfmatldocitem"
+        }
+      }
+    }
+  },
+  "$version": "2.0"
+}

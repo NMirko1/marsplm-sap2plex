@@ -1,0 +1,190 @@
+<core:FragmentDefinition
+    xmlns="sap.m"
+    xmlns:core="sap.ui.core"
+    xmlns:mp="avvaleplm.marsplm.sap2plex.adminconfigplant.control"
+    xmlns:form="sap.ui.layout.form">
+
+    <NavContainer id="groupsNav" height="100%">
+
+        <!-- ============ LIST PAGE ============ -->
+        <Page id="groupsListPage" showHeader="false" class="sapUiContentPadding">
+            <VBox class="sapUiSmallMarginBottom sapUiSmallMarginTop">
+                <Text text="{i18n>groupsTabIntro}"/>
+            </VBox>
+
+            <!-- [LIST-COUNT] `$count: true`, ed e' cio' che rende onesto «Mostra di piu'».
+                 Senza, OData V4 non SA quante righe ci sono: `isLengthFinal()` resta falso finche'
+                 una pagina non torna corta, `getLength()` rende `righe + 10` e il pulsante compare
+                 anche quando non c'e' piu' niente da caricare. Premendolo la pagina chiesta non
+                 porta righe nuove, il binding non emette `change` e il trigger di
+                 `GrowingEnablement` — che quel `change` e' l'unica cosa che lo spegne — resta a
+                 girare per sempre (`sap.m.ListBase` lo ammette nel proprio TODO). Col conteggio
+                 dichiarato il pulsante compare solo se righe ne restano davvero, e scrive
+                 «[ 50 / 121 ]»: alla domanda «ci sono altre righe?» risponde la lista, non l'utente.
+                 Va SOLO sui binding ASSOLUTI: su un binding relativo (la tabella delle condizioni
+                 qui sotto) le system query option non sono ammesse senza `$$ownRequest`, e V4
+                 lancia. Il conteggio lo calcola CAP; l'`after` di [NATURAL-ORDER] lo tiene coerente
+                 quando ordina in memoria. Vedi DEC-102; perimetro: grep -rn "LIST-COUNT" -->
+            <Table
+                id="objectGroupsTable"
+                items="{
+                    path: 'objgrp>/ObjectGroups',
+                    parameters: { '$$updateGroupId': 'objGroupChanges', '$count': true }
+                }"
+                growing="true"
+                growingThreshold="50"
+                mode="MultiSelect">
+
+                <headerToolbar>
+                    <OverflowToolbar>
+                        <Title text="{i18n>ogTableTitle}"/>
+                        <ToolbarSpacer/>
+                        <Button icon="sap-icon://add" text="{i18n>ogBtnAdd}" type="Transparent" press=".onAddObjectGroup"/>
+                        <!-- [ROW-COPY] Copia testata E condizioni. Le condizioni si leggono dal
+                             server, quindi una sorgente con modifiche non salvate si rifiuta: le
+                             due meta' della copia verrebbero da due momenti diversi. -->
+                        <Button icon="sap-icon://copy" text="{i18n>ogBtnCopy}" type="Transparent" press=".onCopyObjectGroup"/>
+                        <Button icon="sap-icon://delete" text="{i18n>ogBtnDelete}" type="Transparent" press=".onDeleteObjectGroup"/>
+                        <Button icon="sap-icon://save" text="{i18n>aaBtnSave}" type="Emphasized" press=".onSaveObjectGroups"/>
+                        <Button icon="sap-icon://sys-cancel" text="{i18n>aaBtnCancel}" type="Transparent" press=".onCancelObjectGroups"/>
+                    </OverflowToolbar>
+                </headerToolbar>
+
+                <!-- [COLUMN-SORT] I criteri attivi si DICHIARANO: un elenco filtrato che non dice
+                     come e' filtrato si legge come un elenco corto. -->
+                <infoToolbar>
+                    <OverflowToolbar visible="{listCriteria>/objectGroups/visible}">
+                        <Text text="{listCriteria>/objectGroups/text}"/>
+                        <ToolbarSpacer/>
+                        <Button
+                            text="{i18n>colMenuClearAll}"
+                            type="Transparent"
+                            icon="sap-icon://clear-filter"
+                            press=".onClearObjectGroupsCriteria"/>
+                    </OverflowToolbar>
+                </infoToolbar>
+
+                <!-- [COLUMN-SORT] La `CustomData` `field` e' cio' che rende una colonna ordinabile
+                     e filtrabile: `ColumnMenu.install` la legge e aggancia il menu
+                     all'intestazione. Il menu sta SOLO su questa lista: la tabella delle condizioni
+                     del dettaglio ha poche righe per gruppo e un binding relativo che cambia a ogni
+                     gruppo aperto. -->
+                <columns>
+                    <Column width="35%">
+                        <Text text="{i18n>ogColGroupId}"/>
+                        <customData>
+                            <core:CustomData key="field" value="GroupId"/>
+                        </customData>
+                    </Column>
+                    <Column>
+                        <Text text="{i18n>ogColDescription}"/>
+                        <customData>
+                            <core:CustomData key="field" value="Description"/>
+                        </customData>
+                    </Column>
+                </columns>
+
+                <items>
+                    <ColumnListItem type="Navigation" press=".onGroupPress" highlightText="{i18n>rowUnsavedHint}">
+                        <cells>
+                            <ObjectIdentifier title="{objgrp>GroupId}"/>
+                            <Text text="{objgrp>Description}"/>
+                        </cells>
+                    </ColumnListItem>
+                </items>
+            </Table>
+        </Page>
+
+        <!-- ============ DETAIL PAGE ============ -->
+        <Page
+            id="groupDetailPage"
+            title="{objgrp>GroupId}"
+            showNavButton="true"
+            navButtonPress=".onGroupDetailBack"
+            class="sapUiContentPadding">
+
+            <form:SimpleForm
+                editable="true"
+                layout="ResponsiveGridLayout"
+                title="{i18n>ogDetailHeader}">
+                <form:content>
+                    <Label text="{i18n>ogColPlant}"/>
+                    <Text text="{objgrp>Plant}"/>
+                    <Label text="{i18n>ogColGroupId}"/>
+                    <Input value="{objgrp>GroupId}" placeholder="{i18n>ogGroupIdPlaceholder}"/>
+                    <Label text="{i18n>ogColDescription}"/>
+                    <Input value="{objgrp>Description}"/>
+                </form:content>
+            </form:SimpleForm>
+
+            <Table
+                id="groupFieldsTable"
+                items="{
+                    path: 'objgrp>Fields',
+                    parameters: { '$$updateGroupId': 'objGroupChanges' }
+                }"
+                growing="true"
+                growingThreshold="50"
+                mode="MultiSelect"
+                class="sapUiSmallMarginTop">
+
+                <headerToolbar>
+                    <OverflowToolbar>
+                        <Title text="{i18n>ogFieldsTitle}"/>
+                        <ToolbarSpacer/>
+                        <Button icon="sap-icon://add" text="{i18n>ogBtnAddField}" type="Transparent" press=".onAddGroupField"/>
+                        <!-- [ROW-COPY] Qui la copia e' salvabile com'e': su queste righe non c'e'
+                             nessun vincolo di unicita'. -->
+                        <Button icon="sap-icon://copy" text="{i18n>ogBtnCopyField}" type="Transparent" press=".onCopyGroupField"/>
+                        <Button icon="sap-icon://delete" text="{i18n>ogBtnDeleteField}" type="Transparent" press=".onDeleteGroupField"/>
+                    </OverflowToolbar>
+                </headerToolbar>
+
+                <columns>
+                    <Column width="15%"><Text text="{i18n>ogColConditionType}"/></Column>
+                    <Column width="20%"><Text text="{i18n>ogColFieldName}"/></Column>
+                    <Column><Text text="{i18n>ogColFieldValue}"/></Column>
+                    <Column><Text text="{i18n>ogColClass}"/></Column>
+                    <Column><Text text="{i18n>ogColCharacteristic}"/></Column>
+                    <Column><Text text="{i18n>ogColCharcValue}"/></Column>
+                </columns>
+
+                <items>
+                    <ColumnListItem highlightText="{i18n>rowUnsavedHint}">
+                        <cells>
+                            <Select
+                                selectedKey="{objgrp>ConditionType}"
+                                change=".onConditionTypeChange"
+                                width="100%">
+                                <core:Item key="FIELD" text="{i18n>ogTypeField}"/>
+                                <core:Item key="CLASS" text="{i18n>ogTypeClass}"/>
+                            </Select>
+                            <mp:SearchComboBox
+                                selectedKey="{objgrp>FieldName}"
+                                items="{ path: 'objgrp>/MatPlantFieldVH', templateShareable: true }"
+                                placeholder="{i18n>ogFieldNamePlaceholder}"
+                                width="100%"
+                                visible="{= %{objgrp>ConditionType} !== 'CLASS'}">
+                                <core:Item key="{objgrp>FieldName}" text="{objgrp>Label}"/>
+                            </mp:SearchComboBox>
+                            <Input value="{objgrp>FieldValue}" visible="{= %{objgrp>ConditionType} !== 'CLASS'}"/>
+                            <Input value="{objgrp>Class}" visible="{= %{objgrp>ConditionType} === 'CLASS'}"/>
+                            <Input value="{objgrp>Characteristic}" visible="{= %{objgrp>ConditionType} === 'CLASS'}"/>
+                            <Input value="{objgrp>CharcValue}" visible="{= %{objgrp>ConditionType} === 'CLASS'}"/>
+                        </cells>
+                    </ColumnListItem>
+                </items>
+            </Table>
+
+            <footer>
+                <OverflowToolbar>
+                    <ToolbarSpacer/>
+                    <Button icon="sap-icon://save" text="{i18n>aaBtnSave}" type="Emphasized" press=".onSaveObjectGroups"/>
+                    <Button icon="sap-icon://sys-cancel" text="{i18n>aaBtnCancel}" type="Transparent" press=".onCancelObjectGroups"/>
+                </OverflowToolbar>
+            </footer>
+        </Page>
+
+    </NavContainer>
+
+</core:FragmentDefinition>

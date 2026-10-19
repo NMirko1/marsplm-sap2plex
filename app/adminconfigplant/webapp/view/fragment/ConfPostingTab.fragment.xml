@@ -1,0 +1,250 @@
+<core:FragmentDefinition
+    xmlns="sap.m"
+    xmlns:core="sap.ui.core"
+    xmlns:form="sap.ui.layout.form">
+
+    <!-- ============================================================
+         [CONF-POSTING] Consumi e scarti della consuntivazione, per plant (feature 0028).
+
+         Governa i documenti materiale che il job PROD_CONF costruisce da una registrazione Plex:
+         QUANDO si consumano i componenti del prodotto buono (BBP §8.3.3) e che sorte hanno quando
+         un pezzo viene SCARTATO (§8.4.1, che chiede il CONSUMO — non lo scarto — «fino
+         all'operazione di scarto» o «completo della BOM»).
+
+         Persistenza reale su ZProdConfPostingConfig (modello 'catalog', update group
+         'confPostingChanges'). I controlli sono legati al modello JSON `cpc` perche' la riga OData
+         puo' NON esistere e aprire la schermata non deve crearla: nasce al primo salvataggio, come
+         il blocco dei fantasma e quello del perimetro ordini.
+
+         SELECT E NON ComboBox, e non contraddice DEC-81: quel vincolo nasce dove l'elenco e' lungo
+         e si CERCA — le 154 operazioni di un tenant Plex — mentre qui gli elenchi sono di due o tre
+         voci chiuse, dove un campo di ricerca sarebbe rumore. E' la stessa scelta degli operatori
+         di condizione nelle altre schede.
+
+         OGNI CAMPO HA IL SUO TESTO DI AIUTO, e non e' prolissita': queste cinque tendine decidono
+         MOVIMENTI DI MAGAZZINO, ed e' l'unica scheda del progetto in cui una scelta sbagliata
+         scarica merce in SAP. Il testo dice cosa chiede la BBP e cosa faceva il sistema prima.
+         ============================================================ -->
+    <VBox class="sapUiSmallMargin">
+
+        <MessageStrip
+            text="{i18n>cpcTabIntro}"
+            type="Information"
+            showIcon="true"
+            class="sapUiSmallMarginBottom"/>
+
+        <!-- Dichiarato, non lasciato intuire. Il testo e' composto nel controller perche' ha un
+             segnaposto e, in italiano, apostrofi che solo getText() con argomenti risolve. -->
+        <MessageStrip
+            id="cpcNotConfiguredStrip"
+            type="Information"
+            showIcon="true"
+            class="sapUiSmallMarginBottom"
+            visible="{= !${cpc>/exists} }"
+            text="{cpc>/notConfiguredText}"/>
+
+        <!-- ============================================================
+             [CONF-POSTING] CHI PORTA IN SAP LA PRODUZIONE (feature 0030).
+             Le due tendine di questo blocco cambiano il CANALE, non un parametro: con `CONF` i
+             movimenti della produzione li fa SAP e i nostri due documenti non partono piu'. Lo
+             SCARTO resta un documento materiale in entrambi i casi, con le regole del blocco sotto.
+             L'interruttore e' separato dal canale di proposito: si configura `CONF`, si guarda che
+             le righe si costruiscano, e solo dopo si accende la scrittura. E non e' il flag di prova
+             dei movimenti merci — la conferma non ha una modalita' di prova, l'unico annullamento e'
+             uno storno in CO13.
+             ============================================================ -->
+        <form:SimpleForm
+            editable="true"
+            layout="ResponsiveGridLayout"
+            labelSpanL="3" labelSpanM="3" labelSpanS="12"
+            emptySpanL="2" emptySpanM="2"
+            columnsL="1" columnsM="1"
+            title="{i18n>cpcGroupChannel}">
+            <form:content>
+
+                <!-- Le incoerenze del CANALE stanno qui e non nel blocco dello scarto: un messaggio
+                     sotto la tendina sbagliata si legge come un altro problema. -->
+                <MessageStrip
+                    type="Error"
+                    showIcon="true"
+                    class="sapUiSmallMarginBottom"
+                    visible="{= !!${cpc>/channelWarnText} }"
+                    text="{cpc>/channelWarnText}"/>
+
+                <Label text="{i18n>cpcLblProdPosting}" tooltip="ProdPosting"/>
+                <VBox>
+                    <Select selectedKey="{cpc>/prodPosting}" change=".onConfPostingDirty" width="100%">
+                        <core:Item key="MATDOC" text="{i18n>cpcProdPostingMATDOC}"/>
+                        <core:Item key="CONF" text="{i18n>cpcProdPostingCONF}"/>
+                    </Select>
+                    <Text text="{i18n>cpcHelpProdPosting}" class="sapUiTinyMarginTop"/>
+                </VBox>
+
+                <Label text="{i18n>cpcLblConfPostEnabled}" tooltip="ConfPostEnabled"/>
+                <VBox>
+                    <CheckBox selected="{cpc>/confPostEnabled}" select=".onConfPostingDirty"
+                              enabled="{= ${cpc>/prodPosting} === 'CONF' }"
+                              text="{i18n>cpcConfPostEnabledText}"/>
+                    <Text text="{i18n>cpcHelpConfPostEnabled}" class="sapUiTinyMarginTop"/>
+                </VBox>
+
+            </form:content>
+        </form:SimpleForm>
+
+        <form:SimpleForm
+            editable="true"
+            layout="ResponsiveGridLayout"
+            labelSpanL="3" labelSpanM="3" labelSpanS="12"
+            emptySpanL="2" emptySpanM="2"
+            columnsL="1" columnsM="1"
+            title="{i18n>cpcGroupProduct}"
+            class="sapUiMediumMarginTop">
+            <form:content>
+
+                <Label text="{i18n>cpcLblConsumeAt}" tooltip="ConsumeAt"/>
+                <VBox>
+                    <Select selectedKey="{cpc>/consumeAt}" change=".onConfPostingDirty" width="100%">
+                        <core:Item key="LAST" text="{i18n>cpcConsumeAtLAST}"/>
+                        <core:Item key="EACH_OP" text="{i18n>cpcConsumeAtEACH_OP}"/>
+                    </Select>
+                    <Text text="{i18n>cpcHelpConsumeAt}" class="sapUiTinyMarginTop"/>
+                </VBox>
+
+            </form:content>
+        </form:SimpleForm>
+
+        <form:SimpleForm
+            editable="true"
+            layout="ResponsiveGridLayout"
+            labelSpanL="3" labelSpanM="3" labelSpanS="12"
+            emptySpanL="2" emptySpanM="2"
+            columnsL="1" columnsM="1"
+            title="{i18n>cpcGroupScrap}"
+            class="sapUiMediumMarginTop">
+            <form:content>
+
+                <!-- LA RICETTA, scritta dove si configura. Le tre tendine qui sotto sono ortogonali
+                     per costruzione, e la regola concordata e' una loro combinazione precisa: farla
+                     dedurre da tre testi di aiuto separati significherebbe farla sbagliare. -->
+                <MessageStrip
+                    text="{i18n>cpcRecipe}"
+                    type="Information"
+                    showIcon="true"
+                    class="sapUiSmallMarginBottom"/>
+
+                <!-- La combinazione a doppio addebito si dichiara QUI, appena scelta: il server la
+                     rifiuta comunque, ma vederla prima di premere Salva evita il giro (DEC-40). -->
+                <MessageStrip
+                    type="Error"
+                    showIcon="true"
+                    class="sapUiSmallMarginBottom"
+                    visible="{= !!${cpc>/warnText} }"
+                    text="{cpc>/warnText}"/>
+
+                <Label text="{i18n>cpcLblScrapConsume}" tooltip="ScrapConsume"/>
+                <VBox>
+                    <Select selectedKey="{cpc>/scrapConsume}" change=".onConfPostingDirty" width="100%">
+                        <core:Item key="NONE" text="{i18n>cpcScrapConsumeNONE}"/>
+                        <core:Item key="UP_TO_OP" text="{i18n>cpcScrapConsumeUP_TO_OP}"/>
+                        <core:Item key="ALL" text="{i18n>cpcScrapConsumeALL}"/>
+                    </Select>
+                    <Text text="{i18n>cpcHelpScrapConsume}" class="sapUiTinyMarginTop"/>
+                </VBox>
+
+                <Label text="{i18n>cpcLblScrapMove}" tooltip="ScrapMove"/>
+                <VBox>
+                    <Select selectedKey="{cpc>/scrapMove}" change=".onConfPostingDirty" width="100%"
+                            enabled="{= ${cpc>/scrapConsume} !== 'NONE' }">
+                        <core:Item key="ISSUE" text="{i18n>cpcScrapMoveISSUE}"/>
+                        <core:Item key="SCRAP" text="{i18n>cpcScrapMoveSCRAP}"/>
+                    </Select>
+                    <Text text="{i18n>cpcHelpScrapMove}" class="sapUiTinyMarginTop"/>
+                </VBox>
+
+                <Label text="{i18n>cpcLblScrapIssue}" tooltip="ScrapIssue"/>
+                <VBox>
+                    <Select selectedKey="{cpc>/scrapIssue}" change=".onConfPostingDirty" width="100%">
+                        <core:Item key="ALWAYS" text="{i18n>cpcScrapIssueALWAYS}"/>
+                        <core:Item key="GR_OP_ONLY" text="{i18n>cpcScrapIssueGR_OP_ONLY}"/>
+                    </Select>
+                    <Text text="{i18n>cpcHelpScrapIssue}" class="sapUiTinyMarginTop"/>
+                </VBox>
+
+                <Label text="{i18n>cpcLblScrapNoOrder}" tooltip="ScrapNoOrder"/>
+                <VBox>
+                    <Select selectedKey="{cpc>/scrapNoOrder}" change=".onConfPostingDirty" width="100%">
+                        <core:Item key="OFF" text="{i18n>cpcScrapNoOrderOFF}"/>
+                        <core:Item key="POST" text="{i18n>cpcScrapNoOrderPOST}"/>
+                    </Select>
+                    <Text text="{i18n>cpcHelpScrapNoOrder}" class="sapUiTinyMarginTop"/>
+                </VBox>
+
+            </form:content>
+        </form:SimpleForm>
+
+        <!-- ============================================================
+             I quattro valori da passare a SAP. Sono la riga TYPE_FLOW='SCRAP' della tabella
+             ZMEST_LOCATION che la soluzione ABAP preesistente configura, e che questo progetto non
+             ha mai mandato. VUOTO NON SIGNIFICA «manda vuoto»: significa «come prima».
+             Il centro di costo NON c'e' ed e' deliberato: `KOSTL` e' vuoto su tutte le righe del
+             precursore, e quando si scarica con il riferimento all'ordine la parte ABAP compila i
+             campi mancanti derivandoli dall'ordine e dalle operazioni.
+             `maxLength` e' la lunghezza della colonna: oltre quella il valore non e' scrivibile, e
+             la difesa utile e' qui — la validazione di tipo di CAP gira PRIMA di ogni handler
+             dell'applicazione, quindi un valore troppo lungo tornerebbe con un messaggio tecnico
+             (DEC-40).
+             ============================================================ -->
+        <form:SimpleForm
+            editable="true"
+            layout="ResponsiveGridLayout"
+            labelSpanL="3" labelSpanM="3" labelSpanS="12"
+            emptySpanL="2" emptySpanM="2"
+            columnsL="1" columnsM="1"
+            title="{i18n>cpcGroupSapValues}"
+            class="sapUiMediumMarginTop">
+            <form:content>
+
+                <Label text="{i18n>cpcLblStorLoc}" tooltip="ScrapStorLoc (LGORT_FROM)"/>
+                <VBox>
+                    <Input value="{cpc>/scrapStorLoc}" maxLength="4" width="12rem"
+                           placeholder="PROD" liveChange=".onConfPostingDirty"/>
+                    <Text text="{i18n>cpcHelpStorLoc}" class="sapUiTinyMarginTop"/>
+                </VBox>
+
+                <Label text="{i18n>cpcLblReason}" tooltip="ScrapReason (MOVE_REAS)"/>
+                <VBox>
+                    <Input value="{cpc>/scrapReason}" maxLength="4" width="12rem"
+                           placeholder="0013" liveChange=".onConfPostingDirty"/>
+                    <Text text="{i18n>cpcHelpReason}" class="sapUiTinyMarginTop"/>
+                </VBox>
+
+                <Label text="{i18n>cpcLblHeadTxt}" tooltip="ScrapHeadTxt (HEADER_TXT)"/>
+                <VBox>
+                    <Input value="{cpc>/scrapHeadTxt}" maxLength="25" width="20rem"
+                           placeholder="PLEX Scrap" liveChange=".onConfPostingDirty"/>
+                    <Text text="{i18n>cpcHelpHeadTxt}" class="sapUiTinyMarginTop"/>
+                </VBox>
+
+                <Label text="{i18n>cpcLblLateTxt}" tooltip="ScrapLateTxt (LATE_SCRAP_TXT)"/>
+                <VBox>
+                    <Input value="{cpc>/scrapLateTxt}" maxLength="50" width="24rem"
+                           enabled="{= ${cpc>/scrapNoOrder} === 'POST' }"
+                           liveChange=".onConfPostingDirty"/>
+                    <Text text="{i18n>cpcHelpLateTxt}" class="sapUiTinyMarginTop"/>
+                </VBox>
+
+                <Label text=""/>
+                <HBox class="sapUiTinyMarginTop">
+                    <Button text="{i18n>cpcBtnSave}" type="Emphasized" icon="sap-icon://save"
+                            enabled="{cpc>/dirty}" press=".onSaveConfPosting"
+                            class="sapUiTinyMarginEnd"/>
+                    <Button text="{i18n>cpcBtnCancel}" type="Transparent" icon="sap-icon://sys-cancel"
+                            enabled="{cpc>/dirty}" press=".onCancelConfPosting"/>
+                </HBox>
+
+            </form:content>
+        </form:SimpleForm>
+
+    </VBox>
+
+</core:FragmentDefinition>

@@ -1,0 +1,25 @@
+<core:FragmentDefinition
+    xmlns="sap.m"
+    xmlns:core="sap.ui.core">
+
+    <SelectDialog
+        id="materialValueHelpDialog"
+        title="{i18n>aaVHTitle}"
+        noDataText="{i18n>aaVHNoData}"
+        search=".onMaterialValueHelpSearch"
+        liveChange=".onMaterialValueHelpSearch"
+        confirm=".onMaterialSelected"
+        cancel=".onMaterialValueHelpClose"
+        growing="true"
+        growingThreshold="50"
+        items="{
+            path: 'product>/Products',
+            parameters: { '$select': 'Product,Plant,ProductDescription,ProductGroup' }
+        }">
+        <StandardListItem
+            title="{product>Product}"
+            description="{product>ProductDescription}"
+            info="{product>ProductGroup}"/>
+    </SelectDialog>
+
+</core:FragmentDefinition>

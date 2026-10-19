@@ -1,0 +1,47 @@
+<core:FragmentDefinition
+    xmlns="sap.m"
+    xmlns:core="sap.ui.core"
+    xmlns:l="sap.ui.layout">
+
+    <Dialog
+        id="importTemplateDialog"
+        title="{i18n>dlgImportTemplateTitle}"
+        contentWidth="460px"
+        draggable="true"
+        resizable="true">
+
+        <content>
+            <l:VerticalLayout width="100%" class="sapUiContentPadding">
+                <MessageStrip
+                    text="{i18n>dlgImportTemplateWarning}"
+                    type="Warning"
+                    showIcon="true"
+                    class="sapUiSmallMarginBottom"/>
+                <Label text="{i18n>dlgTemplateSelect}" required="true" labelFor="importTemplateBox"/>
+                <ComboBox
+                    id="importTemplateBox"
+                    width="100%"
+                    placeholder="{i18n>dlgTemplateSelectPlaceholder}"
+                    selectionChange=".onImportTemplateSelectChange"
+                    items="{templateModel>/RoutingTemplates}">
+                    <core:Item key="{templateModel>ID}" text="{templateModel>TemplateCode} - {templateModel>Description}"/>
+                </ComboBox>
+            </l:VerticalLayout>
+        </content>
+
+        <beginButton>
+            <Button
+                text="{i18n>dlgBtnImport}"
+                type="Emphasized"
+                enabled="{importTmpl>/canImport}"
+                press=".onImportTemplateConfirm"/>
+        </beginButton>
+        <endButton>
+            <Button
+                text="{i18n>dlgBtnCancel}"
+                press=".onImportTemplateCancel"/>
+        </endButton>
+
+    </Dialog>
+
+</core:FragmentDefinition>

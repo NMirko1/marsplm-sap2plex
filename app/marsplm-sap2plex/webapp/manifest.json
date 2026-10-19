@@ -1,0 +1,176 @@
+{
+    "_version": "1.80.0",
+    "sap.app": {
+        "id": "avvaleplm.marsplm.sap2plex.main",
+        "type": "application",
+        "i18n": {
+            "bundleUrl": "i18n/i18n.properties",
+            "supportedLocales": [
+                "",
+                "it"
+            ],
+            "fallbackLocale": ""
+        },
+        "applicationVersion": {
+            "version": "0.0.1"
+        },
+        "title": "{{appTitle}}",
+        "description": "{{appDescription}}",
+        "resources": "resources.json",
+        "sourceTemplate": {
+            "id": "@sap/generator-fiori:basic",
+            "version": "1.20.2",
+            "toolsId": "80da98ee-0266-452e-84bf-34c679192114"
+        },
+        "dataSources": {},
+        "crossNavigation": {
+            "inbounds": {
+                "marsplm-manage": {
+                    "semanticObject": "marsplm",
+                    "action": "manage",
+                    "title": "{{appTitle}}",
+                    "signature": {
+                        "parameters": {},
+                        "additionalParameters": "allowed"
+                    }
+                }
+            }
+        }
+    },
+    "sap.ui": {
+        "technology": "UI5",
+        "icons": {
+            "icon": "",
+            "favIcon": "",
+            "phone": "",
+            "phone@2": "",
+            "tablet": "",
+            "tablet@2": ""
+        },
+        "deviceTypes": {
+            "desktop": true,
+            "tablet": true,
+            "phone": true
+        }
+    },
+    "sap.ui5": {
+        "flexEnabled": false,
+        "dependencies": {
+            "minUI5Version": "1.142.0",
+            "libs": {
+                "sap.m": {},
+                "sap.ui.core": {},
+                "sap.f": {},
+                "sap.ui.codeeditor": {},
+                "sap.ui.layout": {},
+                "sap.ui.table": {}
+            }
+        },
+        "contentDensities": {
+            "compact": true,
+            "cozy": true
+        },
+        "models": {
+            "i18n": {
+                "type": "sap.ui.model.resource.ResourceModel",
+                "settings": {
+                    "bundleName": "avvaleplm.marsplm.sap2plex.main.i18n.i18n",
+                    "supportedLocales": [
+                        "",
+                        "it"
+                    ],
+                    "fallbackLocale": ""
+                }
+            }
+        },
+        "resources": {
+            "css": [
+                {
+                    "uri": "css/style.css"
+                }
+            ]
+        },
+        "routing": {
+            "config": {
+                "routerClass": "sap.m.routing.Router",
+                "controlAggregation": "pages",
+                "controlId": "app",
+                "transition": "slide",
+                "type": "View",
+                "viewType": "XML",
+                "path": "avvaleplm.marsplm.sap2plex.main.view",
+                "async": true
+            },
+            "routes": [
+                {
+                    "name": "dashboardNavigation",
+                    "pattern": "",
+                    "target": [
+                        "dashboardNavigation"
+                    ]
+                },
+                {
+                    "name": "detailNavigation",
+                    "pattern": "detailNavigation/{Product}/{Plant}",
+                    "target": [
+                        "detailNavigation"
+                    ]
+                },
+                {
+                    "name": "prodOrderDetail",
+                    "pattern": "prodOrderDetail/{ManufacturingOrder}",
+                    "target": [
+                        "prodOrderDetail"
+                    ]
+                },
+                {
+                    "name": "routingDetail",
+                    "pattern": "routingDetail/{ProductionRoutingGroup}/{ProductionRouting}/{Material}",
+                    "target": [
+                        "routingDetail"
+                    ]
+                },
+                {
+                    "name": "routingTemplateDetail",
+                    "pattern": "routingTemplateDetail/{Plant}/{TemplateID}",
+                    "target": [
+                        "routingTemplateDetail"
+                    ]
+                }
+            ],
+            "targets": {
+                "dashboardNavigation": {
+                    "id": "dashboardNavigation",
+                    "name": "DashboardNavigation"
+                },
+                "detailNavigation": {
+                    "id": "detailNavigation",
+                    "name": "DetailNavigation"
+                },
+                "prodOrderDetail": {
+                    "id": "prodOrderDetail",
+                    "name": "ProdOrderDetail"
+                },
+                "routingDetail": {
+                    "id": "routingDetail",
+                    "name": "RoutingDetail"
+                },
+                "routingTemplateDetail": {
+                    "id": "routingTemplateDetail",
+                    "name": "RoutingTemplateDetail"
+                }
+            }
+        },
+        "rootView": {
+            "viewName": "avvaleplm.marsplm.sap2plex.main.view.App",
+            "type": "XML",
+            "id": "App",
+            "async": true
+        },
+        "flexBundle": false
+    },
+    "sap.cloud": {
+        "public": true,
+        "service": "marsplm.service"
+    }
+}

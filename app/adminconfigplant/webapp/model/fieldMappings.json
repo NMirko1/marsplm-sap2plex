@@ -1,0 +1,247 @@
+{
+    "FieldMappings": [
+        {
+            "object": "Material",
+            "sapField": "MARA.MATNR",
+            "sapDesc": "Material Number",
+            "plexField": "Part.Part_No",
+            "plexDesc": "Part Number",
+            "transform": "Direct",
+            "active": true
+        },
+        {
+            "object": "Material",
+            "sapField": "MAKT.MAKTX",
+            "sapDesc": "Material Description",
+            "plexField": "Part.Part_Name",
+            "plexDesc": "Part Name",
+            "transform": "Direct",
+            "active": true
+        },
+        {
+            "object": "Material",
+            "sapField": "MARA.MTART",
+            "sapDesc": "Material Type",
+            "plexField": "Part.Part_Type",
+            "plexDesc": "Part Type",
+            "transform": "XREF mapping",
+            "active": true
+        },
+        {
+            "object": "Material",
+            "sapField": "MARA.MEINS",
+            "sapDesc": "Base Unit of Measure",
+            "plexField": "Part.Default_UOM",
+            "plexDesc": "Default UOM",
+            "transform": "UOM conversion table",
+            "active": true
+        },
+        {
+            "object": "Material",
+            "sapField": "MARC.WERKS",
+            "sapDesc": "Plant",
+            "plexField": "Part.PCN",
+            "plexDesc": "Plant Code Number",
+            "transform": "Plant XREF table",
+            "active": true
+        },
+        {
+            "object": "Material",
+            "sapField": "MARC.DISMM",
+            "sapDesc": "MRP Type",
+            "plexField": "Part.Planning_Type",
+            "plexDesc": "Planning Type",
+            "transform": "MRP type mapping",
+            "active": false
+        },
+        {
+            "object": "Material",
+            "sapField": "MARA.MATKL",
+            "sapDesc": "Material Group",
+            "plexField": "Part.Part_Group",
+            "plexDesc": "Part Group",
+            "transform": "Direct / XREF",
+            "active": false
+        },
+        {
+            "object": "Material",
+            "sapField": "MARM.UMREZ",
+            "sapDesc": "UoM Conversion Factor",
+            "plexField": "Part.UOM_Factor",
+            "plexDesc": "Conversion Factor",
+            "transform": "Formula",
+            "active": false
+        },
+        {
+            "object": "Material",
+            "sapField": "AUSP.ATWRT",
+            "sapDesc": "Classification Value",
+            "plexField": "Part.Custom_Field_*",
+            "plexDesc": "Custom Attribute",
+            "transform": "Dynamic mapping",
+            "active": false
+        },
+        {
+            "object": "BOM",
+            "sapField": "STPO.IDNRK",
+            "sapDesc": "Component Material No.",
+            "plexField": "BOM_Component.Part_No",
+            "plexDesc": "Component Part No",
+            "transform": "Key XREF",
+            "active": true
+        },
+        {
+            "object": "BOM",
+            "sapField": "STPO.MENGE",
+            "sapDesc": "Component Quantity",
+            "plexField": "BOM_Component.Quantity",
+            "plexDesc": "Quantity",
+            "transform": "Direct + UoM conv.",
+            "active": true
+        },
+        {
+            "object": "BOM",
+            "sapField": "STPO.AUSSS",
+            "sapDesc": "Component Scrap %",
+            "plexField": "BOM_Component.Scrap_Pct",
+            "plexDesc": "Scrap %",
+            "transform": "Direct / ÷100",
+            "active": true
+        },
+        {
+            "object": "BOM",
+            "sapField": "STPO.KZKUP",
+            "sapDesc": "Co-product indicator",
+            "plexField": "BOM_Component.Is_Byproduct",
+            "plexDesc": "By-product flag",
+            "transform": "Boolean map",
+            "active": false
+        },
+        {
+            "object": "BOM",
+            "sapField": "STPO.POTX1",
+            "sapDesc": "Item Text",
+            "plexField": "BOM_Component.Note",
+            "plexDesc": "Component Note",
+            "transform": "Text copy",
+            "active": false
+        },
+        {
+            "object": "Routing",
+            "sapField": "PLPO.ARBID",
+            "sapDesc": "Work Center Key",
+            "plexField": "Operation.Workcell_Code",
+            "plexDesc": "Workcell Code",
+            "transform": "WC XREF table",
+            "active": true
+        },
+        {
+            "object": "Routing",
+            "sapField": "PLPO.VGW01",
+            "sapDesc": "Machine Time (std)",
+            "plexField": "Operation.Cycle_Time",
+            "plexDesc": "Cycle Time (min)",
+            "transform": "Unit conversion",
+            "active": true
+        },
+        {
+            "object": "Routing",
+            "sapField": "PLPO.VGW02",
+            "sapDesc": "Labor Time (std)",
+            "plexField": "Operation.Labor_Time",
+            "plexDesc": "Labor Time (min)",
+            "transform": "Unit conversion",
+            "active": false
+        },
+        {
+            "object": "Routing",
+            "sapField": "PLPO.VGW03",
+            "sapDesc": "Setup Time (std)",
+            "plexField": "Operation.Setup_Time",
+            "plexDesc": "Setup Time (min)",
+            "transform": "Unit conversion",
+            "active": false
+        },
+        {
+            "object": "Routing",
+            "sapField": "PLPO.LTXA1",
+            "sapDesc": "Operation Description",
+            "plexField": "Operation.Oper_Desc",
+            "plexDesc": "Operation Description",
+            "transform": "Direct",
+            "active": true
+        },
+        {
+            "object": "Routing",
+            "sapField": "CRCO.LSTAR",
+            "sapDesc": "Activity Type",
+            "plexField": "Operation.Cost_Center",
+            "plexDesc": "Cost Center Code",
+            "transform": "Activity XREF",
+            "active": false
+        },
+        {
+            "object": "Prod Order",
+            "sapField": "AUFK.AUFNR",
+            "sapDesc": "Order Number",
+            "plexField": "Job.Job_No",
+            "plexDesc": "Job Number",
+            "transform": "Key XREF",
+            "active": true
+        },
+        {
+            "object": "Prod Order",
+            "sapField": "AFKO.PLNBEZ",
+            "sapDesc": "Material (header)",
+            "plexField": "Job.Part_No",
+            "plexDesc": "Part Number",
+            "transform": "Material XREF",
+            "active": true
+        },
+        {
+            "object": "Prod Order",
+            "sapField": "AFKO.GAMNG",
+            "sapDesc": "Total Quantity",
+            "plexField": "Job.Quantity",
+            "plexDesc": "Job Quantity",
+            "transform": "Direct + UoM",
+            "active": true
+        },
+        {
+            "object": "Prod Order",
+            "sapField": "AFKO.GSTRP",
+            "sapDesc": "Scheduled Start Date",
+            "plexField": "Job.Scheduled_Date",
+            "plexDesc": "Scheduled Date",
+            "transform": "Date format conv.",
+            "active": true
+        },
+        {
+            "object": "Prod Order",
+            "sapField": "AFKO.GLTRP",
+            "sapDesc": "Scheduled End Date",
+            "plexField": "Job.Due_Date",
+            "plexDesc": "Due Date",
+            "transform": "Date format conv.",
+            "active": true
+        },
+        {
+            "object": "Prod Order",
+            "sapField": "JEST.STAT",
+            "sapDesc": "System Status",
+            "plexField": "Job.Status",
+            "plexDesc": "Job Status",
+            "transform": "Status mapping table",
+            "active": true
+        },
+        {
+            "object": "Prod Order",
+            "sapField": "RESB.CHARG",
+            "sapDesc": "Batch Number (comp.)",
+            "plexField": "Job_Component.Lot_No",
+            "plexDesc": "Lot Number",
+            "transform": "Direct",
+            "active": false
+        }
+    ]
+}

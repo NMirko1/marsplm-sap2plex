@@ -1,0 +1,597 @@
+<core:FragmentDefinition
+    xmlns="sap.m"
+    xmlns:core="sap.ui.core"
+    xmlns:mp="avvaleplm.marsplm.sap2plex.adminconfigplant.control"
+    xmlns:form="sap.ui.layout.form">
+
+    <!-- ============================================================
+         [ORDER-STATUS-FILTER] Perimetro degli ordini di produzione per stato, per plant
+         (feature 0017).
+
+         Questo tab era INTERAMENTE MOCK: quattro blocchi legati al modello JSON `plants`
+         (ORDER_TYPES_FILTER, la tabella SAP_STATUS_MAP, SPLIT_WRITEBACK_TO_SAP,
+         BATCH_TRACEABILITY / SERIAL_NUMBER_SYNC / ACTUAL_SYNCH_ENABLED) il cui unico effetto
+         era un toast. Sono stati rimossi tutti: lasciare interruttori finti accanto al primo
+         controllo che decide davvero cosa entra in produzione avrebbe fatto credere che
+         salvassero qualcosa. Torneranno, uno alla volta, quando esistera' il flusso che
+         governano — e' la stessa scelta fatta sul tab "Routings" con la 0016.
+
+         Cio' che resta e' UNO e solo uno: quali ordini SAP entrano in perimetro. Per stato
+         (0017) e, dalla [W1-09], per tipo ordine e responsabile di schedulazione — il criterio
+         con cui la BBP §8.2.1 definisce il perimetro Plex, e che era anch'esso uno dei controlli
+         mock rimossi (ORDER_TYPES_FILTER).
+         Persistenza reale su ZProdOrderFilterConfig (modello 'catalog', update group
+         'prodOrderFilterChanges'). I controlli sono legati al modello JSON `osf` perche' la
+         riga OData puo' NON esistere e aprire la schermata non deve crearla: nasce al primo
+         salvataggio, come il blocco di ordinamento della 0014.
+         ============================================================ -->
+    <VBox class="sapUiSmallMargin">
+
+        <MessageStrip
+            text="{i18n>osfTabIntro}"
+            type="Information"
+            showIcon="true"
+            class="sapUiSmallMarginBottom"/>
+
+        <form:SimpleForm
+            editable="true"
+            layout="ResponsiveGridLayout"
+            labelSpanL="3" labelSpanM="3" labelSpanS="12"
+            emptySpanL="2" emptySpanM="2"
+            columnsL="1" columnsM="1"
+            title="{i18n>osfGroupTitle}">
+            <form:content>
+
+                <!-- Dichiarato, non lasciato intuire: finche' la riga non esiste il plant NON
+                     produce ordini, e la conseguenza va scritta dov'e' visibile. Testo composto
+                     nel controller perche' ha un segnaposto e, in italiano, un apostrofo che
+                     solo getText() con argomenti risolve. -->
+                <MessageStrip
+                    id="osfNotConfiguredStrip"
+                    type="Warning"
+                    showIcon="true"
+                    class="sapUiSmallMarginBottom"
+                    visible="{= !${osf>/exists} }"
+                    text="{osf>/notConfiguredText}"/>
+
+                <Label text="{i18n>osfLblRequired}" tooltip="RequiredStatuses"/>
+                <VBox>
+                    <mp:SearchMultiComboBox
+                        id="osfRequiredStatuses"
+                        items="{osf>/catalog}"
+                        selectedKeys="{osf>/required}"
+                        showSecondaryValues="true"
+                        placeholder="{i18n>osfPhRequired}"
+                        selectionFinish=".onProdOrderFilterDirty">
+                        <core:ListItem key="{osf>code}" text="{osf>label}" additionalText="{osf>note}"/>
+                    </mp:SearchMultiComboBox>
+                    <Text text="{i18n>osfHelpRequired}" class="sapUiTinyMarginTop"/>
+                </VBox>
+
+                <Label text="{i18n>osfLblExcluded}" tooltip="ExcludedStatuses"/>
+                <VBox>
+                    <mp:SearchMultiComboBox
+                        id="osfExcludedStatuses"
+                        items="{osf>/catalog}"
+                        selectedKeys="{osf>/excluded}"
+                        showSecondaryValues="true"
+                        placeholder="{i18n>osfPhExcluded}"
+                        selectionFinish=".onProdOrderFilterDirty">
+                        <core:ListItem key="{osf>code}" text="{osf>label}" additionalText="{osf>note}"/>
+                    </mp:SearchMultiComboBox>
+                    <Text text="{i18n>osfHelpExcluded}" class="sapUiTinyMarginTop"/>
+                </VBox>
+
+                <!-- ============================================================
+                     [W1-09] I due criteri su VALORE: tipo ordine (AUART) e responsabile di
+                     schedulazione (FEVOR). E' su quest'ultimo che la BBP §8.2.1 definisce il
+                     perimetro Plex («Responsabili di schedulazione dei soli prodotti finiti»).
+
+                     MultiInput e non MultiComboBox, ed e' la differenza che conta: gli stati qui
+                     sopra sono nomi di campo del contratto OData, cioe' una lista CHIUSA che
+                     decide SAP; questi sono codici di customizing del CLIENTE (T003O, T024F) e
+                     un elenco chiuso sarebbe sbagliato per chi ne ha aggiunti. Nessun value help
+                     per la stessa ragione: non esiste un indirizzo pubblicato da cui leggerne il
+                     catalogo.
+
+                     maxLength e' la lunghezza DDIC del codice: oltre quella il codice non puo'
+                     esistere in SAP, ed e' l'unico controllo possibile. Il rifiuto arriva anche
+                     dal server, ma difendersi qui evita il giro (DEC-40).
+                     ============================================================ -->
+                <Label text="{i18n>osfLblOrderTypes}" tooltip="ManufacturingOrderType (AUART)"/>
+                <VBox>
+                    <MultiInput
+                        id="osfOrderTypes"
+                        tokens="{path: 'osf>/orderTypes', templateShareable: false}"
+                        showValueHelp="false"
+                        maxLength="4"
+                        placeholder="{i18n>osfPhOrderTypes}"
+                        tokenUpdate=".onProdOrderCodeTokenUpdate"
+                        submit=".onProdOrderCodeSubmit">
+                        <tokens>
+                            <Token key="{osf>}" text="{osf>}"/>
+                        </tokens>
+                    </MultiInput>
+                    <Text text="{i18n>osfHelpOrderTypes}" class="sapUiTinyMarginTop"/>
+                </VBox>
+
+                <Label text="{i18n>osfLblSupervisors}" tooltip="ProductionSupervisor (FEVOR)"/>
+                <VBox>
+                    <MultiInput
+                        id="osfSupervisors"
+                        tokens="{path: 'osf>/supervisors', templateShareable: false}"
+                        showValueHelp="false"
+                        maxLength="3"
+                        placeholder="{i18n>osfPhSupervisors}"
+                        tokenUpdate=".onProdOrderCodeTokenUpdate"
+                        submit=".onProdOrderCodeSubmit">
+                        <tokens>
+                            <Token key="{osf>}" text="{osf>}"/>
+                        </tokens>
+                    </MultiInput>
+                    <Text text="{i18n>osfHelpSupervisors}" class="sapUiTinyMarginTop"/>
+                </VBox>
+
+                <!-- Il caso «tutti e quattro gli elenchi vuoti» e' l'unico modo di dire «tutti gli
+                     ordini di questo plant», ed e' diverso dalla riga assente: va scritto, o
+                     nessuno lo indovina. -->
+                <Label text=""/>
+                <Text text="{i18n>osfHelpEmpty}" class="sapUiSmallMarginBottom"/>
+
+                <!-- Salvataggio esplicito: le due liste si validano insieme (uno stato non puo'
+                     stare in entrambe) e la riga puo' non esistere ancora. -->
+                <Label text=""/>
+                <HBox class="sapUiTinyMarginTop">
+                    <Button text="{i18n>osfBtnSave}" type="Emphasized" icon="sap-icon://save"
+                            enabled="{osf>/dirty}" press=".onSaveProdOrderFilter"
+                            class="sapUiTinyMarginEnd"/>
+                    <Button text="{i18n>osfBtnCancel}" type="Transparent" icon="sap-icon://sys-cancel"
+                            enabled="{osf>/dirty}" press=".onCancelProdOrderFilter"/>
+                </HBox>
+
+            </form:content>
+        </form:SimpleForm>
+
+        <!-- ============================================================
+             [ORDER-TECO] La chiusura tecnica riportata su Plex (feature 0023).
+
+             PERCHE' QUESTA SEZIONE ESISTE. Fino a qui `ZProdOrderTecoConfig` si scriveva SOLO con
+             una POST OData a mano: in esercizio nessuno poteva accendere la funzione, quindi il
+             job girava e non chiudeva niente — chiudendo in verde, cioe' in modo indistinguibile
+             da «non c'era niente da fare». E' lo stesso schema di DEC-88.
+
+             GEMELLA DELLA SEZIONE QUI SOPRA, E CON LA SEMANTICA OPPOSTA. Riusa lo STESSO catalogo
+             (`osf>/catalog`, caricato una volta da `prodOrderStatusCatalog()`), ma:
+
+               ZProdOrderFilterConfig   AND fra i flag   descrive un PERIMETRO  («devono valere tutti»)
+               ZProdOrderTecoConfig     OR  fra i flag   descrive un EVENTO     («e' successa una di queste»)
+
+             Un AND qui significherebbe «chiudi solo gli ordini che sono TECO *e* CLSD», cioe'
+             quasi nessuno. Il testo d'aiuto lo dice, perche' due elenchi identici a schermo con
+             regole opposte sono il modo migliore di far configurare male.
+
+             L'INTERRUTTORE GOVERNA SOLO LA SCRITTURA (DEC-71): il rilevamento gira comunque e
+             l'arretrato si chiude da se' il giorno in cui viene acceso.
+             ============================================================ -->
+        <form:SimpleForm
+            editable="true"
+            layout="ResponsiveGridLayout"
+            labelSpanL="3" labelSpanM="3" labelSpanS="12"
+            emptySpanL="2" emptySpanM="2"
+            columnsL="1" columnsM="1"
+            title="{i18n>tecGroupTitle}"
+            class="sapUiMediumMarginTop">
+            <form:content>
+
+                <MessageStrip
+                    id="tecNotConfiguredStrip"
+                    type="Information"
+                    showIcon="true"
+                    class="sapUiSmallMarginBottom"
+                    visible="{= !${tec>/exists} }"
+                    text="{tec>/notConfiguredText}"/>
+
+                <Label text="{i18n>tecLblEnabled}" tooltip="IsEnabled"/>
+                <VBox>
+                    <Switch state="{tec>/enabled}" change=".onProdOrderTecoDirty"/>
+                    <Text text="{i18n>tecHelpEnabled}" class="sapUiTinyMarginTop"/>
+                </VBox>
+
+                <Label text="{i18n>tecLblTriggers}" tooltip="TriggerStatuses"/>
+                <VBox>
+                    <!-- `mp:SearchMultiComboBox` e non `<MultiComboBox>`: il filtro predefinito di
+                         UI5 matcha sul PREFISSO, e una tendina vuota si legge come «non c'e'»
+                         (DEC-81). Stesso controllo dei due elenchi qui sopra. -->
+                    <mp:SearchMultiComboBox
+                        id="tecTriggerStatuses"
+                        items="{osf>/catalog}"
+                        selectedKeys="{tec>/triggers}"
+                        showSecondaryValues="true"
+                        placeholder="{i18n>tecPhTriggers}"
+                        selectionFinish=".onProdOrderTecoDirty">
+                        <core:ListItem key="{osf>code}" text="{osf>label}" additionalText="{osf>note}"/>
+                    </mp:SearchMultiComboBox>
+                    <Text text="{i18n>tecHelpTriggers}" class="sapUiTinyMarginTop"/>
+                </VBox>
+
+                <!-- Acceso senza criteri e' RIFIUTATO dal server (RB-19): sembrerebbe attivo senza
+                     chiudere niente, cioe' indistinguibile da un flusso guasto. Si dice qui, cosi'
+                     l'utente non lo scopre dal messaggio d'errore. -->
+                <Label text=""/>
+                <Text text="{i18n>tecHelpEmpty}" class="sapUiSmallMarginBottom"/>
+
+                <Label text=""/>
+                <HBox class="sapUiTinyMarginTop">
+                    <Button text="{i18n>tecBtnSave}" type="Emphasized" icon="sap-icon://save"
+                            enabled="{tec>/dirty}" press=".onSaveProdOrderTeco"
+                            class="sapUiTinyMarginEnd"/>
+                    <Button text="{i18n>tecBtnCancel}" type="Transparent" icon="sap-icon://sys-cancel"
+                            enabled="{tec>/dirty}" press=".onCancelProdOrderTeco"/>
+                </HBox>
+
+            </form:content>
+        </form:SimpleForm>
+
+        <!-- ============================================================
+             [ORDER-COMPLETE] Il job completato su Plex diventa uno stato utente in SAP
+             (feature 0045, gap W1-12).
+
+             IL VERSO OPPOSTO DELLA SEZIONE QUI SOPRA, e le due non si fondono. La chiusura tecnica
+             porta su Plex una decisione presa in SAP; questa porta in SAP un fatto avvenuto in
+             fabbrica. Con W1-14 ancora aperto, e' l'unico segnale che in SAP dice «l'ordine e'
+             finito».
+
+             PERCHE' L'ELENCO E' TESTO LIBERO E NON UNA TENDINA. La sezione sopra sceglie da un
+             catalogo CHIUSO — i campi di A_ProductionOrder_2, che sono del contratto OData. Qui il
+             criterio e' un nome di STATO DEL JOB PLEX, cioe' una riga della tabella di setup del
+             TENANT, e nessun endpoint della Job Scheduling API la elenca (DEC-65). Una tendina qui
+             sarebbe un catalogo inventato da noi, e il primo tenant con uno stato in piu' non
+             potrebbe configurarsi. Il prezzo e' che un refuso non da' errore: da' zero ordini
+             trattati — ed e' per questo che il recap dell'esecuzione elenca gli stati VISTI, e che
+             il testo d'aiuto lo dice prima che qualcuno lo scopra da un run vuoto.
+
+             L'INTERRUTTORE GOVERNA SOLO LA SCRITTURA (DEC-71), ED E' L'UNICO: sopra non c'e'
+             nessuna leva di processo. La 0045 ce l'aveva messa — `ORDER_STATUS_POST`, che mta.yaml
+             tiene chiusa in produzione — e la 0046 l'ha tolta da entrambi i flussi, perche' un job
+             che parte dallo scheduler deve scrivere: con quella leva chiusa avrebbe rilevato tutto
+             e mandato niente, chiudendo in verde. Il testo d'aiuto lo dice, perche' da acceso
+             questa casella scrive su ordini veri gia' alla prima esecuzione.
+             ============================================================ -->
+        <form:SimpleForm
+            editable="true"
+            layout="ResponsiveGridLayout"
+            labelSpanL="3" labelSpanM="3" labelSpanS="12"
+            emptySpanL="2" emptySpanM="2"
+            columnsL="1" columnsM="1"
+            title="{i18n>cmpGroupTitle}"
+            class="sapUiMediumMarginTop">
+            <form:content>
+
+                <MessageStrip
+                    id="cmpNotConfiguredStrip"
+                    type="Information"
+                    showIcon="true"
+                    class="sapUiSmallMarginBottom"
+                    visible="{= !${cmp>/exists} }"
+                    text="{cmp>/notConfiguredText}"/>
+
+                <Label text="{i18n>cmpLblEnabled}" tooltip="IsEnabled"/>
+                <VBox>
+                    <Switch state="{cmp>/enabled}" change=".onProdOrderCompleteDirty"/>
+                    <Text text="{i18n>cmpHelpEnabled}" class="sapUiTinyMarginTop"/>
+                </VBox>
+
+                <Label text="{i18n>cmpLblStatuses}" tooltip="PlexStatuses"/>
+                <VBox>
+                    <!-- `MultiInput` con token LIBERI e `showValueHelp="false"`: e' il controllo
+                         UI5 per un elenco di valori che nessun catalogo conosce. Non e' un
+                         `mp:SearchMultiComboBox` come sopra — quello sceglie da un elenco, e qui
+                         l'elenco non esiste (DEC-65). `submit` e' cio' che trasforma il testo
+                         digitato in un token: senza, l'Invio non farebbe niente e il campo
+                         sembrerebbe rotto. -->
+                    <MultiInput
+                        id="cmpPlexStatuses"
+                        tokens="{cmp>/statusTokens}"
+                        showValueHelp="false"
+                        placeholder="{i18n>cmpPhStatuses}"
+                        submit=".onProdOrderCompleteStatusSubmit"
+                        tokenUpdate=".onProdOrderCompleteTokenUpdate">
+                        <tokens>
+                            <Token key="{cmp>key}" text="{cmp>text}"/>
+                        </tokens>
+                    </MultiInput>
+                    <Text text="{i18n>cmpHelpStatuses}" class="sapUiTinyMarginTop"/>
+                </VBox>
+
+                <!-- Acceso senza stati e' RIFIUTATO dal server, e prima ancora non SCRIVE: si dice
+                     qui, cosi' l'utente non lo scopre da un run vuoto. -->
+                <Label text=""/>
+                <Text text="{i18n>cmpHelpEmpty}" class="sapUiSmallMarginBottom"/>
+
+                <Label text=""/>
+                <HBox class="sapUiTinyMarginTop">
+                    <Button text="{i18n>cmpBtnSave}" type="Emphasized" icon="sap-icon://save"
+                            enabled="{cmp>/dirty}" press=".onSaveProdOrderComplete"
+                            class="sapUiTinyMarginEnd"/>
+                    <Button text="{i18n>cmpBtnCancel}" type="Transparent" icon="sap-icon://sys-cancel"
+                            enabled="{cmp>/dirty}" press=".onCancelProdOrderComplete"/>
+                </HBox>
+
+            </form:content>
+        </form:SimpleForm>
+
+        <!-- ============================================================
+             [ORDER-SCHEDULED] Il job pianificato su Plex diventa uno stato utente in SAP
+             (feature 0046, gap W1-11).
+
+             GEMELLA DELLA SEZIONE QUI SOPRA, sull'altro estremo del ciclo: quella dichiara in SAP
+             che il lotto e' FINITO, questa che e' stato PIANIFICATO. Le regole sono le stesse e
+             vivono in un modulo solo (srv/lib/orderStatusFlow.js); le due schede restano due perche'
+             sono due job con due schedulazioni, e un plant puo' volerne una accesa e l'altra spenta.
+
+             UNA COSA IN PIU' DA SPIEGARE, E LA SCHERMATA LA DICE. Questo job guarda gli stati COME
+             SONO ADESSO e non i cambiamenti avvenuti — su `GET /scheduling/v1/jobs` non esiste
+             nessun filtro su una data di modifica — quindi un lotto che entra ed esce da
+             «Scheduled» fra due esecuzioni non viene visto. Elencare anche gli stati successivi lo
+             recupera, al prezzo di dichiarare «pianificato» un ordine che e' gia' oltre: e' una
+             scelta del plant, e il testo d'aiuto la mette davanti a chi configura invece di
+             lasciarla scoprire da un ordine che non arriva.
+
+             PERCHE' L'ELENCO E' TESTO LIBERO E NON UNA TENDINA. La sezione sopra sceglie da un
+             catalogo CHIUSO — i campi di A_ProductionOrder_2, che sono del contratto OData. Qui il
+             criterio e' un nome di STATO DEL JOB PLEX, cioe' una riga della tabella di setup del
+             TENANT, e nessun endpoint della Job Scheduling API la elenca (DEC-65). Una tendina qui
+             sarebbe un catalogo inventato da noi, e il primo tenant con uno stato in piu' non
+             potrebbe configurarsi. Il prezzo e' che un refuso non da' errore: da' zero ordini
+             trattati — ed e' per questo che il recap dell'esecuzione elenca gli stati VISTI, e che
+             il testo d'aiuto lo dice prima che qualcuno lo scopra da un run vuoto.
+
+             L'INTERRUTTORE GOVERNA SOLO LA SCRITTURA (DEC-71), ED E' L'UNICO: sopra non c'e'
+             nessuna leva di processo. La 0045 ce l'aveva messa — `ORDER_STATUS_POST`, che mta.yaml
+             tiene chiusa in produzione — e la 0046 l'ha tolta da entrambi i flussi, perche' un job
+             che parte dallo scheduler deve scrivere: con quella leva chiusa avrebbe rilevato tutto
+             e mandato niente, chiudendo in verde. Il testo d'aiuto lo dice, perche' da acceso
+             questa casella scrive su ordini veri gia' alla prima esecuzione.
+             ============================================================ -->
+        <form:SimpleForm
+            editable="true"
+            layout="ResponsiveGridLayout"
+            labelSpanL="3" labelSpanM="3" labelSpanS="12"
+            emptySpanL="2" emptySpanM="2"
+            columnsL="1" columnsM="1"
+            title="{i18n>schGroupTitle}"
+            class="sapUiMediumMarginTop">
+            <form:content>
+
+                <MessageStrip
+                    id="schNotConfiguredStrip"
+                    type="Information"
+                    showIcon="true"
+                    class="sapUiSmallMarginBottom"
+                    visible="{= !${sch>/exists} }"
+                    text="{sch>/notConfiguredText}"/>
+
+                <Label text="{i18n>schLblEnabled}" tooltip="IsEnabled"/>
+                <VBox>
+                    <Switch state="{sch>/enabled}" change=".onProdOrderScheduledDirty"/>
+                    <Text text="{i18n>schHelpEnabled}" class="sapUiTinyMarginTop"/>
+                </VBox>
+
+                <Label text="{i18n>schLblStatuses}" tooltip="PlexStatuses"/>
+                <VBox>
+                    <!-- `MultiInput` con token LIBERI e `showValueHelp="false"`: e' il controllo
+                         UI5 per un elenco di valori che nessun catalogo conosce. Non e' un
+                         `mp:SearchMultiComboBox` come sopra — quello sceglie da un elenco, e qui
+                         l'elenco non esiste (DEC-65). `submit` e' cio' che trasforma il testo
+                         digitato in un token: senza, l'Invio non farebbe niente e il campo
+                         sembrerebbe rotto. -->
+                    <MultiInput
+                        id="schPlexStatuses"
+                        tokens="{sch>/statusTokens}"
+                        showValueHelp="false"
+                        placeholder="{i18n>schPhStatuses}"
+                        submit=".onProdOrderScheduledStatusSubmit"
+                        tokenUpdate=".onProdOrderScheduledTokenUpdate">
+                        <tokens>
+                            <Token key="{sch>key}" text="{sch>text}"/>
+                        </tokens>
+                    </MultiInput>
+                    <Text text="{i18n>schHelpStatuses}" class="sapUiTinyMarginTop"/>
+                    <Text text="{i18n>schHelpSnapshot}" class="sapUiTinyMarginTop"/>
+                </VBox>
+
+                <!-- Acceso senza stati e' RIFIUTATO dal server, e prima ancora non SCRIVE: si dice
+                     qui, cosi' l'utente non lo scopre da un run vuoto. -->
+                <Label text=""/>
+                <Text text="{i18n>schHelpEmpty}" class="sapUiSmallMarginBottom"/>
+
+                <Label text=""/>
+                <HBox class="sapUiTinyMarginTop">
+                    <Button text="{i18n>schBtnSave}" type="Emphasized" icon="sap-icon://save"
+                            enabled="{sch>/dirty}" press=".onSaveProdOrderScheduled"
+                            class="sapUiTinyMarginEnd"/>
+                    <Button text="{i18n>schBtnCancel}" type="Transparent" icon="sap-icon://sys-cancel"
+                            enabled="{sch>/dirty}" press=".onCancelProdOrderScheduled"/>
+                </HBox>
+
+            </form:content>
+        </form:SimpleForm>
+
+        <!-- ============================================================
+             [PHANTOM-EXPLODE] L'interruttore dell'esplosione fantasma sui componenti degli
+             ORDINI (feature 0019). Gemello di quello del tab "Cicli di lavorazione"; i parametri
+             del motore stanno nella scheda «Distinta base».
+
+             ATTENZIONE, ed e' scritto nel testo di aiuto: in SAP standard l'ordine nasce con i
+             fantasma GIA' dissolti — la distinta d'ordine contiene la riga fantasma *e* i suoi
+             figli. In quel caso l'effetto visibile di questo interruttore e' la sola sparizione
+             della riga fantasma, non l'arrivo di nuovi componenti. Il motore regge entrambi i
+             casi e nel log dice quale si e' presentato.
+             ============================================================ -->
+        <form:SimpleForm
+            editable="true"
+            layout="ResponsiveGridLayout"
+            labelSpanL="3" labelSpanM="3" labelSpanS="12"
+            emptySpanL="2" emptySpanM="2"
+            columnsL="1" columnsM="1"
+            title="{i18n>phxGroupProdOrder}"
+            class="sapUiMediumMarginTop">
+            <form:content>
+
+                <MessageStrip
+                    type="Information"
+                    showIcon="true"
+                    class="sapUiSmallMarginBottom"
+                    visible="{= !${phx>/exists} }"
+                    text="{phx>/notConfiguredText}"/>
+
+                <Label text="{i18n>phxLblInProdOrder}" tooltip="ExplodeInProdOrder"/>
+                <VBox>
+                    <CheckBox selected="{phx>/inProdOrder}" select=".onPhantomDirty"/>
+                    <Text text="{i18n>phxHelpInProdOrder}" class="sapUiTinyMarginTop"/>
+                </VBox>
+
+                <Label text=""/>
+                <HBox class="sapUiTinyMarginTop">
+                    <Button text="{i18n>phxBtnSave}" type="Emphasized" icon="sap-icon://save"
+                            enabled="{phx>/dirty}" press=".onSavePhantomConfig"
+                            class="sapUiTinyMarginEnd"/>
+                    <Button text="{i18n>phxBtnCancel}" type="Transparent" icon="sap-icon://sys-cancel"
+                            enabled="{phx>/dirty}" press=".onCancelPhantomConfig"/>
+                </HBox>
+
+            </form:content>
+        </form:SimpleForm>
+
+        <!-- ============================================================
+             [COMP-EXCL] Esclusione configurabile dei componenti dell'ordine.
+
+             Field mapping Ariston, foglio `5. Orders or Jobs` cella `H18`: dai componenti vanno
+             tolti quelli che la MES non deve prelevare ne' consumare — nel foglio, RGEKZ vuoto e
+             tipo materiale ZSFR. Non sono cablati: sono regole di questa scheda.
+
+             COSA FA DAVVERO, e va detto perche' non e' intuitivo: Plex deriva la distinta del JOB
+             da quella della PART, quindi il job nasce con TUTTI i componenti. Un componente
+             escluso qui non viene "non mandato": viene DISATTIVATO sul job (Active = 0), perche'
+             l'allineamento lavora per sottrazione. L'elenco che si vede nell'albero dell'ordine
+             nel cockpit e' lo stesso su cui la sottrazione gira.
+
+             Master/detail nella stessa scheda e non un NavContainer come le «Categorie
+             materiali»: qui la sezione convive con altri due blocchi nello stesso tab.
+             ============================================================ -->
+        <!-- [LIST-COUNT] Il conteggio dichiarato: senza, «Mostra di piu'» compare anche quando non
+             c'e' piu' niente e poi resta a girare. Solo sui binding ASSOLUTI. Vedi GroupsTab e DEC-102. -->
+        <Table
+            id="compExclRulesTable"
+            items="{
+                path: 'compexcl>/CompExclRules',
+                parameters: { '$$updateGroupId': 'compExclChanges', '$count': true },
+                sorter: { path: 'Sequence' }
+            }"
+            mode="SingleSelectMaster"
+            selectionChange=".onCompExclRuleSelect"
+            growing="true"
+            growingThreshold="50"
+            class="sapUiMediumMarginTop">
+
+            <headerToolbar>
+                <OverflowToolbar>
+                    <Title text="{i18n>oceTableTitle}"/>
+                    <ToolbarSpacer/>
+                    <Button icon="sap-icon://add" text="{i18n>oceBtnAdd}" type="Transparent" press=".onAddCompExclRule"/>
+                    <Button icon="sap-icon://delete" text="{i18n>oceBtnDelete}" type="Transparent" press=".onDeleteCompExclRule"/>
+                    <Button icon="sap-icon://save" text="{i18n>oceBtnSave}" type="Emphasized" press=".onSaveCompExcl"/>
+                    <Button icon="sap-icon://sys-cancel" text="{i18n>oceBtnCancel}" type="Transparent" press=".onCancelCompExcl"/>
+                </OverflowToolbar>
+            </headerToolbar>
+
+            <infoToolbar>
+                <OverflowToolbar>
+                    <Text text="{i18n>oceTabIntro}"/>
+                </OverflowToolbar>
+            </infoToolbar>
+
+            <columns>
+                <Column><Text text="{i18n>oceColRuleName}"/></Column>
+                <Column width="15%" hAlign="End"><Text text="{i18n>oceColSequence}"/></Column>
+                <Column width="18%" hAlign="Center"><Text text="{i18n>oceColActive}"/></Column>
+            </columns>
+
+            <items>
+                <ColumnListItem>
+                    <cells>
+                        <Input value="{compexcl>RuleName}" placeholder="{i18n>oceRuleNamePlaceholder}"/>
+                        <Input value="{compexcl>Sequence}" type="Number"/>
+                        <!-- La regola nasce SPENTA e si accende quando ha i suoi criteri:
+                             l'attivazione a vuoto viene rifiutata dal server, perche' una regola
+                             senza condizioni non esclude niente e resterebbe in elenco a far
+                             credere il contrario. -->
+                        <Switch state="{compexcl>IsActive}"/>
+                    </cells>
+                </ColumnListItem>
+            </items>
+        </Table>
+
+        <Table
+            id="compExclCondTable"
+            items="{
+                path: 'compexcl>Conditions',
+                parameters: { '$$updateGroupId': 'compExclChanges' }
+            }"
+            mode="MultiSelect"
+            growing="true"
+            growingThreshold="50"
+            class="sapUiSmallMarginTop">
+
+            <headerToolbar>
+                <OverflowToolbar>
+                    <Title text="{i18n>oceCondTitle}"/>
+                    <ToolbarSpacer/>
+                    <Button icon="sap-icon://add" text="{i18n>oceBtnAddCond}" type="Transparent" press=".onAddCompExclCond"/>
+                    <Button icon="sap-icon://delete" text="{i18n>oceBtnDeleteCond}" type="Transparent" press=".onDeleteCompExclCond"/>
+                </OverflowToolbar>
+            </headerToolbar>
+
+            <columns>
+                <Column width="40%"><Text text="{i18n>oceColCondField}"/></Column>
+                <Column width="22%"><Text text="{i18n>oceColCondOperator}"/></Column>
+                <Column><Text text="{i18n>oceColCondValue}"/></Column>
+            </columns>
+
+            <items>
+                <ColumnListItem>
+                    <cells>
+                        <!-- templateShareable: il ComboBox sta DENTRO il ColumnListItem, che UI5
+                             clona una volta per riga; senza la dichiarazione il framework avvisa
+                             con un FUTURE FATAL (stessa nota del fragment «Categorie materiali»).
+                             `additionalText` mostra la PROVENIENZA del campo: un criterio
+                             sull'anagrafica costa una lettura per materiale, e chi configura deve
+                             poterlo sapere prima di scegliere. -->
+                        <mp:SearchComboBox
+                            selectedKey="{compexcl>SapField}"
+                            items="{ path: 'compexcl>/CompFieldVH', templateShareable: true }"
+                            placeholder="{i18n>oceSapFieldPlaceholder}"
+                            showSecondaryValues="true"
+                            width="100%">
+                            <core:ListItem key="{compexcl>FieldName}" text="{compexcl>Label}"
+                                           additionalText="{compexcl>Source}"/>
+                        </mp:SearchComboBox>
+                        <Select selectedKey="{compexcl>Operator}" width="100%">
+                            <core:Item key="EQ" text="{i18n>mcOpEQ}"/>
+                            <core:Item key="NE" text="{i18n>mcOpNE}"/>
+                            <core:Item key="IN" text="{i18n>mcOpIN}"/>
+                            <core:Item key="NOTIN" text="{i18n>mcOpNOTIN}"/>
+                            <core:Item key="BLANK" text="{i18n>mcOpBLANK}"/>
+                            <core:Item key="NOTBLANK" text="{i18n>mcOpNOTBLANK}"/>
+                        </Select>
+                        <Input value="{compexcl>Value}" placeholder="{i18n>oceCondValuePlaceholder}"/>
+                    </cells>
+                </ColumnListItem>
+            </items>
+        </Table>
+
+        <Text text="{i18n>oceHelpEmpty}" class="sapUiSmallMarginTop"/>
+
+    </VBox>
+
+</core:FragmentDefinition>

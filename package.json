@@ -1,0 +1,529 @@
+{
+  "name": "marsplm-sap2plex",
+  "version": "1.0.0",
+  "description": "A simple CAP project.",
+  "dependencies": {
+    "@cap-js/hana": "^2",
+    "@sap-cloud-sdk/connectivity": "^4.4.0",
+    "@sap-cloud-sdk/http-client": "^4.4.0",
+    "@sap-cloud-sdk/resilience": "^3.26.4",
+    "@sap-cloud-sdk/util": "^4.4.0",
+    "@sap/cds": "^9",
+    "@sap/xssec": "^4",
+    "express": "^4",
+    "nodemailer": "^9",
+    "pdfkit": "0.19.1"
+  },
+  "devDependencies": {
+    "@cap-js/sqlite": "^2.1.3",
+    "@sap/cds-dk": "^9",
+    "mailparser": "^3",
+    "smtp-server": "^3"
+  },
+  "scripts": {
+    "start": "cds-serve",
+    "build:mta": "mbt build -t gen --mtar marsplm-sap2plex.mtar",
+    "deploy:mta": "cf deploy gen/marsplm-sap2plex.mtar --retries 1",
+    "deploy": "npm run build:mta && npm run deploy:mta",
+    "watch-marsplm-sap2plex": "cds watch --open avvaleplm.marsplm.sap2plex.marsplmsap2plex/index.html?sap-ui-xx-viewCache=false --livereload false",
+    "watch-marsplm-sap2plex-hybrid": "cds watch --profile hybrid --open avvaleplm.marsplm.sap2plex.marsplmsap2plex/index.html?sap-ui-xx-viewCache=false --livereload false",
+    "watch-adminconfigmatfil": "cds watch --open avvaleplm.marsplm.sap2plex.adminconfigmatfil/index.html?sap-ui-xx-viewCache=false --livereload false",
+    "watch-adminconfprodtype": "cds watch --open avvaleplm.marsplm.sap2plex.adminconfprodtype/index.html?sap-ui-xx-viewCache=false --livereload false",
+    "watch-adminconfobjgrp": "cds watch --open avvaleplm.marsplm.sap2plex.adminconfobjgrp/index.html?sap-ui-xx-viewCache=false --livereload false",
+    "watch-adminconfigplant": "cds watch --open avvaleplm.marsplm.sap2plex.adminconfigplant/index.html?sap-ui-xx-viewCache=false --livereload false",
+    "job-prod-order-confirmation": "node srv/jobs/postProdOrderConfirmation.js",
+    "job-create-plex-orders": "node srv/jobs/createPlexProductionOrders.js",
+    "job-sync-materials": "node srv/jobs/syncMaterialsToPlex.js",
+    "job-sync-routings": "node srv/jobs/syncRoutingsToPlex.js",
+    "job-prod-order-teco": "node srv/jobs/closeTecoPlexJobs.js",
+    "job-order-complete": "node srv/jobs/completeSapOrdersFromPlex.js",
+    "job-order-scheduled": "node srv/jobs/scheduleSapOrdersFromPlex.js",
+    "seed-dev-plants": "node sample/seedDevPlants.js"
+  },
+  "private": true,
+  "cds": {
+    "features": {
+      "app_services": {
+        "impl": false
+      }
+    },
+    "requires": {
+      "db": {
+        "kind": "sqlite",
+        "credentials": {
+          "url": "sap2plex.db"
+        }
+      },
+      "auth": {
+        "//": "[JOB-TRIGGER] Utente di SVILUPPO per collaudare gli endpoint /job-run (feature 0032). Il servizio JobRunService ha @requires:'JOBSCHEDULER' e quello scope, in cloud, e' concesso all'ISTANZA del Job Scheduling Service — non a una persona, quindi non esiste un role-template e nessun utente umano puo' averlo. In locale l'auth e' `mocked` e serve un utente che quel ruolo ce l'abbia, altrimenti ogni prova finisce in 403: curl -u jobsched:jobsched -X POST http://localhost:4004/job-run/runProdTeco. Vive nel profilo `development`: in produzione il kind e' xsuaa e questa sezione viene ignorata.",
+        "[development]": {
+          "users": {
+            "jobsched": {
+              "roles": [
+                "JOBSCHEDULER"
+              ]
+            }
+          }
+        }
+      },
+      "[production]": {
+        "auth": "xsuaa",
+        "db": {
+          "kind": "hana"
+        },
+        "connectivity": true,
+        "destinations": true,
+        "MARS_MAIL": {
+          "mail": {
+            "//": "[SMTP-MAIL] Il canale e' SMTP: i parametri stanno nella destination MARS_MAIL (Type=MAIL) e il codice li legge a runtime. Il default e' 'smtp' e non 'destination' perche' cosi' il canale parte DA SOLO il giorno in cui quella destination esiste: non c'e' nessun `cf set-env MAIL_TRANSPORT` da ricordarsi, tanto meno da ripetere su ogni task del Job Scheduler (le env non si ereditano, DEC-30). Finche' la destination non c'e' ogni run dichiara «SMTP non configurato: manca host...» su ZJobRunMail, che e' il messaggio giusto: prima falliva contro un /v1/mail/send mai esistito. Vedi DEC-93 e docs/CHECKLIST-CUSTOMIZING-PLANT.md §9.1.",
+            "transport": "smtp"
+          }
+        }
+      },
+      "[hybrid]": {
+        "db": {
+          "kind": "hana"
+        }
+      },
+      "destinations": true,
+      "MARS_MAIL": {
+        "kind": "rest",
+        "credentials": {
+          "destination": "MARS_MAIL"
+        },
+        "mail": {
+          "transport": "file",
+          "template": "flat",
+          "path": "/v1/mail/send",
+          "method": "POST",
+          "requestTimeout": 20000,
+          "fetchCsrfToken": false,
+          "from": "noreply@marsplm.com",
+          "maxAttachmentBytes": 4000000,
+          "maxTotalBytes": 9000000,
+          "pdf": true,
+          "pdfMaxRows": 500,
+          "csvMaxRows": 20000,
+          "fields": {
+            "to": "to",
+            "cc": "cc",
+            "from": "from",
+            "subject": "subject",
+            "html": "html",
+            "text": "text",
+            "attachments": "attachments",
+            "attachmentName": "filename",
+            "attachmentContentType": "contentType",
+            "attachmentContent": "contentBase64"
+          },
+          "smtp": {
+            "//": "[SMTP-MAIL] Solo valori NON segreti e non dipendenti dall'ambiente: questo file e' in git. host, porta, cifratura, utenza, password e mittente arrivano dalla DESTINATION MARS_MAIL (Type=MAIL) - e' la sorgente decisa col referente di infrastruttura. Le variabili MAIL_SMTP_* la scavalcano e servono allo sviluppo locale e alle emergenze: in produzione devono essere assenti, o la password finisce in `cf env` in chiaro. Vedi DEC-93 per la precedenza e docs/0010 per la mappa delle proprieta'.",
+            "destination": "MARS_MAIL",
+            "port": 587,
+            "starttls": true,
+            "pool": true,
+            "maxMessages": 100,
+            "timeoutMs": 20000,
+            "tlsRejectUnauthorized": true,
+            "allowPlaintext": false,
+            "maxMessageBytes": null
+          }
+        }
+      },
+      "MARS_LICENSE": {
+        "kind": "rest",
+        "credentials": {
+          "destination": "MARS_LICENSE"
+        }
+      },
+      "OP_API_PRODUCTION_ORDER_2_SRV_0001": {
+        "kind": "odata-v2",
+        "model": "srv/external/OP_API_PRODUCTION_ORDER_2_SRV_0001",
+        "max_get_url_length": 4000,
+        "credentials": {
+          "[development]": {
+            "url": "https://sandbox.api.sap.com/s4hanacloud/sap/opu/odata/sap/API_PRODUCTION_ORDER_2_SRV",
+            "headers": {
+              "APIKey": "113PrVDOsvhdQO8ZsAXmCB1azHzc4ZU0"
+            }
+          },
+          "[hybrid]": {
+            "url": null,
+            "headers": null,
+            "destination": "MARS_SAP_CON",
+            "path": "/sap/opu/odata/sap/API_PRODUCTION_ORDER_2_SRV"
+          },
+          "[production]": {
+            "destination": "MARS_SAP_CON",
+            "path": "/sap/opu/odata/sap/API_PRODUCTION_ORDER_2_SRV"
+          }
+        },
+        "isSource": {
+          "destination": "MARS_SAP_CON",
+          "requestTimeout": 120000,
+          "chunkSize": 15,
+          "concurrency": 8,
+          "paths": {
+            "A_ProductionOrder_2": {
+              "GET": "/gw/odata/SAP/F0491.87_OPERATIONS_SAPECC_SAPBTPMARS_PRODUCTIONORDER_GET;v=1",
+              "QUERY": "/gw/odata/SAP/F0491.87_OPERATIONS_SAPECC_SAPBTPMARS_PRODUCTIONORDER_QUERYGET;v=1"
+            },
+            "A_ProductionOrderOperation_2": {
+              "QUERY": "/gw/odata/SAP/F0491.87_OPERATIONS_SAPECC_SAPBTPMARS_PRODUCTIONORDEROPERATION_QUERYGET;v=1"
+            },
+            "A_ProductionOrderComponent_2": {
+              "QUERY": "/gw/odata/SAP/F0491.87_OPERATIONS_SAPECC_SAPBTPMARS_PRODUCTIONORDERCOMPONENT_QUERYGET;v=1"
+            }
+          }
+        },
+        "post": {
+          "enabled": true,
+          "destination": "MARS_SAP_CON",
+          "orderId": "999999999999",
+          "shape": "qs",
+          "full": false,
+          "metadata": true,
+          "csrf": true,
+          "requestTimeout": 60000,
+          "calls": {
+            "close": {
+              "path": "/gw/odata/SAP/F1110.01_OPERATIONS_SAPBTPMARS_SAPECC_ORDER_CLOSE_POST;v=1",
+              "functionImport": "CloseOrder"
+            },
+            "teco": {
+              "path": "/gw/odata/SAP/F1110.01_OPERATIONS_SAPBTPMARS_SAPECC_ORDER_TECO_POST;v=1",
+              "functionImport": "TechlyCmpltOrder"
+            }
+          }
+        }
+      },
+      "API_PROD_ORDER_CONFIRMATION_2_SRV": {
+        "kind": "odata-v2",
+        "model": "srv/external/OP_API_PROD_ORDER_CONFIRMATIO_2_SRV_0001",
+        "credentials": {
+          "[development]": {
+            "url": "https://sandbox.api.sap.com/s4hanacloud/sap/opu/odata/sap/API_PROD_ORDER_CONFIRMATION_2_SRV",
+            "headers": {
+              "APIKey": "113PrVDOsvhdQO8ZsAXmCB1azHzc4ZU0"
+            }
+          },
+          "[hybrid]": {
+            "url": null,
+            "headers": null,
+            "destination": "MARS_SAP_CON",
+            "path": "/sap/opu/odata/sap/API_PROD_ORDER_CONFIRMATION_2_SRV"
+          },
+          "[production]": {
+            "destination": "MARS_SAP_CON",
+            "path": "/sap/opu/odata/sap/API_PROD_ORDER_CONFIRMATION_2_SRV"
+          }
+        },
+        "post": {
+          "destination": "MARS_SAP_CON",
+          "path": "/gw/odata/SAP/F1110.01_OPERATIONS_SAPBTPMARS_SAPECC_PRODUCTIONORDER_CONFIRMATION_POST;v=1",
+          "entitySet": "ProdnOrdConf2",
+          "shape": "entity",
+          "keepEmpty": true,
+          "booleans": "edm",
+          "csrf": true,
+          "requestTimeout": 60000
+        }
+      },
+      "API_PRODUCTION_ROUTING_AVVALE": {
+        "kind": "odata-v2",
+        "model": "srv/external/API_PRODUCTION_ROUTING_AVVALE",
+        "credentials": {
+          "[development]": {
+            "url": "https://sandbox.api.sap.com/s4hanacloud/sap/opu/odata/sap/API_PRODUCTION_ROUTING",
+            "headers": {
+              "APIKey": "113PrVDOsvhdQO8ZsAXmCB1azHzc4ZU0"
+            }
+          },
+          "[hybrid]": {
+            "url": null,
+            "headers": null,
+            "destination": "MARS_SAP_CON",
+            "path": "/sap/opu/odata/sap/API_PRODUCTION_ROUTING"
+          },
+          "[production]": {
+            "destination": "MARS_SAP_CON",
+            "path": "/sap/opu/odata/sap/API_PRODUCTION_ROUTING"
+          }
+        }
+      },
+      "sap_s4_OP_API_PRODUCTION_ROUTING_0003_v3": {
+        "kind": "odata-v2",
+        "model": "srv/external/sap-s4-OP_API_PRODUCTION_ROUTING_0003-v3",
+        "max_get_url_length": 4000,
+        "credentials": {
+          "[development]": {
+            "url": "https://sandbox.api.sap.com/s4hanacloud/sap/opu/odata/sap/API_PRODUCTION_ROUTING;v=0003",
+            "headers": {
+              "APIKey": "113PrVDOsvhdQO8ZsAXmCB1azHzc4ZU0"
+            }
+          },
+          "[hybrid]": {
+            "url": null,
+            "headers": null,
+            "destination": "MARS_SAP_CON",
+            "path": "/sap/opu/odata/sap/API_PRODUCTION_ROUTING;v=0003"
+          },
+          "[production]": {
+            "destination": "MARS_SAP_CON",
+            "path": "/sap/opu/odata/sap/API_PRODUCTION_ROUTING;v=0003"
+          }
+        },
+        "isSource": {
+          "destination": "MARS_SAP_CON",
+          "requestTimeout": 120000,
+          "chunkSize": 15,
+          "concurrency": 8,
+          "paths": {
+            "ProductionRoutingHeader": {
+              "QUERY": "/gw/odata/SAP/F0491.87_OPERATIONS_SAPECC_SAPBTPMARS_PRODUCTIONROUTINGHEADER_QUERYGET;v=1"
+            },
+            "ProductionRoutingMatlAssgmt": {
+              "QUERY": "/gw/odata/SAP/F0491.87_OPERATIONS_SAPECC_SAPBTPMARS_PRODUCTIONROUTINGMATLASSGMT_QUERYGET;v=1"
+            },
+            "ProductionRoutingOperation": {
+              "QUERY": "/gw/odata/SAP/F0491.87_OPERATIONS_SAPECC_SAPBTPMARS_PRODUCTIONROUTINGOPERATION_QUERYGET;v=1"
+            },
+            "ProductionRoutingCompAlloc": {
+              "QUERY": "/gw/odata/SAP/F0491.87_OPERATIONS_SAPECC_SAPBTPMARS_PRODUCTIONROUTINGCOMPALLOC_QUERYGET;v=1"
+            },
+            "ProductionRouting": {
+              "GET": "/gw/odata/SAP/F0491.87_OPERATIONS_SAPECC_SAPBTPMARS_PRODUCTIONROUTING_GET;v=1"
+            }
+          }
+        }
+      },
+      "OP_API_BILL_OF_MATERIAL_SRV_0002": {
+        "kind": "odata-v2",
+        "model": "srv/external/OP_API_BILL_OF_MATERIAL_SRV_0002",
+        "credentials": {
+          "[development]": {
+            "url": "https://sandbox.api.sap.com/s4hanacloud/sap/opu/odata/sap/API_BILL_OF_MATERIAL_SRV",
+            "headers": {
+              "APIKey": "113PrVDOsvhdQO8ZsAXmCB1azHzc4ZU0"
+            }
+          },
+          "[hybrid]": {
+            "url": null,
+            "headers": null,
+            "destination": "MARS_SAP_CON",
+            "path": "/sap/opu/odata/sap/API_BILL_OF_MATERIAL_SRV"
+          },
+          "[production]": {
+            "destination": "MARS_SAP_CON",
+            "path": "/sap/opu/odata/sap/API_BILL_OF_MATERIAL_SRV"
+          }
+        },
+        "isSource": {
+          "destination": "MARS_SAP_CON",
+          "requestTimeout": 120000,
+          "chunkSize": 15,
+          "concurrency": 8,
+          "paths": {
+            "ExplodeBOM": {
+              "GET": "/gw/odata/SAP/F0491.87_OPERATIONS_SAPECC_SAPBTPMARS_BOM_EXPLODE_GET;v=1"
+            },
+            "MaterialBOM": {
+              "GET": "/gw/odata/SAP/F0491.87_OPERATIONS_SAPECC_SAPBTPMARS_BOM_GET;v=1",
+              "QUERY": "/gw/odata/SAP/F0491.87_OPERATIONS_SAPECC_SAPBTPMARS_BOM_QUERYGET;v=1"
+            }
+          }
+        }
+      },
+      "html5-repo": true,
+      "OP_API_PRODUCT_SRV_0001": {
+        "kind": "odata-v2",
+        "model": "srv/external/OP_API_PRODUCT_SRV_0001",
+        "max_get_url_length": 4000,
+        "credentials": {
+          "[development]": {
+            "url": "https://sandbox.api.sap.com/s4hanacloud/sap/opu/odata/sap/API_PRODUCT_SRV",
+            "headers": {
+              "APIKey": "113PrVDOsvhdQO8ZsAXmCB1azHzc4ZU0"
+            }
+          },
+          "[hybrid]": {
+            "url": null,
+            "headers": null,
+            "destination": "MARS_SAP_CON",
+            "path": "/sap/opu/odata/sap/API_PRODUCT_SRV"
+          },
+          "[production]": {
+            "destination": "MARS_SAP_CON",
+            "path": "/sap/opu/odata/sap/API_PRODUCT_SRV"
+          }
+        },
+        "isSource": {
+          "destination": "MARS_SAP_CON",
+          "requestTimeout": 120000,
+          "chunkSize": 15,
+          "concurrency": 16,
+          "paths": {
+            "A_Product": {
+              "GET": "/gw/odata/SAP/F0491.87_OPERATIONS_SAPECC_SAPBTPMARS_PRODUCT_GET;v=1"
+            },
+            "A_ProductPlant": {
+              "QUERY": "/gw/odata/SAP/F0491.87_OPERATIONS_SAPECC_SAPBTPMARS_PRODUCT_PLANT_QUERYGET;v=1",
+              "GET": "/gw/odata/SAP/F0491.87_OPERATIONS_SAPECC_SAPBTPMARS_PRODUCT_PLANT_GET;v=1"
+            },
+            "A_ProductDescription": {
+              "GET": "/gw/odata/SAP/F0491.87_OPERATIONS_SAPECC_SAPBTPMARS_PRODUCT_DESCRIPTION_GET;v=1"
+            }
+          }
+        }
+      },
+      "OP_API_CLFN_PRODUCT_SRV": {
+        "kind": "odata-v2",
+        "model": "srv/external/OP_API_CLFN_PRODUCT_SRV",
+        "credentials": {
+          "[development]": {
+            "url": "https://sandbox.api.sap.com/s4hanacloud/sap/opu/odata/sap/API_CLFN_PRODUCT_SRV",
+            "headers": {
+              "APIKey": "113PrVDOsvhdQO8ZsAXmCB1azHzc4ZU0"
+            }
+          },
+          "[hybrid]": {
+            "url": null,
+            "headers": null,
+            "destination": "MARS_SAP_CON",
+            "path": "/sap/opu/odata/sap/API_CLFN_PRODUCT_SRV"
+          },
+          "[production]": {
+            "destination": "MARS_SAP_CON",
+            "path": "/sap/opu/odata/sap/API_CLFN_PRODUCT_SRV"
+          }
+        },
+        "isSource": {
+          "destination": "MARS_SAP_CON",
+          "requestTimeout": 120000,
+          "chunkSize": 15,
+          "concurrency": 16,
+          "paths": {
+            "A_ProductClass": {
+              "QUERY": "/gw/odata/SAP/F0491.87_OPERATIONS_SAPECC_SAPBTPMARS_PRODUCTCLASS_QUERYGET;v=1"
+            },
+            "A_ClfnClassForKeyDate": {
+              "GET": "/gw/odata/SAP/F0491.87_OPERATIONS_SAPECC_SAPBTPMARS_CLFNCLASSFORKEYDATE_GET;v=1"
+            },
+            "A_ProductClassCharc": {
+              "GET": "/gw/odata/SAP/F0491.87_OPERATIONS_SAPECC_SAPBTPMARS_PRODUCTCLASSCHARC_GET;v=1"
+            },
+            "A_ProductCharcValue": {
+              "GET": "/gw/odata/SAP/F0491.87_OPERATIONS_SAPECC_SAPBTPMARS_PRODUCTCHARVALUE_GET;v=1"
+            }
+          }
+        }
+      },
+      "OP_API_CLFN_CHARACTERISTIC_SRV": {
+        "kind": "odata-v2",
+        "model": "srv/external/OP_API_CLFN_CHARACTERISTIC_SRV",
+        "credentials": {
+          "[development]": {
+            "url": "https://sandbox.api.sap.com/s4hanacloud/sap/opu/odata/sap/API_CLFN_CHARACTERISTIC_SRV",
+            "headers": {
+              "APIKey": "113PrVDOsvhdQO8ZsAXmCB1azHzc4ZU0"
+            }
+          },
+          "[hybrid]": {
+            "url": null,
+            "headers": null,
+            "destination": "MARS_SAP_CON",
+            "path": "/sap/opu/odata/sap/API_CLFN_CHARACTERISTIC_SRV"
+          },
+          "[production]": {
+            "destination": "MARS_SAP_CON",
+            "path": "/sap/opu/odata/sap/API_CLFN_CHARACTERISTIC_SRV"
+          }
+        },
+        "isSource": {
+          "destination": "MARS_SAP_CON",
+          "requestTimeout": 120000,
+          "chunkSize": 15,
+          "concurrency": 16,
+          "paths": {
+            "A_ClfnCharacteristicForKeyDate": {
+              "QUERY": "/gw/odata/SAP/F0491.87_OPERATIONS_SAPECC_SAPBTPMARS_CLFNCHARACTERISTICFORKEYDATE_QUERYGET;v=1",
+              "GET": "/gw/odata/SAP/F0491.87_OPERATIONS_SAPECC_SAPBTPMARS_CLFNCHARACTERISTICFORKEYDATE_GET;v=1"
+            }
+          }
+        }
+      },
+      "OP_API_MATERIAL_DOCUMENT_SRV": {
+        "kind": "odata-v2",
+        "model": "srv/external/OP_API_MATERIAL_DOCUMENT_SRV",
+        "credentials": {
+          "[development]": {
+            "url": "https://sandbox.api.sap.com/s4hanacloud/sap/opu/odata/sap/API_MATERIAL_DOCUMENT_SRV",
+            "headers": {
+              "APIKey": "113PrVDOsvhdQO8ZsAXmCB1azHzc4ZU0"
+            }
+          },
+          "[hybrid]": {
+            "url": null,
+            "headers": null,
+            "destination": "MARS_SAP_CON",
+            "path": "/sap/opu/odata/sap/API_MATERIAL_DOCUMENT_SRV"
+          },
+          "[production]": {
+            "destination": "MARS_SAP_CON",
+            "path": "/sap/opu/odata/sap/API_MATERIAL_DOCUMENT_SRV"
+          }
+        },
+        "post": {
+          "enabled": true,
+          "destination": "MARS_SAP_CON",
+          "path": "/http/btpmars/sapecc/1110.02/materialdocument",
+          "entitySet": "",
+          "testRun": "X",
+          "csrf": false,
+          "requestTimeout": 60000
+        }
+      },
+      "ZMARS_PRODUCT_SRV": {
+        "kind": "odata-v2",
+        "model": "srv/external/ZMARS_PRODUCT_SRV",
+        "credentials": {
+          "[development]": {
+            "url": "https://sandbox.api.sap.com/s4hanacloud/sap/opu/odata/sap/API_PRODUCT_SRV",
+            "headers": {
+              "APIKey": "113PrVDOsvhdQO8ZsAXmCB1azHzc4ZU0"
+            }
+          },
+          "[hybrid]": {
+            "url": null,
+            "headers": null,
+            "destination": "MARS_SAP_CON",
+            "path": "/sap/opu/odata/sap/API_PRODUCT_SRV"
+          },
+          "[production]": {
+            "destination": "MARS_SAP_CON",
+            "path": "/sap/opu/odata/sap/API_PRODUCT_SRV"
+          }
+        },
+        "isSource": {
+          "destination": "MARS_SAP_CON",
+          "requestTimeout": 120000,
+          "chunkSize": 15,
+          "concurrency": 16,
+          "paths": {
+            "A_Product": {
+              "QUERY": "/gw/odata/SAP/F0491.87_OPERATIONS_SAPECC_SAPBTPMARS_PRODUCT_QUERYGET;v=1"
+            }
+          }
+        }
+      }
+    }
+  },
+  "sapux": [
+    "app/adminconfigmatfil",
+    "app/adminconfprodtype",
+    "app/adminconfobjgrp"
+  ],
+  "engines": {
+    "node": ">=20"
+  }
+}

@@ -1,0 +1,229 @@
+<core:FragmentDefinition
+    xmlns="sap.m"
+    xmlns:core="sap.ui.core"
+    xmlns:mp="avvaleplm.marsplm.sap2plex.adminconfigplant.control"
+    xmlns:form="sap.ui.layout.form">
+
+    <!--
+        [PLEX-PART-CODES] Codici del tenant Plex: tipologia e stato prodotto (feature 0022).
+
+        E' l'UNICA schermata del progetto in cui una chiave numerica di Plex — Part_Type_Key
+        34669, Part_Status_Key 6387 — viene mostrata e digitata. Ovunque altro l'utente vede
+        l'etichetta: la classe nella scheda «Categorie materiali», lo stato per nome qui sotto.
+        Se un codice compare in un'altra schermata, e' un difetto da correggere la', non qui.
+
+        La catena e' una sola, e questa scheda ne e' l'ultimo anello:
+          classe materiale -> tipologia Plex (seed, DEC-62) -> codice del tenant (questa scheda)
+
+        NESSUN codice configurato = si manda la stringa, cioe' il comportamento storico: qui non
+        si fa fail-closed, perche' cio' che parte e' una part che una persona ha chiesto di
+        inviare (DEC-53). La lacuna pero' si DICHIARA — il MessageStrip qui sotto e una riga nel
+        recap del job MAT_SYNC — perche' senza, un plant non configurato e uno configurato bene
+        chiudono l'invio allo stesso identico modo.
+    -->
+    <VBox class="sapUiSmallMargin">
+
+        <VBox class="sapUiSmallMarginBottom">
+            <Text text="{i18n>ppcTabIntro}"/>
+            <MessageStrip
+                text="{i18n>ppcTabHint}"
+                type="Information"
+                showIcon="true"
+                class="sapUiSmallMarginTop"/>
+            <!--
+                Le tipologie in uso dalle categorie attive del plant che non hanno ancora un
+                codice. Testo composto dal controller: nessuna lacuna => nessun avviso.
+            -->
+            <MessageStrip
+                id="ppcMissingCodesStrip"
+                visible="{ppcState>/hasMissingCodes}"
+                text="{ppcState>/missingCodesText}"
+                type="Warning"
+                showIcon="true"
+                class="sapUiSmallMarginTop"/>
+            <!--
+                Un `status` mappato a mano nella scheda «Plex Part Mapping» vince su quello
+                configurato qui e viaggia anche in aggiornamento (0004 RB-17). E' il
+                comportamento di sempre e non si tocca, ma va detto: altrimenti si configura
+                uno stato che non parte e non si capisce perche'.
+            -->
+            <MessageStrip
+                id="ppcStatusOverrideStrip"
+                visible="{ppcState>/hasStatusOverride}"
+                text="{i18n>ppcStatusOverriddenWarning}"
+                type="Warning"
+                showIcon="true"
+                class="sapUiSmallMarginTop"/>
+        </VBox>
+
+        <!-- ============ STATO PRODOTTO DEL PLANT (una riga sola) ============ -->
+        <Panel headerText="{i18n>ppcStatusTitle}" class="sapUiSmallMarginBottom">
+            <headerToolbar>
+                <OverflowToolbar>
+                    <Title text="{i18n>ppcStatusTitle}"/>
+                    <ToolbarSpacer/>
+                    <Button icon="sap-icon://save" text="{i18n>ppcBtnSave}" type="Emphasized" press=".onSavePlexPartCodes"/>
+                    <Button icon="sap-icon://sys-cancel" text="{i18n>ppcBtnCancel}" type="Transparent" press=".onCancelPlexPartCodes"/>
+                </OverflowToolbar>
+            </headerToolbar>
+
+            <VBox class="sapUiSmallMarginBegin sapUiSmallMarginEnd">
+                <Text text="{i18n>ppcStatusHint}" class="sapUiSmallMarginBottom"/>
+            </VBox>
+
+            <!--
+                UNA riga per plant (@assert.unique su Plant). La tabella e' vincolata a una riga
+                dal controller: il bottone «Aggiungi» sparisce quando la riga c'e' gia'.
+            -->
+            <Table
+                id="plexPartStatusTable"
+                items="{
+                    path: 'catalog>/ZPlexPartStatusConfig',
+                    parameters: { '$$updateGroupId': 'plexPartCodeChanges' }
+                }"
+                mode="MultiSelect">
+
+                <headerToolbar>
+                    <OverflowToolbar>
+                        <ToolbarSpacer/>
+                        <Button
+                            id="ppcAddStatusButton"
+                            icon="sap-icon://add"
+                            text="{i18n>ppcBtnAddStatus}"
+                            type="Transparent"
+                            press=".onAddPlexPartStatus"/>
+                        <Button icon="sap-icon://delete" text="{i18n>ppcBtnDelete}" type="Transparent" press=".onDeletePlexPartStatus"/>
+                    </OverflowToolbar>
+                </headerToolbar>
+
+                <columns>
+                    <Column width="45%">
+                        <Text text="{i18n>ppcColStatusLabel}"/>
+                    </Column>
+                    <Column width="30%">
+                        <Text text="{i18n>ppcColStatusCode}"/>
+                    </Column>
+                    <Column width="25%" hAlign="Center">
+                        <Text text="{i18n>ppcColActive}"/>
+                    </Column>
+                </columns>
+
+                <items>
+                    <ColumnListItem>
+                        <cells>
+                            <!--
+                                L'etichetta e' cio' che ogni altra schermata mostrera' al posto
+                                del codice: non e' decorazione, ed e' obbligatoria in scrittura.
+                            -->
+                            <Input
+                                value="{catalog>PlexStatusLabel}"
+                                maxLength="100"
+                                placeholder="{i18n>ppcStatusLabelPlaceholder}"/>
+                            <!--
+                                maxLength e liveChange lato client sono la difesa UTILE: la
+                                validazione di tipo di CAP gira nella fase _initial, PRIMA di ogni
+                                before handler, quindi un valore troppo lungo verrebbe rifiutato
+                                con un messaggio tecnico che nessun handler puo' riscrivere
+                                (DEC-40). Il server ricontrolla comunque: la tendina e' vincolata
+                                a schermo, l'URL OData no.
+
+                                [PLEX-VALUE-PROBE] Il valore NON e' un numero: Plex ha rifiutato la
+                                chiave `34670` e vuole il nome della riga di setup, «Materia prima».
+                                Qui non si filtra piu' per cifre — cancellerebbe il valore giusto
+                                mentre lo si digita.
+                            -->
+                            <Input
+                                value="{catalog>PlexStatusCode}"
+                                maxLength="50"
+                                liveChange=".onPlexCodeLiveChange"
+                                placeholder="{i18n>ppcCodePlaceholder}"/>
+                            <CheckBox selected="{catalog>IsActive}"/>
+                        </cells>
+                    </ColumnListItem>
+                </items>
+            </Table>
+        </Panel>
+
+        <!-- ============ CODICI DELLE TIPOLOGIE ============ -->
+        <Panel headerText="{i18n>ppcTableTitle}">
+
+            <VBox class="sapUiSmallMarginBegin sapUiSmallMarginEnd">
+                <Text text="{i18n>ppcTypeHint}" class="sapUiSmallMarginBottom"/>
+            </VBox>
+
+            <!-- [LIST-COUNT] Il conteggio dichiarato: senza, «Mostra di piu'» compare anche quando non
+                 c'e' piu' niente e poi resta a girare. Solo sui binding ASSOLUTI. Vedi GroupsTab e DEC-102. -->
+            <Table
+                id="plexPartTypeCodeTable"
+                items="{
+                    path: 'catalog>/ZPlexPartTypeCode',
+                    parameters: { '$$updateGroupId': 'plexPartCodeChanges', '$count': true },
+                    sorter: { path: 'PlexTypeValue' }
+                }"
+                growing="true"
+                growingThreshold="50"
+                mode="MultiSelect">
+
+                <headerToolbar>
+                    <OverflowToolbar>
+                        <Title text="{i18n>ppcTableTitle}"/>
+                        <ToolbarSpacer/>
+                        <Button icon="sap-icon://add" text="{i18n>ppcBtnAdd}" type="Transparent" press=".onAddPlexPartTypeCode"/>
+                        <Button icon="sap-icon://delete" text="{i18n>ppcBtnDelete}" type="Transparent" press=".onDeletePlexPartTypeCode"/>
+                        <Button icon="sap-icon://save" text="{i18n>ppcBtnSave}" type="Emphasized" press=".onSavePlexPartCodes"/>
+                        <Button icon="sap-icon://sys-cancel" text="{i18n>ppcBtnCancel}" type="Transparent" press=".onCancelPlexPartCodes"/>
+                    </OverflowToolbar>
+                </headerToolbar>
+
+                <columns>
+                    <Column width="45%">
+                        <Text text="{i18n>ppcColTypeValue}"/>
+                    </Column>
+                    <Column width="30%">
+                        <Text text="{i18n>ppcColTypeCode}"/>
+                    </Column>
+                    <Column width="25%" hAlign="Center">
+                        <Text text="{i18n>ppcColActive}"/>
+                    </Column>
+                </columns>
+
+                <items>
+                    <ColumnListItem>
+                        <cells>
+                            <!--
+                                La tendina porta le TIPOLOGIE (PlexValue), non le classi: le
+                                classi sono cinque, le tipologie quattro, perche' un semilavorato
+                                esterno e' un componente per Plex e lo dice gia' il seed (DEC-62).
+                                La lista e' costruita dal controller a partire da
+                                catalog>/ZPlexPartTypeVH, deduplicando i PlexValue.
+
+                                [PLEX-TYPE-LABEL] La `key` e' il PlexValue grezzo — e' quello che
+                                si salva e che il server riconfronta stretta — mentre il `text` e'
+                                l'etichetta i18n costruita dal controller. Il nome che il tenant
+                                usa e' la colonna accanto, non questa.
+                            -->
+                            <mp:SearchComboBox
+                                selectedKey="{catalog>PlexTypeValue}"
+                                items="{
+                                    path: 'ppcState>/typeValues',
+                                    templateShareable: true
+                                }"
+                                placeholder="{i18n>ppcTypeValuePlaceholder}"
+                                width="100%">
+                                <core:Item key="{ppcState>key}" text="{ppcState>text}"/>
+                            </mp:SearchComboBox>
+                            <Input
+                                value="{catalog>PlexTypeCode}"
+                                maxLength="50"
+                                liveChange=".onPlexCodeLiveChange"
+                                placeholder="{i18n>ppcCodePlaceholder}"/>
+                            <CheckBox selected="{catalog>IsActive}"/>
+                        </cells>
+                    </ColumnListItem>
+                </items>
+
+            </Table>
+        </Panel>
+    </VBox>
+
+</core:FragmentDefinition>

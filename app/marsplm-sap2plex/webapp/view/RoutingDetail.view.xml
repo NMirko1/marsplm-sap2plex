@@ -1,0 +1,438 @@
+<mvc:View controllerName="avvaleplm.marsplm.sap2plex.main.controller.RoutingDetail"
+    xmlns:mvc="sap.ui.core.mvc"
+    xmlns:core="sap.ui.core"
+    xmlns="sap.m"
+    xmlns:f="sap.f"
+    xmlns:form="sap.ui.layout.form"
+    xmlns:dnd="sap.ui.core.dnd"
+    xmlns:editor="sap.ui.codeeditor">
+
+    <!-- busyIndicatorDelay="0": il ritardo predefinito di UI5 e' un secondo, e in quel secondo non
+         compare ne' il velo ne' il livello che intercetta i clic — cioe' esattamente la finestra in
+         cui l'utente impaziente preme una seconda volta «Auto-Assegna». Il prezzo e' un lampo di
+         velo sulle letture rapidissime (canale ONPREM in locale): cosmetico, contro un secondo di
+         pagina cliccabile che e' funzionale. -->
+    <f:DynamicPage busy="{detailModel>/busy}" busyIndicatorDelay="0">
+        <!-- HEADER -->
+        <f:title>
+            <f:DynamicPageTitle>
+                <f:heading>
+                    <Title text="{parts: ['i18n>routingDetailTitle', 'detailModel>/ProductionRoutingGroup', 'detailModel>/BillOfOperationsDesc'], formatter: '.formatTitle'}" class="sapUiSmallMarginEnd"/>
+                </f:heading>
+                <f:actions>
+                    <Button
+                        text="{i18n>btnBack}"
+                        press="onBack"
+                        icon="sap-icon://nav-back"/>
+                </f:actions>
+                <f:breadcrumbs>
+                    <Breadcrumbs>
+                        <Link text="{i18n>backToRoutings}" press="onBack"/>
+                    </Breadcrumbs>
+                </f:breadcrumbs>
+            </f:DynamicPageTitle>
+        </f:title>
+
+        <!-- ROUTING INFORMATION HEADER -->
+        <f:header>
+            <f:DynamicPageHeader pinnable="true">
+                <f:content>
+                    <FlexBox width="100%" justifyContent="SpaceBetween" wrap="Wrap">
+                        <items>
+                            <form:SimpleForm editable="false" layout="ResponsiveGridLayout"
+                                labelSpanL="6" labelSpanM="6" labelSpanS="12"
+                                class="sapUiSmallMarginEnd">
+                                <form:layoutData>
+                                    <FlexItemData growFactor="1" baseSize="45%"/>
+                                </form:layoutData>
+                                <form:content>
+                                    <Label text="{i18n>routingGroup}"/>
+                                    <Text text="{detailModel>/ProductionRoutingGroup}"/>
+                                    <Label text="{i18n>routingCounter}"/>
+                                    <Text text="{detailModel>/ProductionRouting}"/>
+                                    <Label text="{i18n>routingDescription}"/>
+                                    <Text text="{detailModel>/BillOfOperationsDesc}"/>
+                                    <Label text="{i18n>plant}"/>
+                                    <Text text="{detailModel>/Plant}"/>
+                                    <Label text="{i18n>material}"/>
+                                    <Text text="{detailModel>/Material}"/>
+                                </form:content>
+                            </form:SimpleForm>
+                            <form:SimpleForm editable="false" layout="ResponsiveGridLayout"
+                                labelSpanL="6" labelSpanM="6" labelSpanS="12">
+                                <form:layoutData>
+                                    <FlexItemData growFactor="1" baseSize="45%"/>
+                                </form:layoutData>
+                                <form:content>
+                                    <Label text="{i18n>routingStatus}"/>
+                                    <Text text="{detailModel>/BillOfOperationsStatus}"/>
+                                    <Label text="{i18n>routingPlannerGroup}"/>
+                                    <Text text="{detailModel>/ResponsiblePlannerGroup}"/>
+                                    <Label text="{i18n>routingWorkCenter}"/>
+                                    <Text text="{detailModel>/PlanningWorkCenter}"/>
+                                    <Label text="{i18n>routingLastChanged}"/>
+                                    <Text text="{detailModel>/LastChangeDate}"/>
+                                </form:content>
+                            </form:SimpleForm>
+                        </items>
+                    </FlexBox>
+                </f:content>
+            </f:DynamicPageHeader>
+        </f:header>
+
+        <!-- CONTENT: IconTabBar with Trees and Sync History -->
+        <f:content>
+            <IconTabBar id="routingDetailTabs" headerMode="Inline" expandable="false" class="sapUiSmallMargin">
+                <items>
+                    <!-- Tab 1: Cycle Trees -->
+                    <IconTabFilter key="trees" text="{i18n>tabRoutingTrees}" icon="sap-icon://tree">
+                        <FlexBox width="100%" class="sapUiSmallMargin" wrap="Wrap">
+                            <items>
+                                <!-- LEFT: Routing Operations & Components Tree -->
+                                <VBox class="sapUiSmallMarginEnd" width="48%">
+                                    <Title text="{i18n>routingOpsTreeTitle}" level="H2" class="sapUiSmallMarginBottom"/>
+                                    <OverflowToolbar class="sapUiSmallMarginBottom">
+                                        <Button
+                                            text="{i18n>btnRefreshCycle}"
+                                            icon="sap-icon://refresh"
+                                            press="onRefreshSapTree"/>
+                                        <Button
+                                            id="btnClearHighlight"
+                                            text="{i18n>btnClearHighlight}"
+                                            icon="sap-icon://eraser"
+                                            press="onClearHighlights"/>
+                                        <ToolbarSpacer/>
+                                    </OverflowToolbar>
+                                    <!-- [ROUTING-DEFAULT-OP] Questo albero puo' NON essere l'albero
+                                         di SAP (feature 0051): dove il plant ha acceso l'allocazione
+                                         di default, i componenti vengono dalla distinta base e
+                                         compaiono tutti sotto una sola operazione. Senza questa
+                                         striscia la schermata afferma qualcosa di falso su cosa SAP
+                                         contiene — ed e' un'affermazione su cui si decide un invio.
+                                         Fuori dal Tree e non dentro: deve comparire anche quando i
+                                         componenti sono ZERO, che e' il caso in cui serve di piu'. -->
+                                    <MessageStrip
+                                        class="sapUiSmallMarginBottom"
+                                        showIcon="true"
+                                        visible="{treeModel>/note/visible}"
+                                        type="{treeModel>/note/type}"
+                                        text="{treeModel>/note/text}"/>
+                                    <VBox class="treePanel">
+                                        <!-- [DETAIL-RESET] Il velo e' di QUEST'AREA: la testata
+                                             arriva subito dalla riga cliccata, l'albero no. -->
+                                        <Tree
+                                            id="operationsTree"
+                                            busy="{treeModel>/busy}"
+                                            items="{path: 'treeModel>/nodes', templateShareable: false}"
+                                            toggleOpenState="onSapTreeToggle">
+                                            <dragDropConfig>
+                                                <dnd:DragInfo sourceAggregation="items"/>
+                                            </dragDropConfig>
+
+                                            <CustomTreeItem class="{treeModel>cssClass}">
+                                                <HBox alignItems="Center" class="treeNodeContent">
+                                                    <core:Icon
+                                                        src="{treeModel>icon}"
+                                                        class="{treeModel>iconClass}"
+                                                        color="{treeModel>iconColor}"/>
+                                                    <VBox class="sapUiSmallMarginBegin" width="100%">
+                                                        <Text text="{treeModel>text}" class="treeNodeTitle"/>
+                                                        <Text text="{treeModel>description}" class="treeNodeDesc"/>
+                                                    </VBox>
+                                                    <core:Icon
+                                                        src="sap-icon://chain-link"
+                                                        class="linkIcon"
+                                                        visible="{= ${treeModel>nodeType} === 'operation'}"
+                                                        color="{= ${treeModel>hasLink} ? '#0854A0' : '#CCCCCC'}"
+                                                        press="onHighlightLinkedPlexOps"/>
+                                                </HBox>
+                                            </CustomTreeItem>
+                                        </Tree>
+                                    </VBox>
+                                </VBox>
+
+                                <!-- RIGHT: Plex Cycle Tree -->
+                                <VBox width="48%">
+                                    <Title text="{i18n>plexRoutingCycleTitle}" level="H2" class="sapUiSmallMarginBottom"/>
+
+                                    <!-- Toolbar -->
+                                    <OverflowToolbar class="sapUiSmallMarginBottom">
+                                        <Button
+                                            id="btnAddOperations"
+                                            text="{i18n>btnAddOperations}"
+                                            icon="sap-icon://add"
+                                            press="onAddPlexOperations"
+                                            type="Emphasized"/>
+                                        <!-- priority="NeverOverflow": il pulsante di salvataggio non
+                                             entra MAI nel menu «...». OverflowToolbar riempie quel
+                                             menu partendo DAL FONDO, e finche' «Salva Ciclo» era
+                                             l'ultimo elemento ci finiva per primo: l'utente
+                                             costruiva l'albero e usciva senza salvare, senza nessun
+                                             segnale. Lo scambio di posizione con «Importa da
+                                             Template» lo allontana dal bordo, questa riga lo blinda
+                                             a qualunque larghezza della finestra. -->
+                                        <Button
+                                            id="btnSaveCycle"
+                                            text="{i18n>btnSaveCycle}"
+                                            icon="sap-icon://save"
+                                            press="onSaveRoutingPlexCycle"
+                                            type="Accept"
+                                            enabled="{plexCycleModel>/dirty}">
+                                            <layoutData>
+                                                <OverflowToolbarLayoutData priority="NeverOverflow"/>
+                                            </layoutData>
+                                        </Button>
+                                        <Button
+                                            id="btnRemoveOperation"
+                                            text="{i18n>btnRemoveOperation}"
+                                            icon="sap-icon://delete"
+                                            press="onRemovePlexOperation"
+                                            enabled="{plexCycleModel>/removeEnabled}"/>
+                                        <Button
+                                            id="btnAutoAssign"
+                                            text="{i18n>btnAutoAssign}"
+                                            icon="sap-icon://chain-link"
+                                            press="onAutoAssignComponents"/>
+                                        <ToolbarSpacer/>
+                                        <Button
+                                            id="btnMoveUp"
+                                            icon="sap-icon://navigation-up-arrow"
+                                            tooltip="{i18n>btnMoveUp}"
+                                            press="onMoveOperationUp"
+                                            enabled="{plexCycleModel>/moveUpEnabled}"/>
+                                        <Button
+                                            id="btnMoveDown"
+                                            icon="sap-icon://navigation-down-arrow"
+                                            tooltip="{i18n>btnMoveDown}"
+                                            press="onMoveOperationDown"
+                                            enabled="{plexCycleModel>/moveDownEnabled}"/>
+                                        <ToolbarSeparator/>
+                                        <Button
+                                            id="btnSyncPlex"
+                                            text="{i18n>syncPlexCycle}"
+                                            icon="sap-icon://synchronize"
+                                            press="onSyncPlexCycle"
+                                            type="Emphasized"/>
+                                        <Button
+                                            id="btnImportTemplate"
+                                            text="{i18n>btnImportFromTemplate}"
+                                            icon="sap-icon://download-from-cloud"
+                                            press="onImportFromTemplate"/>
+                                    </OverflowToolbar>
+
+                                    <!-- Plex Cycle Tree -->
+                                    <VBox class="treePanel plexTreePanel">
+                                        <Tree
+                                            id="plexCycleTree"
+                                            busy="{plexCycleModel>/busy}"
+                                            items="{path: 'plexCycleModel>/nodes', templateShareable: false}"
+                                            mode="SingleSelectMaster"
+                                            selectionChange="onPlexTreeSelectionChange"
+                                            toggleOpenState="onPlexTreeToggle">
+                                            <dragDropConfig>
+                                                <dnd:DragInfo sourceAggregation="items"/>
+                                                <dnd:DropInfo
+                                                    targetAggregation="items"
+                                                    dropPosition="OnOrBetween"
+                                                    dropLayout="Vertical"
+                                                    drop="onPlexTreeDrop"/>
+                                            </dragDropConfig>
+
+                                            <CustomTreeItem class="{plexCycleModel>cssClass}">
+                                                <HBox alignItems="Center" class="treeNodeContent">
+                                                    <core:Icon
+                                                        src="{plexCycleModel>icon}"
+                                                        class="{plexCycleModel>iconClass}"
+                                                        color="{plexCycleModel>iconColor}"/>
+                                                    <VBox class="sapUiSmallMarginBegin" width="100%">
+                                                        <Text text="{plexCycleModel>text}" class="treeNodeTitle"/>
+                                                        <Text text="{plexCycleModel>description}" class="treeNodeDesc"/>
+                                                    </VBox>
+                                                    <core:Icon
+                                                        src="sap-icon://chain-link"
+                                                        class="linkIcon"
+                                                        visible="{= ${plexCycleModel>nodeType} === 'plexOperation'}"
+                                                        color="{= ${plexCycleModel>hasLink} ? '#0854A0' : '#CCCCCC'}"
+                                                        press="onHighlightLinkedSapOp"/>
+                                                    <core:Icon
+                                                        src="sap-icon://factory"
+                                                        class="linkIcon"
+                                                        visible="{= ${plexCycleModel>nodeType} === 'plexOperation'}"
+                                                        color="{= ${plexCycleModel>hasWorkcenters} ? '#0854A0' : '#CCCCCC'}"
+                                                        tooltip="{i18n>manageWorkcenters}"
+                                                        press="onManageWorkcenters"/>
+                                                    <core:Icon
+                                                        src="sap-icon://edit"
+                                                        class="linkIcon"
+                                                        visible="{= ${plexCycleModel>nodeType} === 'plexOperation'}"
+                                                        color="#666666"
+                                                        tooltip="{i18n>editLink}"
+                                                        press="onLinkPlexOperation"/>
+                                                    <!-- [COMP-SOURCE] Componente collocato a mano:
+                                                         l'auto-assegnazione del job non lo sposta
+                                                         (feature 0036). Le tre icone qui sopra sono
+                                                         tutte visibili solo su 'plexOperation': la
+                                                         riga componente non aveva alcun marcatore di
+                                                         coda, ed e' questo il punto d'innesto.
+                                                         `visible` e non una classe CSS: la classe la
+                                                         risolve UI5 alla costruzione dell'item,
+                                                         mentre qui il valore cambia a ogni ricostruzione
+                                                         dell'albero. Nessun `press`: dichiara, non agisce. -->
+                                                    <core:Icon
+                                                        src="sap-icon://pushpin-on"
+                                                        class="linkIcon treeIconManualAssign"
+                                                        visible="{= ${plexCycleModel>nodeType} === 'plexComponent' &amp;&amp; ${plexCycleModel>isManual} }"
+                                                        color="#0854A0"
+                                                        tooltip="{i18n>compManualAssigned}"/>
+                                                </HBox>
+                                            </CustomTreeItem>
+                                        </Tree>
+                                    </VBox>
+                                </VBox>
+                            </items>
+                        </FlexBox>
+                    </IconTabFilter>
+
+                    <!-- Tab 2: Sync History -->
+                    <IconTabFilter key="logs" text="{i18n>tabSyncHistory}" icon="sap-icon://history">
+                        <VBox class="sapUiSmallMargin">
+                            <Title text="{i18n>routingSyncLogTitle}" level="H2" class="sapUiSmallMarginBottom"/>
+                            <Table
+                                id="routingLogTable"
+                                inset="false"
+                                busy="{routingLogModel>/busy}"
+                                items="{routingLogModel>/logs}"
+                                mode="SingleSelectMaster"
+                                selectionChange="onRoutingLogRowSelect">
+
+                                <!-- [ACTION-RESULT] Dopo un invio interrotto dal gateway la riga
+                                     puo' non esserci ANCORA: il server sta finendo di scriverla.
+                                     Senza questo pulsante l'unico modo di riguardare e' uscire
+                                     dalla scheda e rientrare, ed e' proprio il momento in cui
+                                     serve sapere se l'invio e' arrivato. -->
+                                <headerToolbar>
+                                    <OverflowToolbar>
+                                        <ToolbarSpacer/>
+                                        <Button
+                                            icon="sap-icon://refresh"
+                                            text="{i18n>btnRefreshSyncLog}"
+                                            tooltip="{i18n>btnRefreshSyncLogTooltip}"
+                                            press="onRefreshRoutingSyncLogs"/>
+                                    </OverflowToolbar>
+                                </headerToolbar>
+
+                                <columns>
+                                    <Column width="5em">
+                                        <Text text="{i18n>colCounter}"/>
+                                    </Column>
+                                    <Column width="8em">
+                                        <Text text="{i18n>colSendDate}"/>
+                                    </Column>
+                                    <Column width="7em">
+                                        <Text text="{i18n>colSendTime}"/>
+                                    </Column>
+                                    <Column hAlign="Center" width="8em">
+                                        <Text text="{i18n>colStatus}"/>
+                                    </Column>
+                                    <Column>
+                                        <Text text="{i18n>colMessage}"/>
+                                    </Column>
+                                </columns>
+
+                                <items>
+                                    <ColumnListItem>
+                                        <cells>
+                                            <ObjectNumber number="{routingLogModel>Counter}"/>
+                                            <Text text="{routingLogModel>SentDate}"/>
+                                            <Text text="{routingLogModel>SentTime}"/>
+                                            <ObjectStatus
+                                                text="{path: 'routingLogModel>Status', formatter: '.formatStatusText'}"
+                                                state="{path: 'routingLogModel>Status', formatter: '.formatStatusState'}"
+                                                icon="{path: 'routingLogModel>Status', formatter: '.formatStatusIcon'}"/>
+                                            <Text text="{routingLogModel>Message}"/>
+                                        </cells>
+                                    </ColumnListItem>
+                                </items>
+                            </Table>
+
+                            <!-- [LOG-PAGE] La barra delle pagine: una sola per le tre schede. -->
+                            <core:Fragment
+                                fragmentName="avvaleplm.marsplm.sap2plex.main.view.fragments.LogPager"
+                                type="XML"/>
+
+                            <!-- JSON Detail Panel -->
+                            <!-- [LOG-TRACE] Il velo e' del PANNELLO, non della pagina: la lista e'
+                                 gia' a schermo, ed e' da li' che si e' cliccato. -->
+                            <VBox
+                                visible="{routingJsonDetailModel>/visible}"
+                                busy="{routingJsonDetailModel>/busy}"
+                                class="sapUiSmallMarginTop">
+
+                                <Toolbar class="sapUiSmallMarginBottom">
+                                    <Title text="{i18n>routingJsonDetailTitle}" level="H3"/>
+                                    <ToolbarSpacer/>
+                                    <Button
+                                        icon="sap-icon://decline"
+                                        press="onCloseRoutingJsonDetail"
+                                        tooltip="{i18n>closeJsonPanel}"/>
+                                </Toolbar>
+
+                                <VBox class="sapUiSmallMarginBegin sapUiSmallMarginEnd">
+                                    <Label text="{i18n>selectedLogInfo}" design="Bold"/>
+                                    <Text text="{i18n>colCounter}: {routingJsonDetailModel>/Counter}"/>
+                                    <Text text="{i18n>colSendDate}: {routingJsonDetailModel>/SentDate}"/>
+                                    <Text text="{i18n>colSendTime}: {routingJsonDetailModel>/SentTime}"/>
+                                </VBox>
+
+                                <!-- [LOG-TRACE] Una lettura caduta si DICHIARA, e i due riquadri
+                                     spariscono: vuoti direbbero «non e' stato mandato niente». -->
+                                <MessageStrip
+                                    visible="{= !!${routingJsonDetailModel>/error} }"
+                                    text="{routingJsonDetailModel>/error}"
+                                    type="Warning"
+                                    showIcon="true"
+                                    class="sapUiSmallMarginTop sapUiSmallMarginBegin sapUiSmallMarginEnd sapUiSmallMarginBottom"/>
+
+                                <VBox
+                                    visible="{= !${routingJsonDetailModel>/error} }"
+                                    class="sapUiSmallMarginTop sapUiSmallMarginBegin sapUiSmallMarginEnd">
+                                    <Label text="{i18n>requestJsonLabel}" design="Bold"/>
+                                    <editor:CodeEditor
+                                        id="routingRequestJsonEditor"
+                                        type="json"
+                                        height="250px"
+                                        value="{routingJsonDetailModel>/RequestJsonFormatted}"
+                                        editable="false"
+                                        lineNumbers="true"
+                                        syntaxHints="true"/>
+                                </VBox>
+
+                                <VBox
+                                    visible="{= !${routingJsonDetailModel>/error} }"
+                                    class="sapUiSmallMarginTop sapUiSmallMarginBegin sapUiSmallMarginEnd sapUiSmallMarginBottom">
+                                    <Label text="{i18n>responseJsonLabel}" design="Bold"/>
+                                    <ObjectStatus
+                                        visible="{= ${routingJsonDetailModel>/ResponseStatus} !== null }"
+                                        text="{routingJsonDetailModel>/ResponseStatusText}"
+                                        state="{path: 'routingJsonDetailModel>/ResponseStatus', formatter: '.formatHttpStatusState'}"
+                                        icon="{path: 'routingJsonDetailModel>/ResponseStatus', formatter: '.formatHttpStatusIcon'}"
+                                        class="sapUiSmallMarginTop sapUiSmallMarginBottom"/>
+                                    <editor:CodeEditor
+                                        id="routingResponseJsonEditor"
+                                        type="json"
+                                        height="250px"
+                                        value="{routingJsonDetailModel>/ResponseJsonFormatted}"
+                                        editable="false"
+                                        lineNumbers="true"
+                                        syntaxHints="true"/>
+                                </VBox>
+                            </VBox>
+                        </VBox>
+                    </IconTabFilter>
+                </items>
+            </IconTabBar>
+        </f:content>
+
+    </f:DynamicPage>
+
+</mvc:View>

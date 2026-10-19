@@ -1,0 +1,63 @@
+<core:FragmentDefinition
+    xmlns="sap.m"
+    xmlns:core="sap.ui.core"
+    xmlns:l="sap.ui.layout">
+
+    <Dialog
+        id="manageTemplatesDialog"
+        title="{i18n>dlgManageTemplatesTitle}"
+        contentWidth="480px"
+        draggable="true"
+        resizable="true">
+
+        <content>
+            <l:VerticalLayout width="100%" class="sapUiContentPadding">
+
+                <Label text="{i18n>dlgTemplatePlant}" required="true" labelFor="templatePlantSelect"/>
+                <!-- [PLANT-ACCESS] Stesso perimetro del selettore in testata (feature 0048): era
+                     l'altro consumatore di `catalog>/ZPlant`, e i due vanno ristretti insieme o
+                     divergono — da qui si SALVA un template su un plant. -->
+                <Select
+                    id="templatePlantSelect"
+                    width="100%"
+                    forceSelection="false"
+                    change=".onTemplatePlantChange"
+                    items="{plantScope>/plants}">
+                    <core:Item key="{plantScope>Plant}" text="{plantScope>Plant} - {plantScope>Name}"/>
+                </Select>
+
+                <Label text="{i18n>dlgTemplateSelect}" labelFor="templateSelectBox" class="sapUiSmallMarginTop"/>
+                <ComboBox
+                    id="templateSelectBox"
+                    width="100%"
+                    enabled="{tmplDlg>/plantSelected}"
+                    placeholder="{i18n>dlgTemplateSelectPlaceholder}"
+                    selectionChange=".onTemplateSelectChange"
+                    items="{templateModel>/RoutingTemplates}">
+                    <core:Item key="{templateModel>ID}" text="{templateModel>TemplateCode} - {templateModel>Description}"/>
+                </ComboBox>
+
+            </l:VerticalLayout>
+        </content>
+
+        <buttons>
+            <Button
+                text="{i18n>dlgBtnNewTemplate}"
+                icon="sap-icon://add"
+                type="Emphasized"
+                enabled="{tmplDlg>/plantSelected}"
+                press=".onTemplateDialogNew"/>
+            <Button
+                text="{i18n>dlgBtnOpenTemplate}"
+                icon="sap-icon://edit"
+                type="Accept"
+                enabled="{tmplDlg>/templateSelected}"
+                press=".onTemplateDialogOpen"/>
+            <Button
+                text="{i18n>dlgBtnCancel}"
+                press=".onTemplateDialogCancel"/>
+        </buttons>
+
+    </Dialog>
+
+</core:FragmentDefinition>

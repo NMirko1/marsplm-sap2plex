@@ -1,0 +1,225 @@
+<core:FragmentDefinition
+    xmlns="sap.m"
+    xmlns:core="sap.ui.core"
+    xmlns:mp="avvaleplm.marsplm.sap2plex.adminconfigplant.control"
+    xmlns:form="sap.ui.layout.form">
+
+    <NavContainer id="matCatNav" height="100%">
+
+        <!-- ============ PAGE 1: CATEGORY LIST ============ -->
+        <Page id="matCatListPage" showHeader="false" class="sapUiContentPadding">
+            <VBox class="sapUiSmallMarginBottom sapUiSmallMarginTop">
+                <Text text="{i18n>mcTabIntro}"/>
+
+                <!-- Feature 0013 / FR-18 (M-01): permanent warning when ACTIVE categories of this
+                     plant have conditions on information the active SAP channel does not provide
+                     (Special Procurement / Production Supervisor). Text composed in the controller
+                     from the i18n bundle; no affected category (or read failed) => no warning.
+                     Never blocks editing or saving. -->
+                <MessageStrip
+                    id="matCatFieldAvailStrip"
+                    visible="{matCatAvail>/hasFieldWarning}"
+                    text="{matCatAvail>/fieldWarningText}"
+                    type="Warning"
+                    showIcon="true"
+                    class="sapUiSmallMarginTop"/>
+            </VBox>
+
+            <!-- [LIST-COUNT] Il conteggio dichiarato: senza, «Mostra di piu'» compare anche quando non
+                 c'e' piu' niente e poi resta a girare. Solo sui binding ASSOLUTI. Vedi GroupsTab e DEC-102. -->
+            <Table
+                id="matCategoryTable"
+                items="{
+                    path: 'matcategory>/MaterialCategories',
+                    parameters: { '$$updateGroupId': 'matCategoryChanges', '$count': true },
+                    sorter: { path: 'Sequence' }
+                }"
+                growing="true"
+                growingThreshold="50"
+                mode="MultiSelect">
+
+                <headerToolbar>
+                    <OverflowToolbar>
+                        <Title text="{i18n>mcTableTitle}"/>
+                        <ToolbarSpacer/>
+                        <Button icon="sap-icon://add" text="{i18n>mcBtnAdd}" type="Transparent" press=".onAddMatCategory"/>
+                        <Button icon="sap-icon://delete" text="{i18n>mcBtnDelete}" type="Transparent" press=".onDeleteMatCategory"/>
+                        <Button icon="sap-icon://save" text="{i18n>mcBtnSave}" type="Emphasized" press=".onSaveMatCategory"/>
+                        <Button icon="sap-icon://sys-cancel" text="{i18n>mcBtnCancel}" type="Transparent" press=".onCancelMatCategory"/>
+                    </OverflowToolbar>
+                </headerToolbar>
+
+                <columns>
+                    <Column><Text text="{i18n>mcColCategoryName}"/></Column>
+                    <Column width="30%"><Text text="{i18n>mcColPlexPartType}"/></Column>
+                    <Column width="15%" hAlign="End"><Text text="{i18n>mcColSequence}"/></Column>
+                    <!-- [MULTI-CATCHALL] Il ripiego si legge come si legge «Attiva»: una colonna
+                         per riga. Prima lo si poteva dedurre solo dalla scritta grigia sotto il
+                         nome e dal trattino nella colonna Sequence — due indizi indiretti, che con
+                         piu' ripieghi attivi non facevano vedere il problema. -->
+                    <Column width="12%" hAlign="Center"><Text text="{i18n>mcColCatchAll}"/></Column>
+                    <Column width="12%" hAlign="Center"><Text text="{i18n>mcColActive}"/></Column>
+                </columns>
+
+                <items>
+                    <ColumnListItem type="Navigation" press=".onMatCategoryPress">
+                        <cells>
+                            <!-- [W1-01] Il ripiego dev'essere riconoscibile senza aprire il dettaglio:
+                                 e' la categoria che decide cosa succede a TUTTO il resto. -->
+                            <ObjectIdentifier
+                                title="{matcategory>CategoryName}"
+                                text="{ path: 'matcategory>IsCatchAll', targetType: 'any', formatter: '.formatCatchAllTag' }"/>
+                            <!-- [PLEX-TYPE-LABEL] La colonna mostrava la chiave grezza: senza il
+                                 formatter la lista resta in inglese e il dettaglio che si apre da
+                                 qui e' in italiano, nella stessa scheda. Con una parte sola il
+                                 ripiego e' il codice stesso. -->
+                            <Text text="{ path: 'matcategory>PlexPartType', formatter: '.formatPlexPartTypeLabel' }"/>
+                            <Text text="{
+                                parts: [
+                                    { path: 'matcategory>IsCatchAll', targetType: 'any' },
+                                    { path: 'matcategory>Sequence', targetType: 'any' }
+                                ],
+                                formatter: '.formatSequenceCell'
+                            }"/>
+                            <ObjectStatus
+                                text="{ path: 'matcategory>IsCatchAll', targetType: 'any', formatter: '.formatCatchAllText' }"
+                                state="{ path: 'matcategory>IsCatchAll', targetType: 'any', formatter: '.formatCatchAllState' }"/>
+                            <ObjectStatus
+                                text="{ path: 'matcategory>IsActive', targetType: 'any', formatter: '.formatActiveText' }"
+                                state="{ path: 'matcategory>IsActive', targetType: 'any', formatter: '.formatActiveState' }"/>
+                        </cells>
+                    </ColumnListItem>
+                </items>
+            </Table>
+        </Page>
+
+        <!-- ============ PAGE 2: CATEGORY DETAIL (CONDITIONS) ============ -->
+        <Page
+            id="matCatDetailPage"
+            title="{matcategory>CategoryName}"
+            showNavButton="true"
+            navButtonPress=".onMatCategoryBack"
+            class="sapUiContentPadding">
+
+            <form:SimpleForm
+                editable="true"
+                layout="ResponsiveGridLayout"
+                title="{i18n>mcDetailHeader}">
+                <form:content>
+                    <Label text="{i18n>mcColPlant}"/>
+                    <Text text="{matcategory>Plant}"/>
+
+                    <Label text="{i18n>mcColCategoryName}" required="true"/>
+                    <Input value="{matcategory>CategoryName}"/>
+
+                    <Label text="{i18n>mcColPlexPartType}"/>
+                    <mp:SearchComboBox
+                        selectedKey="{matcategory>PlexPartType}"
+                        items="{matcategory>/PlexPartTypeVH}"
+                        placeholder="{i18n>mcPartTypePlaceholder}"
+                        width="100%">
+                        <!-- [PLEX-TYPE-LABEL] Il testo e' i18n per codice; `key` NON si tocca, e'
+                             cio' che finisce in ZMatCategory.PlexPartType e che il server
+                             riconfronta stretta. La seconda parte e' il ripiego: il `Label` del
+                             seed, per un codice che i bundle non conoscono ancora. -->
+                        <core:Item
+                            key="{matcategory>PartType}"
+                            text="{ parts: ['matcategory>PartType', 'matcategory>Label'], formatter: '.formatPlexPartTypeLabel' }"/>
+                    </mp:SearchComboBox>
+
+                    <Label text="{i18n>mcColSequence}"/>
+                    <Input
+                        value="{matcategory>Sequence}"
+                        type="Number"
+                        enabled="{ path: 'matcategory>IsCatchAll', targetType: 'any', formatter: '.formatNotCatchAll' }"
+                        placeholder="{ path: 'matcategory>IsCatchAll', targetType: 'any', formatter: '.formatSequencePlaceholder' }"/>
+
+                    <Label text="{i18n>mcColActive}"/>
+                    <Switch state="{matcategory>IsActive}"/>
+
+                    <!-- [W1-01] Categoria di ripiego: prende tutto cio' che nessun'altra categoria
+                         aggancia. Senza, il giorno in cui si definisce «Finished Product» tutto il
+                         resto sparisce da Plex. -->
+                    <Label text="{i18n>mcColCatchAll}"/>
+                    <Switch state="{matcategory>IsCatchAll}"/>
+
+                    <Label text=""/>
+                    <Text text="{i18n>mcCatchAllHint}"/>
+                </form:content>
+            </form:SimpleForm>
+
+            <Table
+                id="matCatConditionsTable"
+                items="{
+                    path: 'matcategory>Conditions',
+                    parameters: { '$$updateGroupId': 'matCategoryChanges' }
+                }"
+                growing="true"
+                growingThreshold="50"
+                mode="MultiSelect"
+                class="sapUiSmallMarginTop">
+
+                <headerToolbar>
+                    <OverflowToolbar>
+                        <Title text="{i18n>mcConditionsTitle}"/>
+                        <ToolbarSpacer/>
+                        <!-- [W1-01] Su un ripiego le condizioni non hanno effetto e la scrittura le
+                             rifiuta: «Aggiungi» si spegne, «Elimina» resta acceso perche' e' il modo
+                             di rimuovere le condizioni gia' presenti su una categoria che si sta
+                             convertendo in ripiego. -->
+                        <Text
+                            text="{ path: 'matcategory>IsCatchAll', targetType: 'any', formatter: '.formatConditionsHint' }"
+                            class="sapUiTinyMarginEnd"/>
+                        <Button icon="sap-icon://add" text="{i18n>mcBtnAddCond}" type="Transparent"
+                                enabled="{ path: 'matcategory>IsCatchAll', targetType: 'any', formatter: '.formatNotCatchAll' }" press=".onAddMatCategoryCond"/>
+                        <Button icon="sap-icon://delete" text="{i18n>mcBtnDeleteCond}" type="Transparent" press=".onDeleteMatCategoryCond"/>
+                    </OverflowToolbar>
+                </headerToolbar>
+
+                <columns>
+                    <Column width="35%"><Text text="{i18n>mcColCondField}"/></Column>
+                    <Column width="25%"><Text text="{i18n>mcColCondOperator}"/></Column>
+                    <Column><Text text="{i18n>mcColCondValue}"/></Column>
+                </columns>
+
+                <items>
+                    <ColumnListItem>
+                        <cells>
+                            <!-- templateShareable: questo ComboBox sta DENTRO il ColumnListItem, che
+                                 UI5 clona una volta per riga. Senza la dichiarazione il framework
+                                 non sa se puo' distruggere il template e avvisa con un FUTURE
+                                 FATAL. Gli altri quattro fragment lo dichiarano gia'; questo era
+                                 rimasto indietro, ed e' l'origine dell'avviso in console. -->
+                            <mp:SearchComboBox
+                                selectedKey="{matcategory>SapField}"
+                                items="{ path: 'matcategory>/MatFieldVH', templateShareable: true }"
+                                placeholder="{i18n>mcSapFieldPlaceholder}"
+                                width="100%">
+                                <core:Item key="{matcategory>FieldName}" text="{matcategory>Label}"/>
+                            </mp:SearchComboBox>
+                            <Select selectedKey="{matcategory>Operator}" width="100%">
+                                <core:Item key="EQ" text="{i18n>mcOpEQ}"/>
+                                <core:Item key="NE" text="{i18n>mcOpNE}"/>
+                                <core:Item key="IN" text="{i18n>mcOpIN}"/>
+                                <core:Item key="NOTIN" text="{i18n>mcOpNOTIN}"/>
+                                <core:Item key="BLANK" text="{i18n>mcOpBLANK}"/>
+                                <core:Item key="NOTBLANK" text="{i18n>mcOpNOTBLANK}"/>
+                            </Select>
+                            <Input value="{matcategory>Value}" placeholder="{i18n>mcCondValuePlaceholder}"/>
+                        </cells>
+                    </ColumnListItem>
+                </items>
+            </Table>
+
+            <footer>
+                <OverflowToolbar>
+                    <ToolbarSpacer/>
+                    <Button icon="sap-icon://save" text="{i18n>mcBtnSave}" type="Emphasized" press=".onSaveMatCategory"/>
+                    <Button icon="sap-icon://sys-cancel" text="{i18n>mcBtnCancel}" type="Transparent" press=".onCancelMatCategory"/>
+                </OverflowToolbar>
+            </footer>
+        </Page>
+
+    </NavContainer>
+
+</core:FragmentDefinition>

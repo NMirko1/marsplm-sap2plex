@@ -1,0 +1,149 @@
+<core:FragmentDefinition
+    xmlns="sap.m"
+    xmlns:core="sap.ui.core">
+
+    <!--
+        [LIST-WHOLE-SET] `productModel` NON e' piu' il modello OData: e' un JSONModel che porta
+        l'insieme INTERO del perimetro, letto una volta sola da `_loadTab`. Le celle non sono
+        cambiate — il nome del modello e' lo stesso — ma il percorso della lista si': `/rows`.
+        Il modello OData vive ora sul controller (`_oProductSrv`) e serve solo alla lettura.
+
+        [COLUMN-SORT] Le `CustomData` `field` e `type` sono cio' che rende una colonna ordinabile
+        e filtrabile: `ColumnMenu.install` le legge e aggancia il menu all'intestazione. Una
+        colonna SENZA `field` resta un'intestazione muta, ed e' il modo di tenerne fuori una.
+    -->
+    <MessageStrip
+        class="sapUiSmallMarginBeginEnd sapUiTinyMarginTop"
+        visible="{productModel>/note/visible}"
+        text="{productModel>/note/text}"
+        type="{productModel>/note/type}"
+        showIcon="true"/>
+
+    <Table
+        id="productsTable"
+        inset="false"
+        growing="true"
+        growingThreshold="100"
+        growingScrollToLoad="true"
+        items="{productModel>/rows}"
+        itemPress="onItemPress">
+
+        <headerToolbar>
+            <OverflowToolbar>
+                <ToolbarSpacer/>
+                <Button
+                    icon="sap-icon://refresh"
+                    press=".onRefresh"
+                    tooltip="{i18n>refresh}"/>
+                <Button
+                    text="{i18n>btnSendAllToPlex}"
+                    press="onSendAllToPlex"
+                    icon="sap-icon://upload"
+                    type="Accept"/>
+            </OverflowToolbar>
+        </headerToolbar>
+
+        <!-- [COLUMN-SORT] I criteri attivi si DICHIARANO: un elenco filtrato che non dice come
+             e' filtrato si legge come un elenco corto. -->
+        <infoToolbar>
+            <OverflowToolbar visible="{productModel>/criteria/visible}">
+                <Text text="{productModel>/criteria/text}"/>
+                <ToolbarSpacer/>
+                <Button
+                    text="{i18n>colMenuClearAll}"
+                    type="Transparent"
+                    icon="sap-icon://clear-filter"
+                    press=".onClearProductCriteria"/>
+            </OverflowToolbar>
+        </infoToolbar>
+
+        <columns>
+            <Column width="7em">
+                <Text text="{i18n>product}"/>
+                <customData>
+                    <core:CustomData key="field" value="Product"/>
+                    <core:CustomData key="type" value="string"/>
+                </customData>
+            </Column>
+            <Column minScreenWidth="Tablet" demandPopin="true" width="20em">
+                <Text text="{i18n>productDescription}"/>
+                <customData>
+                    <core:CustomData key="field" value="ProductDescription"/>
+                    <core:CustomData key="type" value="string"/>
+                </customData>
+            </Column>
+            <Column minScreenWidth="Tablet" demandPopin="true" width="5em">
+                <Text text="{i18n>productType}"/>
+                <customData>
+                    <core:CustomData key="field" value="ProductType"/>
+                    <core:CustomData key="type" value="string"/>
+                </customData>
+            </Column>
+            <Column minScreenWidth="Desktop" demandPopin="true" width="5em">
+                <Text text="{i18n>baseUnit}"/>
+                <customData>
+                    <core:CustomData key="field" value="BaseUnit"/>
+                    <core:CustomData key="type" value="string"/>
+                </customData>
+            </Column>
+            <Column minScreenWidth="Desktop" demandPopin="true" width="6em">
+                <Text text="{i18n>plant}"/>
+                <customData>
+                    <core:CustomData key="field" value="Plant"/>
+                    <core:CustomData key="type" value="string"/>
+                </customData>
+            </Column>
+            <Column minScreenWidth="Desktop" demandPopin="true" width="9em">
+                <Text text="{i18n>plexPartType}"/>
+                <customData>
+                    <core:CustomData key="field" value="PlexPartType"/>
+                    <core:CustomData key="type" value="string"/>
+                </customData>
+            </Column>
+            <!-- Exchange Log Columns -->
+            <!-- [COLUMN-SORT] Lo stato si ordina e si filtra sul valore GREZZO (`S`/`W`/`E`), non
+                 sull'etichetta tradotta che la cella mostra: l'etichetta e' un formatter e non
+                 esiste nel modello. Chi cerca gli errori digita `E`. -->
+            <Column minScreenWidth="Desktop" demandPopin="true" hAlign="Center" width="7em">
+                <Text text="{i18n>colSendStatus}"/>
+                <customData>
+                    <core:CustomData key="field" value="LastSendStatus"/>
+                    <core:CustomData key="type" value="string"/>
+                </customData>
+            </Column>
+            <Column minScreenWidth="Desktop" demandPopin="true" width="14em">
+                <Text text="{i18n>colSendMessage}"/>
+                <customData>
+                    <core:CustomData key="field" value="LastSendMessage"/>
+                    <core:CustomData key="type" value="string"/>
+                </customData>
+            </Column>
+        </columns>
+
+        <items>
+            <ColumnListItem type="Navigation">
+                <cells>
+                    <ObjectIdentifier
+                        title="{productModel>Product}"/>
+                    <Text
+                        text="{productModel>ProductDescription}"
+                        wrapping="false"/>
+                    <Text text="{productModel>ProductType}"/>
+                    <Text text="{productModel>BaseUnit}"/>
+                    <Text text="{productModel>Plant}"/>
+                    <!-- [PLEX-TYPE-LABEL] Etichetta i18n, non il codice del seed: e' la stessa
+                         tipologia che la scheda «Categorie materiali» mostra tradotta. -->
+                    <Text text="{ path: 'productModel>PlexPartType', formatter: '.formatPlexPartTypeLabel' }"/>
+                    <!-- Exchange Log Cells -->
+                    <ObjectStatus
+                        text="{path: 'productModel>LastSendStatus', formatter: '.formatStatusText'}"
+                        state="{path: 'productModel>LastSendStatus', formatter: '.formatStatusState'}"
+                        icon="{path: 'productModel>LastSendStatus', formatter: '.formatStatusIcon'}"/>
+                    <Text text="{productModel>LastSendMessage}" maxLines="2" wrapping="true"/>
+                </cells>
+            </ColumnListItem>
+        </items>
+
+    </Table>
+
+</core:FragmentDefinition>

@@ -1,0 +1,78 @@
+<core:FragmentDefinition
+    xmlns="sap.m"
+    xmlns:core="sap.ui.core">
+
+    <!-- [MASS-IMPORT] La scelta dei bersagli: le righe della lista cicli DEL PLANT DEL TEMPLATE.
+         Sono lette dallo stesso endpoint della dashboard (`/production-routings/Routings?plants=`),
+         quindi stessa query e stessa forma di riga — e non si riciclano quelle gia' in memoria: la
+         dashboard legge i soli plant scelti nel selettore in testata, e se il template e' di un
+         altro plant la lista uscirebbe corta. Una lista corta qui si legge come «questo plant non
+         ha cicli».
+         Le righe senza materiale NON ci sono: sono i cicli SAP senza assegnazione, e
+         `saveRoutingPlexCycle` li rifiuta — offrirle vorrebbe dire offrire un bersaglio che
+         fallira' sempre. Nemmeno quelle gia' scelte, o si riscriverebbe due volte lo stesso ciclo. -->
+    <Dialog
+        id="massImportTargetsDialog"
+        title="{i18n>dlgMassImportPickTitle}"
+        contentWidth="42rem"
+        contentHeight="28rem"
+        draggable="true"
+        resizable="true">
+
+        <subHeader>
+            <OverflowToolbar>
+                <SearchField
+                    id="massImportTargetSearch"
+                    placeholder="{i18n>dlgMassImportSearch}"
+                    liveChange=".onMassImportTargetSearch"
+                    width="100%"/>
+            </OverflowToolbar>
+        </subHeader>
+
+        <content>
+            <!-- Stessa regola della tabella dei bersagli: la spunta e' un dato del modello, e chi
+                 conferma legge l'array completo — `getSelectedItems()` vede le sole righe
+                 RENDERIZZATE, quindi una selezione fatta prima di digitare nella ricerca
+                 sparirebbe alla conferma. -->
+            <Table
+                id="massImportCandidatesTable"
+                mode="MultiSelect"
+                items="{massImport>/candidates}"
+                growing="true"
+                growingThreshold="1000"
+                noDataText="{i18n>dlgMassImportNoCandidates}"
+                busy="{massImport>/candidatesBusy}">
+
+                <columns>
+                    <Column width="30%"><Text text="{i18n>dlgMassImportColCycle}"/></Column>
+                    <Column><Text text="{i18n>dlgMassImportColDescription}"/></Column>
+                    <Column width="30%"><Text text="{i18n>dlgMassImportColMaterial}"/></Column>
+                </columns>
+
+                <items>
+                    <ColumnListItem selected="{massImport>selected}">
+                        <cells>
+                            <ObjectIdentifier title="{massImport>ProductionRoutingGroup}/{massImport>ProductionRouting}"/>
+                            <Text text="{massImport>BillOfOperationsDesc}" wrapping="false"/>
+                            <Text text="{massImport>Material}"/>
+                        </cells>
+                    </ColumnListItem>
+                </items>
+            </Table>
+        </content>
+
+        <beginButton>
+            <Button
+                text="{i18n>dlgBtnConfirm}"
+                type="Emphasized"
+                press=".onMassImportTargetsConfirm"/>
+        </beginButton>
+        <endButton>
+            <Button
+                text="{i18n>dlgBtnCancel}"
+                press=".onMassImportTargetsCancel"/>
+        </endButton>
+
+    </Dialog>
+
+</core:FragmentDefinition>

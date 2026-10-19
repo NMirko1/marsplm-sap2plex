@@ -1,0 +1,204 @@
+<core:FragmentDefinition
+    xmlns="sap.m"
+    xmlns:core="sap.ui.core">
+
+    <!--
+        [LIST-WHOLE-SET] `routingModel` e' ora un JSONModel con l'insieme intero del perimetro in
+        `/rows`, letto una volta sola da `_loadTab`; il modello OData vive sul controller
+        (`_oRoutingSrv`) e serve solo alla lettura. Le celle non sono cambiate.
+
+        [COLUMN-SORT] Le `CustomData` `field` e `type` rendono la colonna ordinabile e
+        filtrabile: `ColumnMenu.install` le legge e aggancia il menu all'intestazione.
+    -->
+    <MessageStrip
+        class="sapUiSmallMarginBeginEnd sapUiTinyMarginTop"
+        visible="{routingModel>/note/visible}"
+        text="{routingModel>/note/text}"
+        type="{routingModel>/note/type}"
+        showIcon="true"/>
+
+    <Table
+        id="routingsTable"
+        inset="false"
+        growing="true"
+        growingThreshold="100"
+        growingScrollToLoad="true"
+        items="{routingModel>/rows}">
+
+        <headerToolbar>
+            <OverflowToolbar>
+                <ToolbarSpacer/>
+                <!-- [MASS-IMPORT] Applica un template a N cicli in un colpo. Visibile solo a chi ha
+                     un ruolo di CONFIGURAZIONE (admin o admin-config) su almeno un plant: e' un
+                     gesto che riscrive customizing, non un gesto di esercizio come il resto della
+                     dashboard, che si apre con qualsiasi ruolo.
+                     Il `visible` e' comodita': la difesa e' il gate dell'action lato server, che
+                     verifica il ruolo sul plant del TEMPLATE. Nasce `false` e resta `false` finche'
+                     `usablePlants()` non ha risposto — un pulsante che compare e poi sparisce e'
+                     peggio di uno che compare tardi. -->
+                <Button
+                    text="{i18n>btnMassImportTemplate}"
+                    icon="sap-icon://duplicate"
+                    press=".onMassImportTemplate"
+                    visible="{plantScope>/canConfigure}"
+                    tooltip="{i18n>btnMassImportTemplate}"/>
+                <Button
+                    text="{i18n>btnManageTemplates}"
+                    icon="sap-icon://course-book"
+                    press=".onManageTemplates"
+                    tooltip="{i18n>btnManageTemplates}"/>
+                <Button
+                    icon="sap-icon://refresh"
+                    press=".onRefreshRoutings"
+                    tooltip="{i18n>refresh}"/>
+            </OverflowToolbar>
+        </headerToolbar>
+
+        <!-- [COLUMN-SORT] I criteri attivi si dichiarano. -->
+        <infoToolbar>
+            <OverflowToolbar visible="{routingModel>/criteria/visible}">
+                <Text text="{routingModel>/criteria/text}"/>
+                <ToolbarSpacer/>
+                <Button
+                    text="{i18n>colMenuClearAll}"
+                    type="Transparent"
+                    icon="sap-icon://clear-filter"
+                    press=".onClearRoutingCriteria"/>
+            </OverflowToolbar>
+        </infoToolbar>
+
+        <columns>
+            <Column width="7em">
+                <Text text="{i18n>routingGroup}"/>
+                <customData>
+                    <core:CustomData key="field" value="ProductionRoutingGroup"/>
+                    <core:CustomData key="type" value="string"/>
+                </customData>
+            </Column>
+            <!-- ============================================================
+                 [ROUTING-BY-MATERIAL] Il MATERIALE e' la seconda colonna, non l'ottava.
+                 La lista ha una riga per (ciclo, materiale): le righe dello stesso ciclo sono
+                 adiacenti e ripetono gruppo, contatore e descrizione, quindi il materiale e'
+                 l'unica cosa che le distingue e deve stare dove l'occhio arriva subito.
+                 ============================================================ -->
+            <Column minScreenWidth="Tablet" demandPopin="true">
+                <Text text="{i18n>material}"/>
+                <customData>
+                    <core:CustomData key="field" value="Material"/>
+                    <core:CustomData key="type" value="string"/>
+                </customData>
+            </Column>
+            <Column minScreenWidth="Tablet" demandPopin="true" width="4em">
+                <Text text="{i18n>routingCounter}"/>
+                <customData>
+                    <core:CustomData key="field" value="ProductionRouting"/>
+                    <core:CustomData key="type" value="string"/>
+                </customData>
+            </Column>
+            <Column minScreenWidth="Tablet" demandPopin="true">
+                <Text text="{i18n>routingDescription}"/>
+                <customData>
+                    <core:CustomData key="field" value="BillOfOperationsDesc"/>
+                    <core:CustomData key="type" value="string"/>
+                </customData>
+            </Column>
+            <Column minScreenWidth="Desktop" demandPopin="true" hAlign="Center" width="5em">
+                <Text text="{i18n>routingStatus}"/>
+                <customData>
+                    <core:CustomData key="field" value="BillOfOperationsStatus"/>
+                    <core:CustomData key="type" value="string"/>
+                </customData>
+            </Column>
+            <!-- [ROUTING-FILTER] Stato e utilizzo sono i due criteri su cui il customizing per
+                 plant decide quali cicli mostrare (feature 0016): filtrare su un campo invisibile
+                 renderebbe impossibile capire perche' una riga e' sparita, e serve anche a leggere
+                 il valore esatto da mettere in configurazione. -->
+            <Column minScreenWidth="Desktop" demandPopin="true" hAlign="Center" width="5em">
+                <Text text="{i18n>routingUsage}"/>
+                <customData>
+                    <core:CustomData key="field" value="BillOfOperationsUsage"/>
+                    <core:CustomData key="type" value="string"/>
+                </customData>
+            </Column>
+            <Column minScreenWidth="Desktop" demandPopin="true" width="5em">
+                <Text text="{i18n>routingPlannerGroup}"/>
+                <customData>
+                    <core:CustomData key="field" value="ResponsiblePlannerGroup"/>
+                    <core:CustomData key="type" value="string"/>
+                </customData>
+            </Column>
+            <!-- ============================================================
+                 [IS-ROUTING-LIST] Colonna Work Center disattivata.
+                 Era alimentata da PlanningWorkCenter, che l'handler READ Routings
+                 ricavava da ProductionRoutingOperation (cat-service.js:1766):
+                 chiamata non disponibile via SAP Integration Suite, perche'
+                 l'iFlow Operation e' solo _GET per chiave e un key predicate
+                 non puo' contenere la lista dei gruppi della pagina.
+                 Il campo PlanningWorkCenter resta valorizzato dall'header e
+                 continua a essere mostrato nella banda header del dettaglio.
+                 Rollback: riattivare questo blocco E la cella corrispondente
+                 sotto (colonne e celle sono allineate per posizione).
+                 Vedi srv/external/PRODUCTION_ROUTING_IS.md
+                 ============================================================ -->
+            <!-- <Column minScreenWidth="Desktop" demandPopin="true" width="5em">
+                <Text text="{i18n>routingWorkCenter}"/>
+            </Column> -->
+            <Column minScreenWidth="Tablet" demandPopin="true" width="4em">
+                <Text text="{i18n>plant}"/>
+                <customData>
+                    <core:CustomData key="field" value="Plant"/>
+                    <core:CustomData key="type" value="string"/>
+                </customData>
+            </Column>
+            <Column minScreenWidth="Desktop" demandPopin="true" width="7em">
+                <Text text="{i18n>routingLastChanged}"/>
+                <customData>
+                    <core:CustomData key="field" value="LastChangeDate"/>
+                    <core:CustomData key="type" value="date"/>
+                </customData>
+            </Column>
+            <Column minScreenWidth="Desktop" demandPopin="true" hAlign="Center" width="7em">
+                <Text text="{i18n>colSendStatus}"/>
+                <customData>
+                    <core:CustomData key="field" value="LastSendStatus"/>
+                    <core:CustomData key="type" value="string"/>
+                </customData>
+            </Column>
+            <Column minScreenWidth="Desktop" demandPopin="true" width="14em">
+                <Text text="{i18n>colSendMessage}"/>
+                <customData>
+                    <core:CustomData key="field" value="LastSendMessage"/>
+                    <core:CustomData key="type" value="string"/>
+                </customData>
+            </Column>
+        </columns>
+
+        <items>
+            <ColumnListItem type="Navigation" press=".onRoutingItemPress">
+                <cells>
+                    <ObjectIdentifier
+                        title="{routingModel>ProductionRoutingGroup}"/>
+                    <!-- [ROUTING-BY-MATERIAL] cella allineata alla colonna Materiale sopra -->
+                    <ObjectIdentifier
+                        title="{path: 'routingModel>Material', formatter: '.formatRoutingMaterial'}"/>
+                    <Text text="{routingModel>ProductionRouting}"/>
+                    <Text text="{routingModel>BillOfOperationsDesc}"/>
+                    <Text text="{routingModel>BillOfOperationsStatus}"/>
+                    <Text text="{routingModel>BillOfOperationsUsage}"/>
+                    <Text text="{routingModel>ResponsiblePlannerGroup}"/>
+                    <!-- [IS-ROUTING-LIST] cella Work Center disattivata insieme alla colonna sopra -->
+                    <!-- <Text text="{routingModel>PlanningWorkCenter}"/> -->
+                    <Text text="{routingModel>Plant}"/>
+                    <Text text="{routingModel>LastChangeDate}"/>
+                    <ObjectStatus
+                        text="{path: 'routingModel>LastSendStatus', formatter: '.formatStatusText'}"
+                        state="{path: 'routingModel>LastSendStatus', formatter: '.formatStatusState'}"
+                        icon="{path: 'routingModel>LastSendStatus', formatter: '.formatStatusIcon'}"/>
+                    <Text text="{routingModel>LastSendMessage}" maxLines="2" wrapping="true"/>
+                </cells>
+            </ColumnListItem>
+        </items>
+
+    </Table>
+
+</core:FragmentDefinition>

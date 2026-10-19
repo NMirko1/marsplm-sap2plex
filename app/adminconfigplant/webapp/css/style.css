@@ -1,0 +1,21 @@
+.sapUiSmallMargin .sapMGT {
+    margin-right: 0.5rem;
+    margin-bottom: 0.5rem;
+}
+
+/* [PLEX-SECRET] Mascheramento dei due segreti Plex (Consumer Key e Data Source password) SENZA
+   `<input type="password">`: quello, e solo quello, aggancia il gestore password del browser, che
+   offriva di archiviare la Consumer Key accoppiandola all'URL Connect come se fosse un login — e
+   che al successivo caricamento poteva auto-compilarla. Vedi DEC-79.
+
+   Il selettore interno e' `.sapMInputBaseInner`: `sap.m.Input` mette la `class` del controllo sul
+   div esterno, non sull'`<input>`.
+
+   `-webkit-text-security` e' prefissato e non universale: dove non e' supportato non si maschera
+   NIENTE, quindi il controller fa un feature detect (`_maskSecretInputs`) e la' torna a
+   `type="Password"`. Se questa regola viene rinominata va rinominata anche in quel metodo e in
+   test/plexSecretFields.test.js. */
+.marsPlmSecretInput .sapMInputBaseInner {
+    -webkit-text-security: disc;
+    text-security: disc;
+}

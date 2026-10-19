@@ -1,0 +1,320 @@
+<core:FragmentDefinition
+    xmlns="sap.m"
+    xmlns:core="sap.ui.core"
+    xmlns:mp="avvaleplm.marsplm.sap2plex.adminconfigplant.control"
+    xmlns:form="sap.ui.layout.form">
+
+    <NavContainer id="plexOpMapNav" height="100%">
+
+        <!-- ============ PAGE 1: FIELD LIST ============ -->
+        <Page id="plexOpMapListPage" showHeader="false" class="sapUiContentPadding">
+            <VBox class="sapUiSmallMarginBottom sapUiSmallMarginTop">
+                <Text text="{i18n>pofTabIntro}"/>
+                <!--
+                    [PLEX-OP-TYPE] L'avviso si e' INVERTITO con la feature 0024 (DEC-84). Prima
+                    denunciava l'ASSENZA della riga di mapping su `type`; ora ne denuncia la
+                    PRESENZA, perche' quel valore lo dichiara il catalogo Plex e la riga non viene
+                    piu' letta da nessuno. Una riga inerte e muta e' peggio di una sbagliata: chi
+                    l'ha scritta continua a credere di governare il valore.
+                -->
+                <MessageStrip
+                    text="{i18n>pofInertTypeMapping}"
+                    type="Warning"
+                    showIcon="true"
+                    visible="{opFieldGap>/hasInertTypeMapping}"
+                    class="sapUiSmallMarginTop"/>
+            </VBox>
+
+            <!--
+                [PLEX-OP-TYPE-FILTER] Feature 0024 (DEC-85): quali TIPI di operazione Plex si
+                possono scegliere, per ambito.
+
+                DUE RIGHE FISSE e nessun Aggiungi/Elimina: gli ambiti sono due e non sono una
+                scelta. Un bottone «Aggiungi» inviterebbe a creare una terza riga con un ambito
+                inventato, che non filtrerebbe niente restando indistinguibile da una
+                configurazione corretta. Le righe mancanti le materializza il controller DOPO la
+                lettura, e restano transitorie fino al Salva: aprire una schermata non scrive
+                customizing.
+
+                Update group PROPRIO, non quello del mapping campi: le due tabelle stanno nella
+                stessa scheda ma non sono la stessa configurazione, e un Salva condiviso manderebbe
+                a Plex modifiche che chi ha premuto il bottone non stava guardando.
+
+                L'ordinamento DISCENDENTE su Scope mette RECV prima di CYCLE: le due righe devono
+                comparire sempre nello stesso ordine, o la tabella cambierebbe aspetto a seconda di
+                quale delle due e' stata salvata per prima.
+            -->
+            <Table
+                id="opTypeFilterTable"
+                items="{
+                    path: 'opfieldmap>/ZPlexOpTypeFilter',
+                    parameters: { '$$updateGroupId': 'opTypeFilterChanges' },
+                    sorter: { path: 'Scope', descending: true }
+                }"
+                class="sapUiSmallMarginBottom">
+
+                <headerToolbar>
+                    <OverflowToolbar>
+                        <Title text="{i18n>potTableTitle}"/>
+                        <ToolbarSpacer/>
+                        <Button icon="sap-icon://save" text="{i18n>potBtnSave}" type="Emphasized" press=".onSaveOpTypeFilter"/>
+                        <Button icon="sap-icon://sys-cancel" text="{i18n>potBtnCancel}" type="Transparent" press=".onCancelOpTypeFilter"/>
+                    </OverflowToolbar>
+                </headerToolbar>
+
+                <infoToolbar>
+                    <OverflowToolbar>
+                        <Text text="{i18n>potTabIntro}"/>
+                    </OverflowToolbar>
+                </infoToolbar>
+
+                <columns>
+                    <Column width="30%"><Text text="{i18n>potColScope}"/></Column>
+                    <Column><Text text="{i18n>potColOpTypes}"/></Column>
+                </columns>
+
+                <items>
+                    <ColumnListItem>
+                        <cells>
+                            <!-- L'ambito si LEGGE, non si scrive: la colonna mostra l'etichetta e
+                                 il valore tecnico (RECV/CYCLE) non compare in nessuna schermata. -->
+                            <Text text="{path: 'opfieldmap>Scope', formatter: '.formatOpTypeScope'}"/>
+                            <!--
+                                maxLength e' la difesa utile: String(255) e' verificato dalla
+                                validazione di tipo di CAP, che gira PRIMA di ogni before handler
+                                (DEC-40), quindi un elenco piu' lungo tornerebbe come errore
+                                tecnico invece che come messaggio leggibile.
+                            -->
+                            <Input
+                                value="{opfieldmap>OpTypes}"
+                                maxLength="255"
+                                placeholder="{i18n>potOpTypesPlaceholder}"/>
+                        </cells>
+                    </ColumnListItem>
+                </items>
+            </Table>
+
+            <!-- [LIST-COUNT] Il conteggio dichiarato: senza, «Mostra di piu'» compare anche quando non
+                 c'e' piu' niente e poi resta a girare. Solo sui binding ASSOLUTI. Vedi GroupsTab e DEC-102. -->
+            <Table
+                id="plexOpFieldMapTable"
+                items="{
+                    path: 'opfieldmap>/ZPlexOpFieldMap',
+                    parameters: { '$$updateGroupId': 'opFieldMapChanges', '$count': true }
+                }"
+                growing="true"
+                growingThreshold="50"
+                mode="MultiSelect">
+
+                <headerToolbar>
+                    <OverflowToolbar>
+                        <Title text="{i18n>pofTableTitle}"/>
+                        <ToolbarSpacer/>
+                        <Button icon="sap-icon://add" text="{i18n>pofBtnAdd}" type="Transparent" press=".onAddPlexOpFieldMap"/>
+                        <Button icon="sap-icon://delete" text="{i18n>pofBtnDelete}" type="Transparent" press=".onDeletePlexOpFieldMap"/>
+                        <Button icon="sap-icon://save" text="{i18n>pofBtnSave}" type="Emphasized" press=".onSavePlexOpFieldMap"/>
+                        <Button icon="sap-icon://sys-cancel" text="{i18n>pofBtnCancel}" type="Transparent" press=".onCancelPlexOpFieldMap"/>
+                    </OverflowToolbar>
+                </headerToolbar>
+
+                <columns>
+                    <Column width="30%"><Text text="{i18n>pofColPlexField}"/></Column>
+                    <Column width="25%"><Text text="{i18n>pofColMappingKind}"/></Column>
+                    <Column><Text text="{i18n>pofColSource}"/></Column>
+                </columns>
+
+                <items>
+                    <ColumnListItem type="Navigation" press=".onPlexOpFieldMapPress">
+                        <cells>
+                            <ObjectIdentifier title="{opfieldmap>PlexField}"/>
+                            <Text text="{opfieldmap>MappingKind}"/>
+                            <Text text="{parts: ['opfieldmap>MappingKind','opfieldmap>FixedValue','opfieldmap>SapField'], formatter: '.formatOpMappingSummary'}"/>
+                        </cells>
+                    </ColumnListItem>
+                </items>
+            </Table>
+        </Page>
+
+        <!-- ============ PAGE 2: FIELD DETAIL ============ -->
+        <Page
+            id="plexOpMapDetailPage"
+            title="{opfieldmap>PlexField}"
+            showNavButton="true"
+            navButtonPress=".onPlexOpFieldMapBack"
+            class="sapUiContentPadding">
+
+            <form:SimpleForm
+                editable="true"
+                layout="ResponsiveGridLayout"
+                title="{i18n>pofDetailHeader}">
+                <form:content>
+                    <Label text="{i18n>pofColPlant}"/>
+                    <Text text="{opfieldmap>Plant}"/>
+
+                    <Label text="{i18n>pofColPlexField}" required="true"/>
+                    <!-- partId / operationId are always set by the send code and are NOT offered here.
+                         [PLEX-OP-TYPE] E nemmeno `type`, che dalla feature 0024 (DEC-84) NON e' piu'
+                         configurabile: lo dichiara il catalogo Plex per ogni singola operazione. Una
+                         riga FIXED imponeva UN tipo a tutte le operazioni del ciclo e permetteva di
+                         scrivere un nome che il tenant non ha — `400 FIELD_REFERENCE_NOT_FOUND`, e il
+                         ciclo non parte affatto. Il rifiuto lato server e' `pofFieldDerived`. -->
+                    <Select selectedKey="{opfieldmap>PlexField}" forceSelection="false" width="100%">
+                        <core:Item key="operationNumber" text="operationNumber"/>
+                        <core:Item key="subOperation" text="subOperation"/>
+                        <core:Item key="shippable" text="shippable"/>
+                        <core:Item key="netWeight" text="netWeight"/>
+                        <core:Item key="standardQuantity" text="standardQuantity"/>
+                    </Select>
+
+                    <Label text="{i18n>pofColMappingKind}" required="true"/>
+                    <Select selectedKey="{opfieldmap>MappingKind}" width="100%">
+                        <core:Item key="FIXED" text="{i18n>pofKindFixed}"/>
+                        <core:Item key="SAP_FIELD" text="{i18n>pofKindSapField}"/>
+                        <core:Item key="RULE" text="{i18n>pofKindRule}"/>
+                    </Select>
+
+                    <Label text="{i18n>pofColFixedValue}" visible="{= %{opfieldmap>MappingKind} === 'FIXED' }"/>
+                    <Input value="{opfieldmap>FixedValue}" visible="{= %{opfieldmap>MappingKind} === 'FIXED' }"/>
+
+                    <Label text="{i18n>pofColSapField}" visible="{= %{opfieldmap>MappingKind} === 'SAP_FIELD' }"/>
+                    <mp:SearchComboBox
+                        selectedKey="{opfieldmap>SapField}"
+                        items="{opfieldmap>/OpFieldVH}"
+                        placeholder="{i18n>pofSapFieldPlaceholder}"
+                        visible="{= %{opfieldmap>MappingKind} === 'SAP_FIELD' }"
+                        width="100%">
+                        <core:Item key="{opfieldmap>FieldName}" text="{opfieldmap>Label}"/>
+                    </mp:SearchComboBox>
+                </form:content>
+            </form:SimpleForm>
+
+            <!-- Rules (only for RULE kind) -->
+            <Table
+                id="plexOpMapRulesTable"
+                items="{
+                    path: 'opfieldmap>Rules',
+                    parameters: { '$$updateGroupId': 'opFieldMapChanges' },
+                    sorter: { path: 'Sequence' }
+                }"
+                growing="true"
+                growingThreshold="50"
+                mode="MultiSelect"
+                visible="{= %{opfieldmap>MappingKind} === 'RULE' }"
+                class="sapUiSmallMarginTop">
+
+                <headerToolbar>
+                    <OverflowToolbar>
+                        <Title text="{i18n>pofRulesTitle}"/>
+                        <ToolbarSpacer/>
+                        <Button icon="sap-icon://add" text="{i18n>pofBtnAddRule}" type="Transparent" press=".onAddPlexOpRule"/>
+                        <Button icon="sap-icon://delete" text="{i18n>pofBtnDeleteRule}" type="Transparent" press=".onDeletePlexOpRule"/>
+                    </OverflowToolbar>
+                </headerToolbar>
+
+                <columns>
+                    <Column width="20%"><Text text="{i18n>pofColSequence}"/></Column>
+                    <Column><Text text="{i18n>pofColOutputValue}"/></Column>
+                    <Column width="15%" hAlign="End"><Text text=""/></Column>
+                </columns>
+
+                <items>
+                    <ColumnListItem>
+                        <cells>
+                            <Input value="{opfieldmap>Sequence}" type="Number"/>
+                            <Input value="{opfieldmap>OutputValue}"/>
+                            <Button icon="sap-icon://navigation-right-arrow" text="{i18n>pofBtnConditions}" type="Transparent" press=".onPlexOpRulePress"/>
+                        </cells>
+                    </ColumnListItem>
+                </items>
+            </Table>
+
+            <footer>
+                <OverflowToolbar>
+                    <ToolbarSpacer/>
+                    <Button icon="sap-icon://save" text="{i18n>pofBtnSave}" type="Emphasized" press=".onSavePlexOpFieldMap"/>
+                    <Button icon="sap-icon://sys-cancel" text="{i18n>pofBtnCancel}" type="Transparent" press=".onCancelPlexOpFieldMap"/>
+                </OverflowToolbar>
+            </footer>
+        </Page>
+
+        <!-- ============ PAGE 3: RULE DETAIL (CONDITIONS) ============ -->
+        <Page
+            id="plexOpMapRulePage"
+            title="{i18n>pofRuleDetailTitle}"
+            showNavButton="true"
+            navButtonPress=".onPlexOpRuleDetailBack"
+            class="sapUiContentPadding">
+
+            <form:SimpleForm
+                editable="true"
+                layout="ResponsiveGridLayout"
+                title="{i18n>pofRuleDetailHeader}">
+                <form:content>
+                    <Label text="{i18n>pofColSequence}"/>
+                    <Input value="{opfieldmap>Sequence}" type="Number"/>
+                    <Label text="{i18n>pofColOutputValue}" required="true"/>
+                    <Input value="{opfieldmap>OutputValue}"/>
+                </form:content>
+            </form:SimpleForm>
+
+            <Table
+                id="plexOpMapConditionsTable"
+                items="{
+                    path: 'opfieldmap>Conditions',
+                    parameters: { '$$updateGroupId': 'opFieldMapChanges' }
+                }"
+                growing="true"
+                growingThreshold="50"
+                mode="MultiSelect"
+                class="sapUiSmallMarginTop">
+
+                <headerToolbar>
+                    <OverflowToolbar>
+                        <Title text="{i18n>pofConditionsTitle}"/>
+                        <ToolbarSpacer/>
+                        <Button icon="sap-icon://add" text="{i18n>pofBtnAddCond}" type="Transparent" press=".onAddPlexOpCondition"/>
+                        <Button icon="sap-icon://delete" text="{i18n>pofBtnDeleteCond}" type="Transparent" press=".onDeletePlexOpCondition"/>
+                    </OverflowToolbar>
+                </headerToolbar>
+
+                <columns>
+                    <Column width="35%"><Text text="{i18n>pofColCondField}"/></Column>
+                    <Column width="25%"><Text text="{i18n>pofColCondOperator}"/></Column>
+                    <Column><Text text="{i18n>pofColCondValue}"/></Column>
+                </columns>
+
+                <items>
+                    <ColumnListItem>
+                        <cells>
+                            <mp:SearchComboBox
+                                selectedKey="{opfieldmap>SapField}"
+                                items="{opfieldmap>/OpFieldVH}"
+                                placeholder="{i18n>pofSapFieldPlaceholder}"
+                                width="100%">
+                                <core:Item key="{opfieldmap>FieldName}" text="{opfieldmap>Label}"/>
+                            </mp:SearchComboBox>
+                            <Select selectedKey="{opfieldmap>Operator}" width="100%">
+                                <core:Item key="EQ" text="{i18n>pofOpEQ}"/>
+                                <core:Item key="NE" text="{i18n>pofOpNE}"/>
+                                <core:Item key="IN" text="{i18n>pofOpIN}"/>
+                                <core:Item key="BLANK" text="{i18n>pofOpBLANK}"/>
+                                <core:Item key="NOTBLANK" text="{i18n>pofOpNOTBLANK}"/>
+                            </Select>
+                            <Input value="{opfieldmap>Value}" placeholder="{i18n>pofCondValuePlaceholder}"/>
+                        </cells>
+                    </ColumnListItem>
+                </items>
+            </Table>
+
+            <footer>
+                <OverflowToolbar>
+                    <ToolbarSpacer/>
+                    <Button icon="sap-icon://save" text="{i18n>pofBtnSave}" type="Emphasized" press=".onSavePlexOpFieldMap"/>
+                    <Button icon="sap-icon://sys-cancel" text="{i18n>pofBtnCancel}" type="Transparent" press=".onCancelPlexOpFieldMap"/>
+                </OverflowToolbar>
+            </footer>
+        </Page>
+
+    </NavContainer>
+
+</core:FragmentDefinition>

@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ZMARS_PRODUCT_SRV - modello dell'indirizzo A_Product per il canale SAP Integration Suite.
+
+  COSA E'
+  Deriva dall'API standard API_PRODUCT_SRV (srv/external/OP_API_PRODUCT_SRV_0001.edmx): l'entity
+  A_Product con le sue 69 proprieta' copiate VERBATIM - tipo, MaxLength, Precision/Scale,
+  display-format - piu' DUE proprieta' che lo standard non ha. I tipi sono verbatim di proposito:
+  un MaxLength diverso non darebbe errore, darebbe un valore troncato.
+
+  COSA AGGIUNGE, E PERCHE'
+  1) Plant .............. NON esiste su MARA: e' il CRITERIO di selezione, ed e' la ragione del file.
+                          Oggi A_Product sul canale IS ha il solo indirizzo per chiave, quindi leggere
+                          l'anagrafica di un perimetro costa UNA CHIAMATA PER MATERIALE (~1000 richieste
+                          per apertura elenco e per run notturno). Il perimetro pero' nasce gia' da
+                          A_ProductPlant filtrato per stabilimento: con questa proprieta' la stessa
+                          lettura diventa UNA chiamata. L'iFlow deve mapparla sulla select-option
+                          SO_PLANT. Attenzione: un $filter su una proprieta' che il modello dell'iFlow
+                          non dichiara viene rifiutato oppure - il caso pericoloso - IGNORATO, e allora
+                          la risposta e' un 200 con l'intera MARA, indistinguibile da un dato corretto.
+  2) ProductDescription . MAKTX. Oggi si legge con un SECONDO fan-out su A_ProductDescription, una
+                          chiamata per (Product, Language). Portandola qui quel fan-out sparisce.
+                          NON c'e' una proprieta' Language: la lingua la decide l'iFlow, ed e' una
+                          scelta esplicita - va dichiarato QUALE lingua riempie MAKTX.
+
+  COSA NON C'E'
+  Nessuna NavigationProperty e nessuna Association. Su questo canale le letture sono piatte, gli
+  $expand non esistono (DEC-43, DEC-44, DEC-45) e le 13 navigazioni dello standard obbligherebbero a
+  trascinare dentro tutti gli entity type di destinazione, cioe' l'intero file da 228 KB.
+  Restano fuori anche gli altri entity set di API_PRODUCT_SRV: questo indirizzo serve A_Product.
+
+  CRITERI ATTESI
+  Product (SO_PRODUCT) e Plant (SO_PLANT). Se serve il delta del job MAT_SYNC, anche LastChangeDate
+  e CreationDate (SO_LAST_CHANGE_DATE / SO_CREATION_DATE, richiesta R-1 del contratto). Le altre
+  proprieta' viaggiano come DATI, non come criteri.
+
+  NOTA - le tre proprieta' che la struttura ABAP ZMARS non riempie sono ChangeNumber,
+  MaterialRevisionLevel e LastChangeDateTime. Restano dichiarate: un campo dichiarato e non riempito
+  arriva vuoto e non rompe niente. Il driver del delta e' LastChangeDate (MARA-LAEDA), che c'e'.
+-->
+<edmx:Edmx Version="1.0" xmlns:edmx="http://schemas.microsoft.com/ado/2007/06/edmx" xmlns:m="http://schemas.microsoft.com/ado/2007/08/dataservices/metadata" xmlns:sap="http://www.sap.com/Protocols/SAPData">
+  <edmx:DataServices m:DataServiceVersion="2.0">
+    <Schema Namespace="ZMARS_PRODUCT_SRV" xml:lang="en" sap:schema-version="1" xmlns="http://schemas.microsoft.com/ado/2008/09/edm">
+      <EntityType Name="A_ProductType" sap:label="Product" sap:content-version="1">
+        <Key>
+          <PropertyRef Name="Product"/>
+        </Key>
+
+        <!-- ============================================================
+             Le 69 proprieta' di A_Product, verbatim da API_PRODUCT_SRV
+             ============================================================ -->
+        <Property Name="Product" Type="Edm.String" Nullable="false" MaxLength="40" sap:display-format="UpperCase" sap:label="Product" sap:quickinfo="Product Number"/>
+        <Property Name="ProductType" Type="Edm.String" MaxLength="4" sap:display-format="UpperCase" sap:label="Product Type"/>
+        <Property Name="CrossPlantStatus" Type="Edm.String" MaxLength="2" sap:display-format="UpperCase" sap:label="CrossPlantProdStatus" sap:quickinfo="Cross-Plant Product Status"/>
+        <Property Name="CrossPlantStatusValidityDate" Type="Edm.DateTime" Precision="0" sap:display-format="Date" sap:label="Valid from" sap:quickinfo="Date from which the cross-plant material status is valid"/>
+        <Property Name="CreationDate" Type="Edm.DateTime" Precision="0" sap:display-format="Date" sap:label="Created On" sap:creatable="false" sap:updatable="false"/>
+        <Property Name="CreatedByUser" Type="Edm.String" MaxLength="12" sap:display-format="UpperCase" sap:label="Created By" sap:quickinfo="Name of Person Responsible for Creating the Object" sap:creatable="false" sap:updatable="false"/>
+        <Property Name="LastChangeDate" Type="Edm.DateTime" Precision="0" sap:display-format="Date" sap:label="Last Change" sap:quickinfo="Date of Last Change" sap:creatable="false" sap:updatable="false"/>
+        <Property Name="LastChangedByUser" Type="Edm.String" MaxLength="12" sap:display-format="UpperCase" sap:label="Changed By" sap:quickinfo="Name of Person Who Changed Object" sap:creatable="false" sap:updatable="false"/>
+        <Property Name="LastChangeDateTime" Type="Edm.DateTimeOffset" Precision="7" sap:label="Last Changed" sap:quickinfo="Change Time Stamp" sap:creatable="false" sap:updatable="false"/>
+        <Property Name="IsMarkedForDeletion" Type="Edm.Boolean" sap:label="Marked for Deletion" sap:quickinfo="Deletion Indicator"/>
+        <Property Name="ProductOldID" Type="Edm.String" MaxLength="40" sap:display-format="UpperCase" sap:label="Old Product Number"/>
+        <Property Name="GrossWeight" Type="Edm.Decimal" Precision="13" Scale="3" sap:unit="WeightUnit" sap:label="Gross Weight"/>
+        <Property Name="PurchaseOrderQuantityUnit" Type="Edm.String" MaxLength="3" sap:label="Order Unit" sap:quickinfo="Purchase Order Unit of Measure" sap:semantics="unit-of-measure"/>
+        <Property Name="SourceOfSupply" Type="Edm.String" MaxLength="1" sap:display-format="UpperCase" sap:label="Source of supply" sap:quickinfo="Source of Supply"/>
+        <Property Name="WeightUnit" Type="Edm.String" MaxLength="3" sap:label="Unit of Weight" sap:semantics="unit-of-measure"/>
+        <Property Name="NetWeight" Type="Edm.Decimal" Precision="13" Scale="3" sap:unit="WeightUnit" sap:label="Net Weight"/>
+        <Property Name="CountryOfOrigin" Type="Edm.String" MaxLength="3" sap:display-format="UpperCase" sap:label="Cntry/Reg of Origin" sap:quickinfo="Country/Region of Origin of Material (Non-Preferential Ori.)"/>
+        <Property Name="CompetitorID" Type="Edm.String" MaxLength="10" sap:display-format="UpperCase" sap:label="Competitor"/>
+        <Property Name="ProductGroup" Type="Edm.String" MaxLength="9" sap:display-format="UpperCase" sap:label="Product Group"/>
+        <Property Name="BaseUnit" Type="Edm.String" MaxLength="3" sap:label="Base Unit of Measure" sap:semantics="unit-of-measure"/>
+        <Property Name="ItemCategoryGroup" Type="Edm.String" MaxLength="4" sap:display-format="UpperCase" sap:label="Gen. item cat. grp" sap:quickinfo="General item category group"/>
+        <Property Name="ProductHierarchy" Type="Edm.String" MaxLength="18" sap:display-format="UpperCase" sap:label="Product Hierarchy"/>
+        <Property Name="Division" Type="Edm.String" MaxLength="2" sap:display-format="UpperCase" sap:label="Division"/>
+        <Property Name="VarblPurOrdUnitIsActive" Type="Edm.String" MaxLength="1" sap:display-format="UpperCase" sap:label="Var. Order Unit" sap:quickinfo="Variable Purchase Order Unit Active"/>
+        <Property Name="VolumeUnit" Type="Edm.String" MaxLength="3" sap:label="Volume Unit" sap:semantics="unit-of-measure"/>
+        <Property Name="MaterialVolume" Type="Edm.Decimal" Precision="13" Scale="3" sap:unit="VolumeUnit" sap:label="Volume"/>
+        <Property Name="ANPCode" Type="Edm.String" MaxLength="9" sap:display-format="NonNegative" sap:label="ANP Code"/>
+        <Property Name="Brand" Type="Edm.String" MaxLength="4" sap:display-format="UpperCase" sap:label="Brand"/>
+        <Property Name="ProcurementRule" Type="Edm.String" MaxLength="1" sap:display-format="UpperCase" sap:label="Procurement rule"/>
+        <Property Name="ValidityStartDate" Type="Edm.DateTime" Precision="0" sap:display-format="Date" sap:label="Valid From" sap:quickinfo="Valid-From Date"/>
+        <Property Name="LowLevelCode" Type="Edm.String" MaxLength="3" sap:display-format="UpperCase" sap:label="Low-Level Code"/>
+        <Property Name="ProdNoInGenProdInPrepackProd" Type="Edm.String" MaxLength="40" sap:display-format="UpperCase" sap:label="Generic Material" sap:quickinfo="Material Number of the Generic Material in Prepack Materials"/>
+        <Property Name="SerialIdentifierAssgmtProfile" Type="Edm.String" MaxLength="4" sap:display-format="UpperCase" sap:label="Serial No. Profile" sap:quickinfo="Serial Number Profile"/>
+        <Property Name="SizeOrDimensionText" Type="Edm.String" MaxLength="32" sap:display-format="UpperCase" sap:label="Size/dimensions"/>
+        <Property Name="IndustryStandardName" Type="Edm.String" MaxLength="18" sap:display-format="UpperCase" sap:label="Industry Std Desc." sap:quickinfo="Industry Standard Description (such as ANSI or ISO)"/>
+        <Property Name="ProductStandardID" Type="Edm.String" MaxLength="18" sap:display-format="UpperCase" sap:label="GTIN" sap:quickinfo="Global Trade Item Number (EAN/UPC/GTIN)"/>
+        <Property Name="InternationalArticleNumberCat" Type="Edm.String" MaxLength="2" sap:display-format="UpperCase" sap:label="EAN category" sap:quickinfo="Category of International Article Number (EAN)"/>
+        <Property Name="ProductIsConfigurable" Type="Edm.Boolean" sap:label="Configurable" sap:quickinfo="Product is Configurable"/>
+        <Property Name="IsBatchManagementRequired" Type="Edm.Boolean" sap:label="Batch Management" sap:quickinfo="Batch Management Requirement Indicator"/>
+        <Property Name="ExternalProductGroup" Type="Edm.String" MaxLength="18" sap:display-format="UpperCase" sap:label="Ext. Product Group" sap:quickinfo="External Product Group"/>
+        <Property Name="CrossPlantConfigurableProduct" Type="Edm.String" MaxLength="40" sap:display-format="UpperCase" sap:label="Cross-plant CP" sap:quickinfo="Cross-Plant Configurable Product"/>
+        <Property Name="SerialNoExplicitnessLevel" Type="Edm.String" MaxLength="1" sap:display-format="UpperCase" sap:label="Serialization level" sap:quickinfo="Level of Explicitness for Serial Number"/>
+        <Property Name="ProductManufacturerNumber" Type="Edm.String" MaxLength="40" sap:display-format="UpperCase" sap:label="Mfr Part Number" sap:quickinfo="Manufacturer Part Number"/>
+        <Property Name="ManufacturerNumber" Type="Edm.String" MaxLength="10" sap:display-format="UpperCase" sap:label="Manufacturer" sap:quickinfo="Number of a Manufacturer"/>
+        <Property Name="ManufacturerPartProfile" Type="Edm.String" MaxLength="4" sap:display-format="UpperCase" sap:label="Mfr Part Profile"/>
+        <Property Name="QltyMgmtInProcmtIsActive" Type="Edm.Boolean" sap:label="QM in Procur. Active" sap:quickinfo="QM in Procurement Is Active"/>
+        <Property Name="IndustrySector" Type="Edm.String" MaxLength="1" sap:display-format="UpperCase" sap:label="Industry"/>
+        <Property Name="ChangeNumber" Type="Edm.String" MaxLength="12" sap:display-format="UpperCase" sap:label="Change Number"/>
+        <Property Name="MaterialRevisionLevel" Type="Edm.String" MaxLength="2" sap:display-format="UpperCase" sap:label="Revision Level"/>
+        <Property Name="HandlingIndicator" Type="Edm.String" MaxLength="4" sap:display-format="UpperCase" sap:label="Handling Indicator"/>
+        <Property Name="WarehouseProductGroup" Type="Edm.String" MaxLength="4" sap:display-format="UpperCase" sap:label="WH Material Group" sap:quickinfo="Warehouse Material Group"/>
+        <Property Name="WarehouseStorageCondition" Type="Edm.String" MaxLength="2" sap:display-format="UpperCase" sap:label="Whse Stor. Condition" sap:quickinfo="Warehouse Storage Condition"/>
+        <Property Name="StandardHandlingUnitType" Type="Edm.String" MaxLength="4" sap:display-format="UpperCase" sap:label="Standard HU Type"/>
+        <Property Name="SerialNumberProfile" Type="Edm.String" MaxLength="4" sap:display-format="UpperCase" sap:label="Serial No. Profile" sap:quickinfo="Serial Number Profile"/>
+        <Property Name="AdjustmentProfile" Type="Edm.String" MaxLength="3" sap:display-format="UpperCase" sap:label="Adjust. Profile" sap:quickinfo="Adjustment Profile"/>
+        <Property Name="PreferredUnitOfMeasure" Type="Edm.String" MaxLength="3" sap:label="Preferred UoM" sap:quickinfo="Preferred Alternative UoM for Warehouse Operations" sap:semantics="unit-of-measure"/>
+        <Property Name="IsPilferable" Type="Edm.Boolean" sap:label="Pilferable"/>
+        <Property Name="IsRelevantForHzdsSubstances" Type="Edm.Boolean" sap:label="Relevant for HS" sap:quickinfo="Relevant for Hazardous Substances"/>
+        <Property Name="QuarantinePeriod" Type="Edm.Decimal" Precision="3" Scale="0" sap:label="Quarant. Per." sap:quickinfo="Quarantine Period"/>
+        <Property Name="TimeUnitForQuarantinePeriod" Type="Edm.String" MaxLength="3" sap:label="Time Unit" sap:quickinfo="Time Unit for Quarantine Period" sap:semantics="unit-of-measure"/>
+        <Property Name="QualityInspectionGroup" Type="Edm.String" MaxLength="4" sap:display-format="UpperCase" sap:label="Quality Inspec. Grp" sap:quickinfo="Quality Inspection Group"/>
+        <Property Name="AuthorizationGroup" Type="Edm.String" MaxLength="4" sap:display-format="UpperCase" sap:label="Authorization Group"/>
+        <Property Name="DocumentIsCreatedByCAD" Type="Edm.Boolean" sap:label="CAD Indicator"/>
+        <Property Name="HandlingUnitType" Type="Edm.String" MaxLength="4" sap:display-format="UpperCase" sap:label="Handling Unit Type"/>
+        <Property Name="HasVariableTareWeight" Type="Edm.Boolean" sap:label="Varb. Tare Weight" sap:quickinfo="Variable Tare Weight"/>
+        <Property Name="MaximumPackagingLength" Type="Edm.Decimal" Precision="15" Scale="3" sap:unit="UnitForMaxPackagingDimensions" sap:label="Max. Pack. Length" sap:quickinfo="Maximum Packing Length of Packaging Material"/>
+        <Property Name="MaximumPackagingWidth" Type="Edm.Decimal" Precision="15" Scale="3" sap:unit="UnitForMaxPackagingDimensions" sap:label="Max. Pack. Width" sap:quickinfo="Maximum Packing Width of Packaging Material"/>
+        <Property Name="MaximumPackagingHeight" Type="Edm.Decimal" Precision="15" Scale="3" sap:unit="UnitForMaxPackagingDimensions" sap:label="Max. Pack. Height" sap:quickinfo="Maximum Packing Height of Packaging Material"/>
+        <Property Name="UnitForMaxPackagingDimensions" Type="Edm.String" MaxLength="3" sap:label="Unit of Measurement" sap:quickinfo="Unit of Measure for Maximum Packing Length/Width/Height" sap:semantics="unit-of-measure"/>
+        <!-- ============================================================
+             AGGIUNTE rispetto allo standard. Vedi il commento in testa.
+             ============================================================ -->
+        <Property Name="Plant" Type="Edm.String" MaxLength="4" sap:display-format="UpperCase" sap:label="Plant" sap:quickinfo="Criterio di selezione: stabilimento (MARC-WERKS) - mappare su SO_PLANT" sap:creatable="false" sap:updatable="false" sap:sortable="false"/>
+        <Property Name="ProductDescription" Type="Edm.String" MaxLength="40" sap:label="Product Description" sap:quickinfo="MAKT-MAKTX nella lingua decisa dall'iFlow" sap:creatable="false" sap:updatable="false" sap:filterable="false" sap:sortable="false"/>
+
+        <!-- [INNESTO] I campi in piu' della struttura ABAP ZMARS vanno qui, con nome, tipo e
+             lunghezza. Aggiungerli sotto questa riga, non in mezzo alle 69 di sopra: la' sopra
+             e' una copia, e deve restare confrontabile con l'originale. -->
+
+      </EntityType>
+      <EntityContainer Name="ZMARS_PRODUCT_SRV_Entities" m:IsDefaultEntityContainer="true" sap:supported-formats="atom json">
+        <EntitySet Name="A_Product" EntityType="ZMARS_PRODUCT_SRV.A_ProductType" sap:creatable="false" sap:updatable="false" sap:deletable="false" sap:addressable="true" sap:content-version="1"/>
+      </EntityContainer>
+    </Schema>
+  </edmx:DataServices>
+</edmx:Edmx>

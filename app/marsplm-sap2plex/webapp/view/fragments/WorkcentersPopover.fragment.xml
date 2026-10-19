@@ -1,0 +1,105 @@
+<core:FragmentDefinition
+    xmlns="sap.m"
+    xmlns:core="sap.ui.core">
+
+    <!-- [WC-POPOVER-WIDTH] Qui NON c'e' `contentWidth`, e non e' una dimenticanza.
+         Con la larghezza cablata a 500px, la riga che porta l'avviso «gia' su V090-...» della
+         [W1-08] sfondava il contenitore — descrizione e avviso stanno su una riga flex che non
+         scende sotto la propria larghezza minima — e UI5 accendeva la barra di scorrimento
+         orizzontale, tagliando proprio l'informazione che serve per decidere. Senza
+         `contentWidth` il popover si dimensiona sul contenuto (`.sapMPopoverScroll` e'
+         inline-block con `min-width: 100%`), cioe' sulla riga piu' larga della lista.
+         Il minimo (500px, la larghezza storica) e il massimo (48rem) sono in `css/style.css`
+         sulla classe `marsPlmWcPopover`: il tetto deve stare sulla RADICE del popover, perche'
+         su `.sapMPopoverCont` UI5 scrive `max-width` inline e vincerebbe sul foglio di stile.
+
+         MA QUEL `max-width` INLINE NON E' SOLO UN TETTO DI SICUREZZA: LO DECIDE IL `placement`,
+         ED E' PER QUESTO CHE QUI NON C'E' PIU' `Left`. Misurato sul sorgente 1.142:
+         `_recalculateMargins` riscrive, per `Left`, il margine DESTRO come tutto cio' che sta a
+         destra dell'icona che apre il popover; `_getMaxContentWidth` e' poi
+         `documentWidth - marginLeft - marginRight`, cioe' lo SPAZIO A SINISTRA DELL'ICONA, e
+         `_adjustPositionAndArrow` lo scrive su `.sapMPopoverCont` (`$content.css(...)` manda solo
+         `max-width` e `max-height`, mai `width`). Nell'editor dei TEMPLATE l'albero e' unico e sta
+         a sinistra, quindi l'icona cade intorno ai 375px e il contenuto restava tappato a ~355px:
+         la lista larga meta' del popover, con la descrizione e l'avviso «gia' su ...» tagliati e
+         una banda vuota a destra — perche' il `min-width` qui sopra allarga la RADICE (titolo,
+         ricerca, pulsanti), che a quel tetto non e' soggetta. Nel dettaglio CICLO l'albero Plex e'
+         il pannello destro, lo spazio a sinistra abbonda e il difetto non si vedeva.
+         `PreferredLeftOrFlip` e' una condizione binaria in `_calcHorizontal`
+         (`iLeftSpace > iPopoverWidth + arrowOffset ? Left : Right`): resta a sinistra dove ci sta
+         — il ciclo, che e' il caso che gia' funzionava — e si ribalta a destra dove non ci sta.
+         NON si usa `Horizontal`, che sceglie il lato col PIU' spazio e sposterebbe il popover
+         anche dove oggi e' a posto.
+         E i due difetti si presentano in modo DIVERSO, che e' la ragione per cui questo e' passato
+         inosservato: la barra orizzontale del primo paragrafo la accendeva il CONTENITORE — con una
+         larghezza cablata, `.sapMPopoverScroll` (inline-block) si dimensiona sul `max-content` della
+         riga e sborda dalla `.sapMPopoverCont` —, mentre la RIGA in se' si accorcia e basta
+         (`.sapMSLIDiv` e' flex con `overflow:hidden`, i testi sono `flex:1 1 auto` con
+         `text-overflow:ellipsis`). Con il tetto del placement non c'e' nessuna barra da vedere:
+         solo tre puntini e uno spazio bianco che sembrano una scelta grafica.
+
+         LA SOGLIA DEL GROWING E' ALTA E IL GROWING RESTA ACCESO. Con 50 righe renderizzate
+         comparivano «Mostra di più [ 50 / n ]» e — cosa meno evidente — la larghezza si misurava
+         sulle sole prime 50: un avviso lungo in coda all'elenco restava fuori dal conto. Spegnere
+         il growing sembrerebbe piu' diretto ed e' sbagliato: e' il growing a chiedere al binding
+         una lunghezza ESPLICITA (`getContexts(0, this._iLimit)`), e senza quella
+         `ClientListBinding` applica il tetto di `JSONModel.iSizeLimit`, che vale 100 — le righe
+         oltre la centesima spariscono senza errore ne' contatore. I due controller alzano anche
+         `setSizeLimit` sul modello, cosi' la difesa non dipende da questo attributo.
+         Guardia: test/wcPopoverWidth.test.js -->
+    <ResponsivePopover
+        id="workcentersPopover"
+        class="marsPlmWcPopover"
+        title="{i18n>popoverWorkcentersTitle}"
+        contentHeight="400px"
+        placement="PreferredLeftOrFlip">
+
+        <subHeader>
+            <OverflowToolbar>
+                <SearchField
+                    id="wcSearchField"
+                    placeholder="{i18n>popoverSearchWorkcenters}"
+                    liveChange=".onWcSearch"
+                    width="100%"/>
+            </OverflowToolbar>
+        </subHeader>
+
+        <content>
+            <List
+                id="wcList"
+                mode="MultiSelect"
+                items="{wcModel>/workcenters}"
+                growing="true"
+                growingThreshold="1000"
+                noDataText="{i18n>popoverNoWorkcenters}"
+                busy="{wcModel>/busy}">
+
+                <!-- [W1-08] `info` non e' piu' il tipo di work center ma `infoText`, che il
+                     controller valorizza col tipo quando tutto e' a posto e con «gia' su OP00x0»
+                     quando quel work center e' approvato su un'ALTRA operazione di questo ciclo
+                     (BBP §7.6.2). Il tipo non si perde nel caso normale, e il conflitto si vede
+                     prima di selezionarlo invece di uscire al salvataggio. -->
+                <StandardListItem
+                    title="{wcModel>workcenterCode}"
+                    description="{wcModel>name}"
+                    info="{wcModel>infoText}"
+                    infoState="{wcModel>infoState}"
+                    selected="{wcModel>selected}"/>
+            </List>
+        </content>
+
+        <beginButton>
+            <Button
+                text="{i18n>dlgBtnConfirm}"
+                type="Emphasized"
+                press=".onWcPopoverConfirm"/>
+        </beginButton>
+        <endButton>
+            <Button
+                text="{i18n>dlgBtnCancel}"
+                press=".onWcPopoverCancel"/>
+        </endButton>
+
+    </ResponsivePopover>
+
+</core:FragmentDefinition>

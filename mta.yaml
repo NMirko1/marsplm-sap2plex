@@ -1,0 +1,287 @@
+_schema-version: 3.3.0
+ID: marsplm-sap2plex
+version: 1.0.0
+description: "A simple CAP project."
+parameters:
+  enable-parallel-deployments: true
+  deploy_mode: html5-repo
+build-parameters:
+  before-all:
+    - builder: custom
+      commands:
+        - npm ci
+        - npx cds build --production
+modules:
+  - name: marsplm-sap2plex-srv
+    type: nodejs
+    path: gen/srv
+    parameters:
+      instances: 1 # il lock dei job in memoria (srv/lib/jobTrigger.js) presuppone UNA istanza
+      memory: 1024M
+      disk-quota: 1024M
+      buildpack: nodejs_buildpack
+    build-parameters:
+      builder: npm-ci
+    provides:
+      - name: srv-api # required by consumers of CAP services (e.g. approuter)
+        properties:
+          srv-url: ${default-url}
+    requires:
+      - name: marsplm-sap2plex-auth
+      - name: marsplm-sap2plex-db
+      - name: marsplm-sap2plex-connectivity
+      - name: marsplm-sap2plex-destination
+      - name: marsplm-sap2plex-job-scheduler
+
+  - name: marsplm-sap2plex-db-deployer
+    type: hdb
+    path: gen/db
+    parameters:
+      buildpack: nodejs_buildpack
+    requires:
+      - name: marsplm-sap2plex-db
+  - name: marsplm-sap2plex
+    type: approuter.nodejs
+    path: app/router
+    parameters:
+      keep-existing-routes: true
+      disk-quota: 256M
+      memory: 256M
+    requires:
+      - name: srv-api
+        group: destinations
+        properties:
+          name: srv-api # must be used in xs-app.json as well
+          url: ~{srv-url}
+          forwardAuthToken: true
+      - name: marsplm-sap2plex-auth
+      - name: marsplm-sap2plex-html5-runtime
+    provides:
+      - name: app-api
+        properties:
+          app-protocol: ${protocol}
+          app-uri: ${default-uri}
+
+  - name: marsplm-sap2plex-app-deployer
+    type: com.sap.application.content
+    path: gen
+    build-parameters:
+      build-result: app/
+      requires:
+        - name: marsplmsap2plexadminconfiglicense
+          artifacts:
+            - adminconfiglicense.zip
+          target-path: app/
+        - name: marsplmsap2plexadminconfigmatfil
+          artifacts:
+            - adminconfigmatfil.zip
+          target-path: app/
+        - name: marsplmsap2plexadminconfigplant
+          artifacts:
+            - adminconfigplant.zip
+          target-path: app/
+        - name: marsplmsap2plexadminconfobjgrp
+          artifacts:
+            - adminconfobjgrp.zip
+          target-path: app/
+        - name: marsplmsap2plexadminconfprodtype
+          artifacts:
+            - adminconfprodtype.zip
+          target-path: app/
+        - name: marsplmsap2plexmarsplmsap2plex
+          artifacts:
+            - marsplm-sap2plex.zip
+          target-path: app/
+    requires:
+      - name: marsplm-sap2plex-auth
+      - name: srv-api
+      - name: marsplm-sap2plex-html5-repo-host
+        parameters:
+          content-target: true
+          config:
+            HTML5Runtime_enabled: true
+
+  # Destination per Work Zone (cockpit + adminconfigplant): repository html5, auth e backend.
+  - name: marsplm-sap2plex-destinations
+    type: com.sap.application.content
+    requires:
+      - name: marsplm-sap2plex-auth
+        parameters:
+          service-key:
+            name: marsplm-sap2plex-auth-key
+      - name: marsplm-sap2plex-html5-repo-host
+        parameters:
+          service-key:
+            name: marsplm-sap2plex-html5-repo-host-key
+      - name: srv-api
+      - name: marsplm-sap2plex-destination
+        parameters:
+          content-target: true
+    build-parameters:
+      no-source: true
+    parameters:
+      content:
+        instance:
+          existing_destinations_policy: update
+          destinations:
+            - Name: marsplm-sap2plex-html5-repository
+              ServiceInstanceName: marsplm-sap2plex-html5-repo-host
+              ServiceKeyName: marsplm-sap2plex-html5-repo-host-key
+              sap.cloud.service: marsplm.service
+            - Name: marsplm-sap2plex-auth
+              Authentication: OAuth2UserTokenExchange
+              ServiceInstanceName: marsplm-sap2plex-auth
+              ServiceKeyName: marsplm-sap2plex-auth-key
+              sap.cloud.service: marsplm.service
+        subaccount:
+          existing_destinations_policy: update
+          destinations:
+            - Name: marsplm-sap2plex-api
+              Description: "Connessione usata da Work Zone, non toccare!"
+              URL: ~{srv-api/srv-url}
+              Authentication: OAuth2ClientCredentials
+              TokenServiceInstanceName: marsplm-sap2plex-auth
+              TokenServiceKeyName: marsplm-sap2plex-auth-key
+              HTML5.DynamicDestination: true
+
+  - name: marsplmsap2plexadminconfiglicense
+    type: html5
+    path: app/adminconfiglicense
+    build-parameters:
+      build-result: dist
+      builder: custom
+      commands:
+        - npm ci
+        - npm run build
+      supported-platforms:
+        []
+  - name: marsplmsap2plexadminconfigmatfil
+    type: html5
+    path: app/adminconfigmatfil
+    build-parameters:
+      build-result: dist
+      builder: custom
+      commands:
+        - npm ci
+        - npm run build
+      supported-platforms:
+        []
+  - name: marsplmsap2plexadminconfigplant
+    type: html5
+    path: app/adminconfigplant
+    build-parameters:
+      build-result: dist
+      builder: custom
+      commands:
+        - npm ci
+        - npm run build
+      supported-platforms:
+        []
+  - name: marsplmsap2plexadminconfobjgrp
+    type: html5
+    path: app/adminconfobjgrp
+    build-parameters:
+      build-result: dist
+      builder: custom
+      commands:
+        - npm ci
+        - npm run build
+      supported-platforms:
+        []
+  - name: marsplmsap2plexadminconfprodtype
+    type: html5
+    path: app/adminconfprodtype
+    build-parameters:
+      build-result: dist
+      builder: custom
+      commands:
+        - npm ci
+        - npm run build
+      supported-platforms:
+        []
+  - name: marsplmsap2plexmarsplmsap2plex
+    type: html5
+    path: app/marsplm-sap2plex
+    build-parameters:
+      build-result: dist
+      builder: custom
+      commands:
+        - npm ci
+        - npm run build
+      supported-platforms:
+        []
+
+resources:
+  - name: marsplm-sap2plex-auth
+    type: org.cloudfoundry.managed-service
+    parameters:
+      service: xsuaa
+      service-plan: application
+      path: ./xs-security.json
+      config:
+        xsappname: marsplm-sap2plex-${org}-${space}
+        tenant-mode: dedicated
+        oauth2-configuration:
+          credential-types:
+            - "binding-secret"
+            - "x509"
+          redirect-uris:
+            - https://*~{app-api/app-uri}/**
+    requires:
+      - name: app-api
+      - name: marsplm-sap2plex-job-scheduler # $XSSERVICENAME(...) in xs-security.json: l'istanza deve esistere prima
+  - name: marsplm-sap2plex-job-scheduler
+    type: org.cloudfoundry.managed-service
+    parameters:
+      service: jobscheduler
+      service-plan: standard
+      config:
+        enable-xsuaa-support: true
+  - name: marsplm-sap2plex-db
+    type: com.sap.xs.hdi-container
+    parameters:
+      service: hana
+      service-plan: hdi-shared
+  - name: marsplm-sap2plex-connectivity
+    type: org.cloudfoundry.managed-service
+    parameters:
+      service: connectivity
+      service-plan: lite
+  - name: marsplm-sap2plex-destination
+    type: org.cloudfoundry.managed-service
+    parameters:
+      service: destination
+      service-plan: lite
+      config:
+        HTML5Runtime_enabled: true
+        init_data:
+          instance:
+            existing_destinations_policy: update
+            destinations:
+              - Name: srv-api # stesso nome delle rotte degli xs-app.json
+                Authentication: NoAuthentication
+                Type: HTTP
+                ProxyType: Internet
+                URL: ~{srv-api/srv-url}
+                HTML5.ForwardAuthToken: true
+                HTML5.DynamicDestination: true
+                HTML5.Timeout: 120000
+    requires:
+      - name: srv-api
+        group: destinations
+        properties:
+          name: srv-api
+          url: ~{srv-url}
+          forwardAuthToken: true
+          timeout: 120000
+
+  - name: marsplm-sap2plex-html5-repo-host
+    type: org.cloudfoundry.managed-service
+    parameters:
+      service: html5-apps-repo
+      service-plan: app-host
+  - name: marsplm-sap2plex-html5-runtime
+    type: org.cloudfoundry.managed-service
+    parameters:
+      service: html5-apps-repo
+      service-plan: app-runtime

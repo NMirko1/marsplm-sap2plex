@@ -1,0 +1,123 @@
+<core:FragmentDefinition
+    xmlns="sap.m"
+    xmlns:core="sap.ui.core">
+
+    <Dialog
+        id="plexOperationsDialog"
+        title="{i18n>dlgSelectOperationsTitle}"
+        contentWidth="600px"
+        contentHeight="400px"
+        draggable="true"
+        resizable="true">
+
+        <subHeader>
+            <OverflowToolbar>
+                <SearchField
+                    id="plexOpsSearchField"
+                    placeholder="{i18n>dlgSearchOperations}"
+                    liveChange=".onPlexOpsSearch"
+                    width="100%"/>
+            </OverflowToolbar>
+        </subHeader>
+
+        <content>
+            <!-- [PLEX-OP-TYPE-FILTER] L'elenco puo' essere FILTRATO per tipo (customizing per plant,
+                 scheda «Mappatura Operazioni Plex»), e un elenco filtrato che non lo dice si legge
+                 come «sul tenant non ci sono altre operazioni». Peggio: «filtrato a zero» e «Plex
+                 non ha risposto» sarebbero la stessa schermata vuota. Il testo lo compone il
+                 controller dalla busta dell'action (readOk / filterTypes / total / kept), ed e'
+                 visibile solo quando c'e' davvero qualcosa da dichiarare. -->
+            <MessageStrip
+                text="{plexOpsModel>/noticeText}"
+                type="{plexOpsModel>/noticeType}"
+                showIcon="true"
+                visible="{= !!${plexOpsModel>/noticeText} }"
+                class="sapUiTinyMargin"/>
+
+            <!-- [PLEX-OPS-SELECT] La spunta e' un DATO del modello, non lo stato della riga.
+                 Il filtro e' client-side e SOSTITUISCE l'array legato alla tabella
+                 (`onPlexOpsSearch`). Senza il `selected` qui sotto la spunta la teneva il
+                 `ColumnListItem`, e `ListBase` la ricordava per PATH del binding context — su un
+                 JSONModel quel path e' un INDICE, `/operations/0`. Filtrando `2` su
+                 100/110/200/210, la 200 selezionata era ricordata come «riga 0»: togliendo il
+                 filtro la riga 0 e' la 100, e nel ciclo entrava l'operazione sbagliata.
+                 Il binding risolve entrambe le meta' del difetto, e la seconda non e' evidente:
+                   - la spunta segue l'OGGETTO, che e' lo stesso in `/operations` e in
+                     `/allOperations` (`filter()` non copia), quindi sopravvive al cambio di filtro;
+                   - la memoria per indice si SPEGNE da sola. `ListBase.onItemBindingContextSet` e
+                     `onItemInserted` riapplicano `_aSelectedPaths` solo `if
+                     (!oItem.isSelectedBoundTwoWay())`, e il binding e' a due vie perche' TwoWay e'
+                     il modo predefinito di JSONModel. Quindi NON serve `rememberSelections="false"`:
+                     e' per questo che WorkcentersPopover e LinkOperationPopover, con lo stesso
+                     schema e senza quell'attributo, non hanno mai avuto il difetto. Se un giorno il
+                     binding diventasse a una via, tornerebbe — insieme alla spunta non scritta.
+                 Chi conferma legge `/allOperations` filtrando `selected`, non `getSelectedItems()`:
+                 quello vede solo le righe renderizzate (filtro corrente e `growingThreshold`).
+                 Presidiato da test/plexOpsSelection.test.js.
+
+                 LA SOGLIA E' ALTA E IL GROWING RESTA ACCESO, e le due cose vanno insieme. Con 50 si
+                 vedeva «Mostra di più [ 50 / 154 ]» e un'operazione in coda all'alfabeto chiedeva
+                 tre clic; con una soglia oltre il numero di righe `GrowingEnablement` nasconde da
+                 solo il trigger, quindi il paginatore non c'e' piu' — e torna, come rete di
+                 sicurezza, solo su un tenant con piu' di 1000 operazioni.
+                 Spegnere il growing sembrerebbe la strada piu' diretta ed e' quella sbagliata: e'
+                 il growing a chiedere al binding una lunghezza ESPLICITA
+                 (`getContexts(0, this._iLimit)`), e senza di essa `ClientListBinding.getContexts`
+                 applica il tetto di `JSONModel.iSizeLimit`, che vale 100 — 54 operazioni
+                 spariscono senza errore ne' contatore. E' lo stesso difetto che in configurazione
+                 plant e' costato le operazioni di ricevimento, corrette la' con `setSizeLimit`
+                 (PlantConfig.controller.js). Per lo stesso motivo i tre controller alzano
+                 `setSizeLimit` sul modello: qui la difesa e' doppia di proposito. -->
+            <Table
+                id="plexOperationsTable"
+                mode="MultiSelect"
+                items="{plexOpsModel>/operations}"
+                growing="true"
+                growingThreshold="1000"
+                noDataText="{i18n>dlgNoOperationsFound}"
+                busy="{plexOpsModel>/busy}">
+
+                <!-- [PLEX-OP-TYPE] Due colonne, non quattro. «Nome» e «Descrizione» sono state
+                     rimosse perche' `name` e `description` NON esistono nel `OperationDTO` di Plex
+                     (srv/external/PLEX_OPERATION_API_CONTRACT.md): erano vuote su qualunque tenant,
+                     per costruzione — non per un dato non popolato. Due colonne sempre vuote si
+                     leggono come un'anagrafica incompleta, che e' il contrario di quello che sono.
+                     Al loro posto c'e' `type`, che e' l'unico altro campo del contratto ed e' anche
+                     il criterio su cui il filtro agisce: mostrarlo rende visibile perche' una
+                     riga c'e' e un'altra no. -->
+                <columns>
+                    <Column>
+                        <Text text="{i18n>dlgColOperationCode}"/>
+                    </Column>
+                    <Column width="35%">
+                        <Text text="{i18n>dlgColOperationType}"/>
+                    </Column>
+                </columns>
+
+                <items>
+                    <ColumnListItem selected="{plexOpsModel>selected}">
+                        <cells>
+                            <Text text="{plexOpsModel>code}"/>
+                            <Text text="{plexOpsModel>type}"/>
+                        </cells>
+                    </ColumnListItem>
+                </items>
+
+            </Table>
+        </content>
+
+        <beginButton>
+            <Button
+                text="{i18n>dlgBtnAdd}"
+                type="Emphasized"
+                press=".onPlexOpsDialogConfirm"/>
+        </beginButton>
+        <endButton>
+            <Button
+                text="{i18n>dlgBtnCancel}"
+                press=".onPlexOpsDialogCancel"/>
+        </endButton>
+
+    </Dialog>
+
+</core:FragmentDefinition>

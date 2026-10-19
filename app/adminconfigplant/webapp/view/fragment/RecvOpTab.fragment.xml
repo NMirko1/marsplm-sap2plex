@@ -1,0 +1,152 @@
+<core:FragmentDefinition
+    xmlns="sap.m"
+    xmlns:core="sap.ui.core"
+    xmlns:mp="avvaleplm.marsplm.sap2plex.adminconfigplant.control">
+
+    <!--
+        [W1-03] Operazione di ricevimento per unita' di misura (BBP §7.3.4).
+
+        Un materiale che Plex non produce non ha ciclo, quindi su Plex e' una part nuda: qui si
+        dichiara, per ogni unita' di misura, quale operazione istanziargli addosso.
+
+        QUALI materiali la vogliono NON si decide qui: lo dice la classe (scheda «Categorie
+        materiali» -> Plex Part Type), tramite la colonna RequiresReceivingOp della value help
+        delle classi. Questa scheda risponde solo alla domanda «con quale operazione».
+    -->
+    <Panel headerText="{i18n>tabRecvOp}" class="sapUiSmallMargin">
+
+        <VBox class="sapUiSmallMarginBottom">
+            <Text text="{i18n>roTabIntro}"/>
+            <MessageStrip
+                text="{i18n>roTabHint}"
+                type="Information"
+                showIcon="true"
+                class="sapUiSmallMarginTop"/>
+            <!--
+                [PLEX-OP-TYPE] La lacuna si DICHIARA, e dalla feature 0024 (DEC-84) il testo non e'
+                piu' fisso: i rami sono tre e hanno rimedi diversi — catalogo Plex non leggibile,
+                operazione senza tipo sul tenant, operazione fuori dall'elenco filtrato. Il ramo
+                «non l'hai digitato» non esiste piu', perche' il tipo non si digita.
+
+                Serve comunque, e per la ragione di prima: senza il tipo giusto il POST risponde 400
+                e l'operazione di ricevimento non nasce, e non si vede da nessuna altra parte perche'
+                e' un passo accessorio che degrada l'invio a «W» senza fermarlo (DEC-38).
+            -->
+            <MessageStrip
+                text="{recvOp>/opTypeGapText}"
+                type="Warning"
+                showIcon="true"
+                visible="{recvOp>/hasMissingOpType}"
+                class="sapUiSmallMarginTop"/>
+        </VBox>
+
+        <!-- [LIST-COUNT] Il conteggio dichiarato: senza, «Mostra di piu'» compare anche quando non
+             c'e' piu' niente e poi resta a girare. Solo sui binding ASSOLUTI. Vedi GroupsTab e DEC-102. -->
+        <Table
+            id="recvOpTable"
+            items="{
+                path: 'catalog>/ZMatRecvOpConfig',
+                parameters: { '$$updateGroupId': 'recvOpChanges', '$count': true }
+            }"
+            growing="true"
+            growingThreshold="50"
+            mode="MultiSelect">
+
+            <headerToolbar>
+                <OverflowToolbar>
+                    <Title text="{i18n>roTableTitle}"/>
+                    <ToolbarSpacer/>
+                    <Button icon="sap-icon://add" text="{i18n>roBtnAdd}" type="Transparent" press=".onAddRecvOp"/>
+                    <Button icon="sap-icon://delete" text="{i18n>roBtnDelete}" type="Transparent" press=".onDeleteRecvOp"/>
+                    <Button icon="sap-icon://save" text="{i18n>roBtnSave}" type="Emphasized" press=".onSaveRecvOp"/>
+                    <Button icon="sap-icon://sys-cancel" text="{i18n>roBtnCancel}" type="Transparent" press=".onCancelRecvOp"/>
+                </OverflowToolbar>
+            </headerToolbar>
+
+            <columns>
+                <Column width="14%">
+                    <Text text="{i18n>roColUom}"/>
+                </Column>
+                <Column width="34%">
+                    <Text text="{i18n>roColOperation}"/>
+                </Column>
+                <Column width="12%" hAlign="End">
+                    <Text text="{i18n>roColOpNumber}"/>
+                </Column>
+                <Column width="18%">
+                    <Text text="{i18n>roColOpType}"/>
+                </Column>
+                <Column width="11%" hAlign="Center">
+                    <Text text="{i18n>roColShippable}"/>
+                </Column>
+                <Column width="11%" hAlign="Center">
+                    <Text text="{i18n>roColActive}"/>
+                </Column>
+            </columns>
+
+            <items>
+                <ColumnListItem>
+                    <cells>
+                        <!--
+                            Il trim/maiuscolo lo fa anche il server, ma NON puo' salvare un valore
+                            con spazi: String(3) e' verificato dalla validazione di tipo di CAP,
+                            che gira PRIMA di ogni before handler (DEC-40). " kg " sarebbe quindi
+                            un errore tecnico prima che qualcuno possa normalizzarlo. La difesa
+                            utile e' qui.
+                        -->
+                        <Input
+                            value="{catalog>BaseUnit}"
+                            maxLength="3"
+                            change=".onRecvOpUomChange"
+                            placeholder="{i18n>roUomPlaceholder}"/>
+                        <!--
+                            selectedKey e' l'ID dell'operazione, non il codice: e' cio' che il
+                            POST /mdm/v1/part-operations chiede come `operationId`. La lista
+                            'operationsById' e' quella senza i due pseudo-valori FIRST_OP/LAST_OP,
+                            che qui non hanno senso: un materiale senza ciclo non ha una «prima»
+                            ne' una «ultima» operazione.
+
+                            [PLEX-OP-TYPE-FILTER] Ed e' l'elenco dell'ambito RECV: il filtro per
+                            tipo lo applica il SERVER (scheda «Mappatura Operazioni Plex»), non
+                            questa tendina. Se qui non compare un'operazione che su Plex esiste, il
+                            criterio da guardare e' quello — e il MessageStrip qui sopra lo dice.
+                        -->
+                        <mp:SearchComboBox
+                            selectedKey="{catalog>PlexOperationId}"
+                            items="{
+                                path: 'plexOps>/operationsById',
+                                templateShareable: true
+                            }"
+                            selectionChange=".onRecvOpOperationChange"
+                            placeholder="{i18n>roOperationPlaceholder}"
+                            width="100%">
+                            <core:Item key="{plexOps>key}" text="{plexOps>text}"/>
+                        </mp:SearchComboBox>
+                        <Input
+                            value="{catalog>OperationNumber}"
+                            type="Number"
+                            textAlign="End"/>
+                        <!--
+                            [PLEX-OP-TYPE] Il tipo si LEGGE, non si scrive (feature 0024, DEC-84).
+                            Era un campo a testo libero, e diceva una seconda volta una cosa che il
+                            catalogo Plex dichiara gia' per l'operazione scelta: due dichiarazioni
+                            della stessa cosa, di cui una digitata a mano — e un nome che il tenant
+                            non ha non da' un dato sbagliato, da' 400 FIELD_REFERENCE_NOT_FOUND.
+
+                            La seconda `part` (`plexOps>/loadedAt`) non e' decorativa: senza, il
+                            formatter non si rivaluterebbe quando l'elenco delle operazioni arriva
+                            DOPO il rendering della tabella, e la colonna resterebbe vuota fino al
+                            primo cambio di riga.
+                        -->
+                        <Text
+                            text="{parts: ['catalog>PlexOperationId', 'plexOps>/loadedAt'], formatter: '.formatRecvOpType'}"/>
+                        <CheckBox selected="{catalog>Shippable}"/>
+                        <CheckBox selected="{catalog>IsActive}"/>
+                    </cells>
+                </ColumnListItem>
+            </items>
+
+        </Table>
+    </Panel>
+
+</core:FragmentDefinition>
